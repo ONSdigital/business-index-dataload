@@ -12,12 +12,17 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
 
   Dev local run command - need to figure out how to run on cluster:
 
+  Memory options may need to be tweaked but not sure how.
+  Jars are for spark-csv package, which cannot be loaded via SBT for some reason.
+  This will be fixed in Spark 2.0, which includes spark-csv by default.
+
   spark-submit --class uk.gov.ons.bi.dataload.SparkApp
-   --packages com.databricks:spark-csv_2.10:1.5.0
-   --master local[*]
-   --driver-memory 2G --executor-memory 2G
-   --driver-java-options "-Xms1g -Xmx4g"
-   target/scala-2.10/business-index-dataload_2.10-1.0.jar
+  --master local[*]
+  --driver-memory 2G --executor-memory 2G
+  --driver-java-options "-Xms1g -Xmx4g"
+  --jars ./lib/spark-csv_2.10-1.5.0.jar,./lib/univocity-parsers-1.5.1.jar,./lib/commons-csv-1.1.jar
+  target/scala-2.10/business-index-dataload_2.10-1.0.jar
+
   */
   
 object SparkApp {

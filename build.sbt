@@ -17,8 +17,5 @@ libraryDependencies+= "org.apache.spark" %% "spark-core" % Versions.spark
 
 libraryDependencies+= "org.apache.spark" %% "spark-sql" % Versions.spark
 
-//libraryDependencies+= "com.databricks" %% "spark-csv" % Versions.sparkCsv
-
-// Uncomment to use Akka
-//libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.11"
+libraryDependencies+= "com.databricks" %% "spark-csv" % Versions.sparkCsv
 
