@@ -8,9 +8,8 @@ import org.apache.spark.sql.{DataFrame}
   * Created by websc on 08/02/2017.
   */
 @Singleton
-class PayeCsvReader(srcDir:String, srcFile:String)
-                   (implicit sc: SparkContext)
-  extends CsvReader(srcDir,srcFile)(sc){
+class PayeCsvReader(implicit sc: SparkContext)
+  extends CsvReader{
 
   val rawTable = "raw_paye"
   /*
@@ -37,13 +36,5 @@ class PayeCsvReader(srcDir:String, srcFile:String)
         |""".stripMargin)
 
     extract
-  }
-
-
-  def testParquetQuery(fileLoc: String)= {
-
-    val df = sqlContext.sql(s"SELECT * FROM parquet.`${fileLoc}`")
-
-    df
   }
 }

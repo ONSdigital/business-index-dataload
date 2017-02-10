@@ -6,11 +6,9 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 /**
   * Created by websc on 09/02/2017.
   */
-abstract class CsvReader (val srcDir: String, val srcFile: String)
-                         (implicit val sc: SparkContext){
 
-  val sqlContext = new SQLContext(sc)
-
+abstract class CsvReader(implicit sc: SparkContext)
+  extends BIDataReader{
 
   def fixSchema(df: DataFrame): DataFrame = {
 
@@ -23,33 +21,21 @@ abstract class CsvReader (val srcDir: String, val srcFile: String)
     newDf
   }
 
-  def readFromCsv: DataFrame = {
-    val src = s"${srcDir}/${srcFile}"
+  def extractRequiredFields(df: DataFrame):DataFrame
 
-    println(s"Reading CSV from: $src")
+  def readFromSourceFile(srcFilePath:String): DataFrame = {
 
     val df = sqlContext.read
       .format("com.databricks.spark.csv")
       .option("header", "true") // Use first line of all files as header
       .option("inferSchema", "true") // Automatically infer data types
-      .load(src)
+      .load(srcFilePath)
     // fix spaces etc in column names
-    fixSchema(df)
-  }
+    val fixedDf = fixSchema(df)
 
-  def extractRequiredFields(df: DataFrame):DataFrame
+    val extracted = extractRequiredFields(fixedDf)
 
-  def extractFromCsv: DataFrame = {
-    val df = readFromCsv
-    val extracted = extractRequiredFields(df)
     extracted
-  }
-
-  def writeParquet(df: DataFrame, targetDir: String, targetFile: String):Unit = {
-    val path = s"${targetDir}/${targetFile}"
-    println(s"Writing Parquet to: $path")
-
-    df.write.mode("overwrite").parquet(path)
   }
 
 }

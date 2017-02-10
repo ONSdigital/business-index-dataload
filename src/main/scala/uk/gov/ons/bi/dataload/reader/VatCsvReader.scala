@@ -8,9 +8,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
   * Created by websc on 08/02/2017.
   */
 @Singleton
-class VatCsvReader(srcDir:String,srcFile:String)
-                  (implicit sc: SparkContext)
-  extends CsvReader(srcDir,srcFile)(sc){
+class VatCsvReader(implicit sc: SparkContext)
+  extends CsvReader{
 
   val rawTable = "raw_vat"
   /*

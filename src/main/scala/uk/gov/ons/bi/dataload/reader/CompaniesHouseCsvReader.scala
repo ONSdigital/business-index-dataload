@@ -8,9 +8,8 @@ import org.apache.spark.sql.{DataFrame}
   * Created by websc on 08/02/2017.
   */
 @Singleton
-class CompaniesHouseCsvReader(srcDir: String, srcFile: String)
-                             (implicit sc: SparkContext)
-  extends CsvReader(srcDir, srcFile)(sc) {
+class CompaniesHouseCsvReader(implicit sc: SparkContext)
+  extends CsvReader {
 
   def extractRequiredFields(df: DataFrame) = {
     // assume CH structure is correct

@@ -6,14 +6,11 @@ import org.apache.spark.sql.DataFrame
 /**
   * Created by websc on 08/02/2017.
   */
-class LinkJsonReader (srcDir: String, srcFile: String)(implicit val sc: SparkContext) {
+class LinkJsonReader (implicit sc: SparkContext)
+  extends BIDataReader {
 
-  val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-
-  val src = s"${srcDir}/${srcFile}"
-
-  def readFromJson: DataFrame = {
-    sqlContext.read.json(src)
+  def readFromSourceFile(srcFilePath:String): DataFrame = {
+    sqlContext.read.json(srcFilePath)
   }
 
 }
