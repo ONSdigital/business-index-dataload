@@ -13,9 +13,9 @@ abstract class BIDataReader(implicit val sc: SparkContext) {
 
   def readFromSourceFile(srcFilePath:String): DataFrame
 
-  def writeParquet(df: DataFrame, targetDir: String, targetFile: String):Unit = {
-    val path = s"${targetDir}/${targetFile}"
-    df.write.mode("overwrite").parquet(path)
+  def writeParquet(df: DataFrame, targetFilePath: String):Unit = {
+
+    df.write.mode("overwrite").parquet(targetFilePath)
   }
 }
 

@@ -11,11 +11,19 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 lazy val Versions = new {
   val spark = "1.6.0"
   val sparkCsv = "1.5.0"
+  val joda = "2.9.4"
+  val jodaConvert = "1.8.1"
+  val json4s = "3.5.0"
 }
 
-libraryDependencies+= "org.apache.spark" %% "spark-core" % Versions.spark
+libraryDependencies++= Seq(
+  "org.apache.spark" %% "spark-core" % Versions.spark,
+  "org.apache.spark" %% "spark-sql" % Versions.spark,
+  "com.databricks" %% "spark-csv" % Versions.sparkCsv,
+  "joda-time" %  "joda-time" % Versions.joda,
+  "org.json4s" %% "json4s-native" % Versions.json4s
+)
 
-libraryDependencies+= "org.apache.spark" %% "spark-sql" % Versions.spark
 
-libraryDependencies+= "com.databricks" %% "spark-csv" % Versions.sparkCsv
+
 

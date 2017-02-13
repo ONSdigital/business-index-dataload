@@ -27,4 +27,3 @@ class Location(override val xc: Int, override val yc: Int,
     println ("Point z location : " + z);
   }
 }
-

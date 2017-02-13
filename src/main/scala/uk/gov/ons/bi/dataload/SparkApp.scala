@@ -58,9 +58,11 @@ object SparkApp {
     }
 
     // Process the data
-    val chData = reader.readFromSourceFile(srcFilePath)
+    val data = reader.readFromSourceFile(srcFilePath)
+    val targetFilePath = s"$parquetPath/$parquetFile"
 
-    reader.writeParquet(chData, parquetPath, parquetFile )
+    println(s"Writing to: $targetFilePath")
+    reader.writeParquet(data, targetFilePath)
   }
 
   def loadSourceDataToParquet(appConfig: AppConfig) = {
@@ -101,7 +103,6 @@ object SparkApp {
     // There are 5 files to read and merge
 
     val nFiles = 5
-    val csvName = "BasicCompanyData-2017-02-03-part5_5.csv"
     val chFiles = (1 to nFiles).map{n => s"BasicCompanyData-2017-02-03-part${n}_${nFiles}.csv"}
 
     val chRdds: Seq[DataFrame] = chFiles.map { srcFile =>
@@ -113,18 +114,18 @@ object SparkApp {
 
     // Output to parquet
     val parquetFile = "BasicCompanyData-2017-02-03.parquet"
-    reader.writeParquet(combined, parquetPath, parquetFile )
+    reader.writeParquet(combined, parquetPath)
   }
 
   def main(args: Array[String]) {
 
     val appConfig = new AppConfig
 
-    preProcessCH(appConfig)
+    // preProcessCH(appConfig)
 
-    //loadSourceDataToParquet(appConfig)
+    // loadSourceDataToParquet(appConfig)
 
-    //buildLinkedData(appConfig)
+    // buildLinkedData(appConfig)
 
   }
 }
