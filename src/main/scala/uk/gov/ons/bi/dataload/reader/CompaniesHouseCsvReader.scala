@@ -18,19 +18,10 @@ class CompaniesHouseCsvReader(implicit sc: SparkContext)
 
     val extract = sqlContext.sql(
       """
-        |SELECT `CompanyName`,`CompanyNumber`, `CompanyCategory`, `CompanyStatus`,
-        |`RegAddressCountry`,`RegAddressPostCode`,
-        |`SICCodeSicText_1`,`SICCodeSicText_2`,`SICCodeSicText_3`,`SICCodeSicText_4`
+        |SELECT *
         |FROM raw_companies
         |""".stripMargin)
 
     extract
-  }
-
-  def queryCompaniesParquet(fileLoc: String) = {
-
-    val df = sqlContext.sql(s"SELECT * FROM parquet.`${fileLoc}` WHERE `CompanyName` LIKE 'A%'")
-
-    df
   }
 }

@@ -41,6 +41,14 @@ class AppConfig  {
 
     lazy val links = envOrElseConfigStr("links", sourceDataConfig)
 
+    lazy val chDir = envOrElseConfigStr("ch-dir", sourceDataConfig)
+
+    lazy val payeDir = envOrElseConfigStr("paye-dir", sourceDataConfig)
+
+    lazy val vatDir = envOrElseConfigStr("vat-dir", sourceDataConfig)
+
+    lazy val linksDir = envOrElseConfigStr("links-dir", sourceDataConfig)
+
   }
 
   object ParquetDataConfig {

@@ -23,7 +23,9 @@ abstract class CsvReader(implicit sc: SparkContext)
 
   def extractRequiredFields(df: DataFrame):DataFrame
 
-  def readFromSourceFile(srcFilePath:String): DataFrame = {
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
+
+    println(s"Reading from CSV files: $srcFilePath")
 
     val df = sqlContext.read
       .format("com.databricks.spark.csv")

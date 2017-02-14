@@ -9,7 +9,7 @@ import org.apache.spark.sql.DataFrame
 class LinkJsonReader (implicit sc: SparkContext)
   extends BIDataReader {
 
-  def readFromSourceFile(srcFilePath:String): DataFrame = {
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.json(srcFilePath)
   }
 
