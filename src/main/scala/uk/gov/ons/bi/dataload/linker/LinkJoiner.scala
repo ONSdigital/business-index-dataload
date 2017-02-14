@@ -16,8 +16,6 @@ class LinkJoiner (implicit val sc: SparkContext){
 
   import sqlContext.implicits._
 
-  def doStuff = println("I DON'T DO ANYTHING YET!")
-
   def loadCompaniesFromParquet(appConfig: AppConfig) = {
 
     // Get data directories
@@ -29,7 +27,11 @@ class LinkJoiner (implicit val sc: SparkContext){
 
     val df = sqlContext.read.parquet(dataFile)
 
-    df.select($"CompanyNumber",$"CompanyName")
+    df.select(
+      $"CompanyNumber",
+      $"CompanyName",
+      $"CompanyStatus",
+      $"SICCodeSicText_1")
 
   }
 
@@ -44,24 +46,34 @@ class LinkJoiner (implicit val sc: SparkContext){
 
     val links = sqlContext.read.parquet(linksFile)
 
-    // Need to modify it so Company Number is NOT an array - just take first one (assume at least one)
-    links.select($"CH".getItem(0).as("CompanyNumber"), $"UBRN", $"VAT", $"PAYE")
+    // For now, we will just take FIRST item (if any) from each of the arrays in Link record
+    links.select(
+      $"CH".getItem(0).as("CompanyNumber"),
+      $"UBRN",
+      $"VAT".getItem(0).as("VAT"),
+      $"PAYE".getItem(0).as("PAYE")
+
+    )
   }
 
   def buildJoinedData(appConfig: AppConfig) = {
 
     val links = loadLinksFromParquet(appConfig)
-    links.cache()
     links.printSchema
-    println(s"Links data contains ${links.count} records.")
 
     val ch = loadCompaniesFromParquet(appConfig)
 
-    val joined = links.join(ch,Seq("CompanyNumber"),"outer").select($"CompanyNumber", $"CompanyName",$"PAYE", $"VAT",$"UBRN")
-    joined.show(10)
+    val joined = links.join(ch,Seq("CompanyNumber"),"outer")
+      .select(
+        $"CompanyNumber",
+        $"CompanyName",
+        $"CompanyStatus",
+        $"SICCodeSicText_1".as("IndustryCode"),
+        $"PAYE", $"VAT",$"UBRN")
+
+    joined.show(20)
 
     println(s"Joined data (left outer join) contains ${joined.count} records.")
-
 
   }
 
