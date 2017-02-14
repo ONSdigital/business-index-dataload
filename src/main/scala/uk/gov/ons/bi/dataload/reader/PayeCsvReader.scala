@@ -28,10 +28,7 @@ class PayeCsvReader(implicit sc: SparkContext)
 
     val extract = sqlContext.sql(
       s"""
-        |SELECT `entref`,`payeref`,
-        |`mfullemp`,`msubemp`,`ffullemp`,`fsubemp`,`unclemp`,`unclsubemp`,
-        |`legalstatus`,
-        |`addressref`,`postcode`
+        |SELECT *
         |FROM ${rawTable}
         |""".stripMargin)
 

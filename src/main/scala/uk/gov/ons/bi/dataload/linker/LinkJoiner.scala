@@ -35,6 +35,56 @@ class LinkJoiner (implicit val sc: SparkContext){
 
   }
 
+  def loadVatFromParquet(appConfig: AppConfig) = {
+
+    // Get data directories
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val parquetData = parquetDataConfig.vat
+
+    val dataFile = s"$parquetPath/$parquetData"
+
+    val df = sqlContext.read.parquet(dataFile)
+
+    df.printSchema
+
+    // rename VAT ref to match Links record
+    df.select(
+      $"entref".as("vat_entref"),
+      $"vatref".as("VAT"),
+      //$"name".as("vat_name"),
+      $"inqcode".as("vat_inqcode"),
+      $"sic92",
+      $"legalstatus".as("vat_legalstatus"),
+      $"turnover")
+
+  }
+
+  def loadPayeFromParquet(appConfig: AppConfig) = {
+
+    // Get data directories
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val parquetData = parquetDataConfig.paye
+
+    val dataFile = s"$parquetPath/$parquetData"
+
+    val df = sqlContext.read.parquet(dataFile)
+
+    df.printSchema
+
+    // rename ref to match Links record
+    df.select(
+      $"entref".as("paye_entref"),
+      $"payeref".as("PAYE"),
+      $"nameline1".as("paye_name"),
+      $"inqcode".as("paye_inqcode"),
+      $"legalstatus".as("paye_legalstatus"),
+      $"employer_cat"
+    )
+
+  }
+
   def loadLinksFromParquet(appConfig: AppConfig) = {
 
     // Get data directories
@@ -63,7 +113,11 @@ class LinkJoiner (implicit val sc: SparkContext){
 
     val ch = loadCompaniesFromParquet(appConfig)
 
-    val joined = links.join(ch,Seq("CompanyNumber"),"outer")
+    val vat = loadVatFromParquet(appConfig)
+
+    val paye = loadPayeFromParquet(appConfig)
+
+    val linksCh = links.join(ch,Seq("CompanyNumber"),"outer")
       .select(
         $"CompanyNumber",
         $"CompanyName",
@@ -71,9 +125,21 @@ class LinkJoiner (implicit val sc: SparkContext){
         $"SICCodeSicText_1".as("IndustryCode"),
         $"PAYE", $"VAT",$"UBRN")
 
-    joined.show(20)
+    val linksChVat = linksCh.join(vat,Seq("VAT"),"outer")
 
-    println(s"Joined data (left outer join) contains ${joined.count} records.")
+    val linksChVatPaye = linksChVat.join(paye,Seq("PAYE"),"outer")
+
+    linksChVatPaye.printSchema
+
+    // Get data directories
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val biOutput = "INTERIM_BI_DATA.parquet"
+
+    val biFile = s"$parquetPath/$biOutput"
+
+    linksChVatPaye.write.mode("overwrite").parquet(biFile)
+
 
   }
 
