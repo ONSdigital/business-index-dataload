@@ -11,8 +11,9 @@ import org.apache.spark.sql.{DataFrame}
 class CompaniesHouseCsvReader(implicit sc: SparkContext)
   extends CsvReader {
 
+  val rawTable = "raw_companies"
+
   def extractRequiredFields(df: DataFrame) = {
-    // assume CH structure is correct
 
     df.registerTempTable("raw_companies")
 

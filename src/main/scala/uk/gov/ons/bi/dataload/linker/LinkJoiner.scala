@@ -31,7 +31,8 @@ class LinkJoiner (implicit val sc: SparkContext){
       $"CompanyNumber",
       $"CompanyName",
       $"CompanyStatus",
-      $"SICCodeSicText_1")
+      $"SICCodeSicText_1",
+      $"RegAddressPostCode")
 
   }
 
@@ -80,7 +81,8 @@ class LinkJoiner (implicit val sc: SparkContext){
       $"nameline1".as("paye_name"),
       $"inqcode".as("paye_inqcode"),
       $"legalstatus".as("paye_legalstatus"),
-      $"employer_cat"
+      $"employer_cat",
+      $"postcode".as("paye_postcode")
     )
 
   }
@@ -122,7 +124,8 @@ class LinkJoiner (implicit val sc: SparkContext){
         $"CompanyNumber",
         $"CompanyName",
         $"CompanyStatus",
-        $"SICCodeSicText_1".as("IndustryCode"),
+        $"SICCodeSicText_1".as("industryCode"),
+        $"RegAddressPostCode".as("ch_postcode"),
         $"PAYE", $"VAT",$"UBRN")
 
     val linksChVat = linksCh.join(vat,Seq("VAT"),"outer")

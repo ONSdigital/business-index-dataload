@@ -12,17 +12,9 @@ class PayeCsvReader(implicit sc: SparkContext)
   extends CsvReader{
 
   val rawTable = "raw_paye"
-  /*
-  PAYE record fields:
- entref,payeref,deathcode,birthdate,deathdate,mfullemp,msubemp,ffullemp,fsubemp,unclemp,unclsubemp,
- dec_jobs,mar_jobs,june_jobs,sept_jobs,jobs_lastupd,
- legalstatus,prevpaye,employer_cat,stc,crn,actiondate,addressref,marker,
- inqcode,nameline1,nameline2,nameline3,tradstyle1,tradstyle2,tradstyle3,
- address1,address2,address3,address4,address5,postcode
-   */
 
   def extractRequiredFields(df: DataFrame) = {
-    // assume CH structure is correct
+    // allows us to include/exclude specific fields here
 
     df.registerTempTable(rawTable)
 

@@ -1,5 +1,6 @@
 package uk.gov.ons.bi.dataload.loader
 
+import com.google.inject.Singleton
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
@@ -8,10 +9,9 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
 /**
   * Created by websc on 14/02/2017.
   */
-object SourceDataToParquetLoader {
-    // Trying to use implicit voodoo to make SC available
 
-    implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Source to Parquet"))
+@Singleton
+class SourceDataToParquetLoader (implicit val sc: SparkContext){
 
     def loadDataToParquet(biSource: BIDataSource, appConfig: AppConfig) = {
 
