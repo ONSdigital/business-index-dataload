@@ -3,8 +3,8 @@ package uk.gov.ons.bi.dataload.model
 /**
   * Created by websc on 13/02/2017.
   */
-// fixme: the same class exists in bi-api
-case class BusinessIndex(
+// From Vlad's code
+case class BusinessIndexES(
                           id: Long,
                           name: String,
                           uprn: Long,
@@ -20,4 +20,3 @@ case class BusinessIndex(
     s"""$id $Delim "$name" $Delim $uprn $Delim $industryCode $Delim $legalStatus $Delim "$tradingStatus" $Delim "$turnover" $Delim "$employmentBand" """
 
 }
-
