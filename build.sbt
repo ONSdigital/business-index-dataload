@@ -17,9 +17,8 @@ lazy val Versions = new {
 }
 
 libraryDependencies++= Seq(
-  "org.apache.spark" %% "spark-core" % Versions.spark,
-  "org.apache.spark" %% "spark-sql" % Versions.spark,
-  "com.databricks" %% "spark-csv" % Versions.sparkCsv,
+  "org.apache.spark" %% "spark-core" % Versions.spark % "provided",
+  "org.apache.spark" %% "spark-sql" % Versions.spark % "provided",
   "joda-time" %  "joda-time" % Versions.joda,
   "org.json4s" %% "json4s-native" % Versions.json4s
 )

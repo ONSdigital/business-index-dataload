@@ -1,7 +1,7 @@
 package uk.gov.ons.bi.dataload
 
 import org.apache.spark.{SparkConf, SparkContext}
-import uk.gov.ons.bi.dataload.linker.LinkJoiner
+import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
@@ -38,16 +38,15 @@ object SourceDataToParquetApp {
   }
 }
 
+
 object LinkDataApp {
-  // Trying to use implicit voodoo to make SC available
-  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link to Business Data"))
 
   def main(args: Array[String]) {
 
     val appConfig = new AppConfig
 
-    val linkJoiner = new LinkJoiner
+    val linkedBusinessBuilder = LinkedBusinessBuilder
 
-    linkJoiner.buildJoinedData(appConfig)
+    linkedBusinessBuilder.buildLinkedBusinessIndexRecords(appConfig)
   }
 }

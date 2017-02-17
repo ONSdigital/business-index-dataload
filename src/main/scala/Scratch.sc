@@ -1,13 +1,16 @@
+import scala.util.{Failure, Success, Try}
 
+val bad = "x"
 
-val mydata: Seq[String] = Array("CH001","CH002")
+val good =  "123"
 
-def getCompanyNo(arr: Seq[String]) = {
-  arr.headOption match {
-    case Some(ch) => ch
-    case None => ""
+def f(x: String):Int = {
+
+  Try {x.toInt * 2} match {
+    case Success(n) => n
+    case Failure(e) => 0
   }
-}
+  }
 
-
-getCompanyNo(mydata)
+f(good)
+f(bad)

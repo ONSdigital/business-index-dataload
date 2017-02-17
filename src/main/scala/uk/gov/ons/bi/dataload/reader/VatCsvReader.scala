@@ -5,8 +5,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
-import uk.gov.ons.bi.dataload.model.VatRecord
-
 /**
   * Created by websc on 08/02/2017.
   */
