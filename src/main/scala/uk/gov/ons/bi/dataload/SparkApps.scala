@@ -41,12 +41,15 @@ object SourceDataToParquetApp {
 
 object LinkDataApp {
 
+  // Trying to use implicit voodoo to make SC available
+  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data to Business Index"))
+
   def main(args: Array[String]) {
 
     val appConfig = new AppConfig
 
     val linkedBusinessBuilder = LinkedBusinessBuilder
 
-    linkedBusinessBuilder.buildLinkedBusinessIndexRecords(appConfig)
+    linkedBusinessBuilder.buildLinkedBusinessIndexRecords(sc, appConfig)
   }
 }

@@ -1,25 +1,22 @@
 package uk.gov.ons.bi.dataload.linker
 
-import org.apache.spark.{SparkConf, SparkContext}
+import com.github.nscala_time.time.Imports._
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import org.apache.spark.sql.types._
+import org.joda.time.DateTime
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.ParquetReader
+import uk.gov.ons.bi.dataload.utils.AppConfig
+
+import scala.util.{Success, Try}
+
 
 /**
   * Created by websc on 16/02/2017.
   */
 object LinkedBusinessBuilder {
-  // Make this an object to avoid weird serialization errors.
-
-  // Trying to use implicit voodoo to make SC available
-  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link to Business Data"))
-
-  val sqlContext = new SQLContext(sc)
-
-  import sqlContext.implicits._
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
     // Convert the Link into a list of UBRNs with business data keys
@@ -31,6 +28,7 @@ object LinkedBusinessBuilder {
     val vat: Seq[UbrnWithKey] = ln.vat.map { vatrefs =>
       vatrefs.map { vatref => UbrnWithKey(ln.ubrn, VAT, vatref) }
     }.getOrElse(Nil)
+
     val paye: Seq[UbrnWithKey] = ln.paye.map { payerefs =>
       payerefs.map { payeref => UbrnWithKey(ln.ubrn, PAYE, payeref) }
     }.getOrElse(Nil)
@@ -38,7 +36,9 @@ object LinkedBusinessBuilder {
     company ++ vat ++ paye
   }
 
-  def buildLinkedBusinessIndexRecords(appConfig: AppConfig) = {
+  def buildLinkedBusinessIndexRecords(implicit sc: SparkContext, appConfig: AppConfig) = {
+
+    val sqlContext = new SQLContext(sc)
 
     // Load source data and links
     val pqReader = new ParquetReader
@@ -86,13 +86,14 @@ object LinkedBusinessBuilder {
 
     println(s"payeData contains ${payeData.count} records.")
 
-    val combined = companyData ++ vatData ++ payeData
+    val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
 
     val grouped: RDD[(String, Iterable[UbrnWithData])] = combined.map { r => (r.ubrn, r) }.groupByKey()
 
-    val uwls = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
+    val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
 
     println(s"UWLs contains ${uwls.count} grouped records.")
+
 
     // Now convert to Business records
 
@@ -110,38 +111,117 @@ object LinkedBusinessBuilder {
 
     }
 
+    val businessRecords = uwls.map(buildBusinessRecord)
+
+
+    // Next we convert Business records to Business Index entries
+    //
     def getCompanyName(br: Business): Option[String] = {
       (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => Some(co.companyName)
-        case (_, Some(vats: Seq[VatRec]), _) => Some(vats.head.nameLine1)
-        case (_, _, Some(payes: Seq[PayeRec])) => Some(payes.head.nameLine1)
+        case (Some(co: CompanyRec), _, _) => co.companyName
+        case (_, Some(vats: Seq[VatRec]), _) =>
+          vats.headOption match {
+            case Some(r: VatRec) => r.nameLine1
+            case _ => None
+          }
+        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match {
+          case Some(r: PayeRec) => r.nameLine1
+          case _ => None
+        }
         case _ => None
       }
     }
 
     def getPostcode(br: Business): Option[String] = {
       (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => Some(co.postcode)
-        case (_, Some(vats: Seq[VatRec]), _) => Some(vats.head.postcode)
-        case (_, _, Some(payes: Seq[PayeRec])) => Some(payes.head.postCode)
+        case (Some(co: CompanyRec), _, _) => co.postcode
+        case (_, Some(vats: Seq[VatRec]), _) => vats.headOption match {
+          case Some(r: VatRec) => r.postcode
+          case _ => None
+        }
+        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match {
+          case Some(r: PayeRec) => r.postCode
+          case _ => None
+        }
         case _ => None
       }
     }
 
     def getIndustryCode(br: Business): Option[String] = {
       (br.company, br.vat) match {
-        case (Some(co: CompanyRec), _) => Some(co.sicCode1)
-        case (_, Some(vats: Seq[VatRec])) => Some(vats.head.sic92.toString)
+        case (Some(co: CompanyRec), _) => co.sicCode1
+        case (_, Some(vats: Seq[VatRec])) => vats.headOption match{
+          case Some(r: VatRec) => r.sic92.map(_.toString)
+          case _ => None
+        }
         case _ => None
       }
     }
 
     def getLegalStatus(br: Business): Option[String] = {
       (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => Some(co.companyStatus)
-        case (_, Some(vats: Seq[VatRec]), _) => Some(vats.head.legalStatus.toString)
-        case (_, _, Some(payes: Seq[PayeRec])) => Some(payes.head.legalStatus.toString)
+        case (Some(co: CompanyRec), _, _) => co.companyStatus
+        case (_, Some(vats: Seq[VatRec]), _) => vats.headOption match{
+          case Some(r: VatRec) => r.legalStatus.map(_.toString)
+          case _ => None
+        }
+        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match{
+          case Some(r: PayeRec) => r.legalStatus.map(_.toString)
+          case _ => None
+        }
         case _ => None
+      }
+    }
+
+    def getVatTurnover(br: Business): Option[Long] = {
+      // not clear what rule is for deriving this
+      br.vat.map { (vats: Seq[VatRec]) =>
+        vats.map(v => v.turnover.getOrElse(0L)).sum
+      }
+    }
+
+
+    def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
+
+      val fmt = DateTimeFormat.forPattern("MMMyy")
+      // unpack the Option
+      str.getOrElse("") match {
+        case "" => None
+        case s: String => Try {
+          DateTime.parse(s, fmt)
+        } match {
+          case Success(d: DateTime) => Some(d)
+          case _ => None
+        }
+      }
+    }
+
+    def getLatestJobsForPayeRec(rec: PayeRec) = {
+
+      // Convert josbLastUpd string to date
+      val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
+
+      // Use this to get corresponding jobd value from record
+      val jobs: Option[Double] = upd.flatMap { d =>
+        d.getMonthOfYear match {
+          case 3 => rec.marJobs
+          case 6 => rec.junJobs
+          case 9 => rec.sepJobs
+          case 12 => rec.decJobs
+          case _ => None
+        }
+      }
+      (upd, jobs)
+    }
+
+    def getNumEmployees(br: Business): Option[Double] = {
+      // not clear what rule is for deriving this
+      val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
+      val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
+      // Allow for empty sequence
+      jobUpdates match {
+        case Nil => None
+        case xs => xs.reverse.head._2
       }
     }
 
@@ -155,19 +235,27 @@ object LinkedBusinessBuilder {
       val legalStatus: Option[String] = getLegalStatus(br)
 
       // not clear what rule is for deriving this:
-      val totalTurnover: Option[Long] = br.vat.map { vats => vats.map(_.turnover).sum }
+      val totalTurnover: Option[Long] = getVatTurnover(br)
+
+      // Not clear how we calculate employees
+      val numEmps: Option[Double] = getNumEmployees(br)
 
       // Build a BI record that we can later upload to ElasticSource
       BusinessIndex(br.ubrn, companyName, postcode, industryCode,
-        legalStatus, totalTurnover)
+        legalStatus, totalTurnover, numEmps)
     }
-
-    val businessRecords = uwls.map(buildBusinessRecord)
 
 
     val businessIndexes = businessRecords.map(convertToBusinessIndex)
 
-    /* Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame */
+    businessIndexes.cache()
+
+    uwks.unpersist()
+
+    sc.parallelize(Seq(s"businessIndexes contains ${businessIndexes.count} grouped records.")).saveAsTextFile("./DUMMY")
+
+    // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame
+
 
     val biSchema = StructType(Seq(
       StructField("ubrn", StringType, true),
@@ -175,7 +263,8 @@ object LinkedBusinessBuilder {
       StructField("postcode", StringType, true),
       StructField("industryCode", StringType, true),
       StructField("legalStatus", StringType, true),
-      StructField("totalTurnover", LongType, true)
+      StructField("totalTurnover", LongType, true),
+      StructField("totalNumEmployees", DoubleType, true)
     ))
 
     def biRowMapper(bi: BusinessIndex): Row = {
@@ -191,13 +280,17 @@ object LinkedBusinessBuilder {
 
     val parquetDataConfig = appConfig.ParquetDataConfig
     val parquetPath = parquetDataConfig.dir
-    val biFile = s"$parquetPath/BUSINESS_INDEX_OUTPUT.parquet"
+    val parquetBiFile = parquetDataConfig.bi
+    val biFile = s"$parquetPath/$parquetBiFile"
 
     biDf.printSchema()
 
+    println(s"Writing Business Indexes to $biFile")
+
     biDf.write.mode("overwrite").parquet(biFile)
 
-    uwks.unpersist()
+    businessIndexes.unpersist()
+
   }
 
 }

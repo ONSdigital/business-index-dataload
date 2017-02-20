@@ -24,5 +24,7 @@ libraryDependencies++= Seq(
 )
 
 
+libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.16.0"
+
 
 

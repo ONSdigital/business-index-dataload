@@ -66,6 +66,8 @@ class AppConfig  {
     lazy val ch = envOrElseConfigStr("ch", parquetDataConfig)
 
     lazy val links = envOrElseConfigStr("links", parquetDataConfig)
+
+    lazy val bi = envOrElseConfigStr("bi", parquetDataConfig)
   }
 
   object ESConfig {
