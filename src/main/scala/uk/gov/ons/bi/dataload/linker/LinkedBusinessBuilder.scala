@@ -19,6 +19,8 @@ import scala.util.{Success, Try}
 object LinkedBusinessBuilder {
   // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
   // errors when there is a lot of nested RDD processing around here. Might be better in Spark 2.x?
+
+
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
     // Convert the Link into a list of UBRNs with business data keys
     val company = ln.ch match {
@@ -41,10 +43,10 @@ object LinkedBusinessBuilder {
 
     val sqlContext = new SQLContext(sc)
 
-    // Load source data and links
+    // Load Parquet source data and links
     val pqReader = new ParquetReader
 
-    val links: RDD[LinkRec] = pqReader.loadLinkRecsFromParquet(appConfig)
+    // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
     val vats: RDD[(String, VatRec)] = pqReader.loadVatRecsFromParquet(appConfig)
 
@@ -52,8 +54,10 @@ object LinkedBusinessBuilder {
 
     val cos: RDD[(String, CompanyRec)] = pqReader.loadCompanyRecsFromParquet(appConfig)
 
-    // Convert each Link record to a sequence of simpler (UBRN, type, key) triples.
-    // The flatMap(identity) turns it from an RDD of Lists of UbrnWithKey into an
+    val links: RDD[LinkRec] = pqReader.loadLinkRecsFromParquet(appConfig)
+
+    // explodeLink() converts each nested Link record to a sequence of (UBRN, type, key) triples.
+    // flatMap(identity) then turns it from an RDD of Seqs of UbrnWithKey into an
     // RDD of UbrnWithKey, which is what we want.
 
     val uwks = links.map { ln => explodeLink(ln) }.flatMap(identity)
@@ -61,7 +65,8 @@ object LinkedBusinessBuilder {
     // Cache this data as we will be doing different things to it
     uwks.cache()
 
-    println(s"UWKs contains ${uwks.count} records.")
+
+    // Join Links to corresponding company/VAT/PAYE data
 
     val companyData: RDD[UbrnWithData] = uwks.filter { r => r.src == CH }.map { r => (r.key, r) }
       .join(cos)
@@ -69,15 +74,11 @@ object LinkedBusinessBuilder {
       => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
 
-    println(s"companyData contains ${companyData.count} records.")
-
     val vatData: RDD[UbrnWithData] = uwks.filter { r => r.src == VAT }.map { r => (r.key, r) }
       .join(vats)
       .map { case (key, (uwk, data))
       => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
-
-    println(s"vatData contains ${vatData.count} records.")
 
     val payeData: RDD[UbrnWithData] = uwks.filter { r => r.src == PAYE }.map { r => (r.key, r) }
       .join(payes)
@@ -85,36 +86,33 @@ object LinkedBusinessBuilder {
       => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
 
-    println(s"payeData contains ${payeData.count} records.")
-
+    // Put the lists of UWDs  (UBRN, src, data) back together
     val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
 
+    // Now we can group data for same UBRN back together
     val grouped: RDD[(String, Iterable[UbrnWithData])] = combined.map { r => (r.ubrn, r) }.groupByKey()
-
     val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
 
-    println(s"UWLs contains ${uwls.count} grouped records.")
-
-
-    // Now convert to Business records
+    // Now convert the grouped UWLs into Business records
 
     def buildBusinessRecord(uwl: UbrnWithList) = {
       val ubrn = uwl.ubrn
       // Should only be ONE company
       val company: Option[CompanyRec] = uwl.data.filter { r => r.src == CH }
         .map { case UbrnWithData(u, CH, data: CompanyRec) => data }.headOption
+
       val vats: Option[Seq[VatRec]] = Some(uwl.data.filter { r => r.src == VAT }
         .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+
       val payes: Option[Seq[PayeRec]] = Some(uwl.data.filter { r => r.src == PAYE }
         .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
 
       Business(ubrn, company, vats, payes)
-
     }
 
     val businessRecords = uwls.map(buildBusinessRecord)
 
-    // Next we convert Business records to Business Index entries
+    // Now we can convert Business records to Business Index entries
 
     def getCompanyName(br: Business): Option[String] = {
       // Extract potential values from CH/VAT/PAYE records
@@ -196,29 +194,11 @@ object LinkedBusinessBuilder {
       }
     }
 
-    def bodgeToMMMYY(strOpt: Option[String]) = {
-      // Some PAYE "month" strings are 4 char, not 3 e.g. "Sept98"
-      // This function bodges them to 3 chars for consistency e.g. "Sep98".
-      strOpt.map { s =>
-        val (mon, yr) = s.partition(!_.isDigit)
-        val mmm = mon.substring(0,3)
-        (mmm + yr)
-      }
-
-    }
-
     def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
-      // Some PAYE month strings are 4 chars, not 3 e.g. "Sept98".
-      // This bit bodges them to 3 chars for consistency e.g. "Sep98".
-      val mmmYy = str.map { s =>
-        val (mon, yr) = s.partition(!_.isDigit)
-        val mmm = mon.substring(0,3)
-        (mmm + yr)
-      }
-      // Now convert the string to a MMMyy date (if possible)
+       // Now convert the string to a MMMyy date (if possible)
       val fmt = DateTimeFormat.forPattern("MMMyy")
       // unpack the Option
-      mmmYy.getOrElse("") match {
+      str.getOrElse("") match {
         case "" => None
         case s: String => Try {
           DateTime.parse(s, fmt)
@@ -231,10 +211,10 @@ object LinkedBusinessBuilder {
 
     def getLatestJobsForPayeRec(rec: PayeRec): (Option[DateTime], Option[Double]) = {
 
-      // Convert jobsLastUpd string to date
+      // Convert jobsLastUpd string to date if possible
       val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
 
-      // Use this to get corresponding jobd value from record
+      // Use this to get corresponding jobs value from record
       val jobs: Option[Double] = upd.flatMap { d =>
         d.getMonthOfYear match {
           case 3 => rec.marJobs
@@ -278,7 +258,6 @@ object LinkedBusinessBuilder {
         legalStatus, totalTurnover, numEmps)
     }
 
-
     val businessIndexes = businessRecords.map(convertToBusinessIndex)
 
     businessIndexes.cache()
@@ -298,24 +277,19 @@ object LinkedBusinessBuilder {
     ))
 
     def biRowMapper(bi: BusinessIndex): Row = {
-      Row(bi.ubrn, bi.companyName, bi.postcode, bi.industryCode, bi.legalStatus, bi.totalTurnover)
+      Row(bi.ubrn, bi.companyName, bi.postcode, bi.industryCode, bi.legalStatus, bi.totalTurnover, bi.totalNumEmps)
     }
 
     val biRows: RDD[Row] = businessIndexes.map(biRowMapper)
 
     val biDf: DataFrame = sqlContext.createDataFrame(biRows, biSchema)
 
-
-    // Write BI data to Parquet file. We will load it into ElasticSearch separately.
+    // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
     val parquetDataConfig = appConfig.ParquetDataConfig
     val parquetPath = parquetDataConfig.dir
     val parquetBiFile = parquetDataConfig.bi
     val biFile = s"$parquetPath/$parquetBiFile"
-
-    biDf.printSchema()
-
-    println(s"Writing Business Indexes to $biFile")
 
     biDf.write.mode("overwrite").parquet(biFile)
 

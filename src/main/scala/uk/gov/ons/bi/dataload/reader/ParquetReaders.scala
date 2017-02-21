@@ -140,7 +140,6 @@ class ParquetReader(implicit sc: SparkContext) {
   }
 
 
-
   def loadVatRecsFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
     // Yields RDD of (VAT Ref, VAT record)
