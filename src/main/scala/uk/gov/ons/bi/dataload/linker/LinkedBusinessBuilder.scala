@@ -229,7 +229,7 @@ object LinkedBusinessBuilder {
       }
     }
 
-    def getLatestJobsForPayeRec(rec: PayeRec) = {
+    def getLatestJobsForPayeRec(rec: PayeRec): (Option[DateTime], Option[Double]) = {
 
       // Convert jobsLastUpd string to date
       val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
@@ -251,10 +251,10 @@ object LinkedBusinessBuilder {
       // not clear what rule is for deriving this.
       val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
       val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
-      // Allow for empty sequence
-      jobUpdates match {
+      // Allow for empty sequence, get num emps for most recent date
+      jobUpdates.sorted.reverse match {
         case Nil => None
-        case xs => xs.reverse.head._2
+        case xs => xs.head._2
       }
     }
 
