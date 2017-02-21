@@ -35,17 +35,14 @@ class ParquetReader(implicit sc: SparkContext) {
   }
 
   def loadCompanyRecsFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
-    // Yields (Company No, company record)
+    // Yields RDD of (Company No, company record)
 
-    // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
-
+    // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
     val df = getDataFrameFromParquet(appConfig, CH)
-
-    // Only interested in a subset of columns
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     df.registerTempTable("temp_comp")
 
-    // Only interested in a subset of columns
+    // Only interested in a subset of columns. SQL is easier to maintain here.
 
     val extracted = sqlContext.sql(
       """
@@ -59,13 +56,14 @@ class ParquetReader(implicit sc: SparkContext) {
         |WHERE CompanyNumber IS NOT NULL""".stripMargin)
 
     extracted.map { row =>
+      val companyNoStr = if (row.isNullAt(0)) "" else row.getString(0)
       val companyNo = if (row.isNullAt(0)) None else Some(row.getString(0))
       val companyName = if (row.isNullAt(1)) None else Some(row.getString(1))
       val companyStatus = if (row.isNullAt(2)) None else Some(row.getString(2))
       val sicCode1 = if (row.isNullAt(3)) None else Some(row.getString(3))
       val postcode = if (row.isNullAt(4)) None else Some(row.getString(4))
 
-      (companyNo.getOrElse(""), CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode))
+      (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode))
     }
 
   }
@@ -75,22 +73,21 @@ class ParquetReader(implicit sc: SparkContext) {
 
     val df = getDataFrameFromParquet(appConfig, LINKS)
 
-    // Nested data structure where only UBRN is mandatory
+    // NB: This is a nested data structure where CH/PAYE/VAT are lists, and only UBRN is mandatory
     df.select(
       $"UBRN",
       $"CH",
       $"VAT",
       $"PAYE"
-    )//.limit(1000)
-      .map { row =>
-        val ubrn = row.getString(0)
-        // CH is currently provided as an array but we only want the first entry (if any)
-        val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
-        val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Some(row.getSeq[String](2))
-        val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Some(row.getSeq[String](3))
+    ).map { row =>
+      val ubrn = row.getString(0)
+      // CH is currently provided as an array but we only want the first entry (if any)
+      val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
+      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Some(row.getSeq[String](2))
+      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Some(row.getSeq[String](3))
 
-        LinkRec(ubrn, ch, vat, paye)
-      }
+      LinkRec(ubrn, ch, vat, paye)
+    }
 
   }
 
@@ -143,14 +140,14 @@ class ParquetReader(implicit sc: SparkContext) {
   }
 
 
+
   def loadVatRecsFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
-    // Yields (VAT Ref, VAT record)
+    // Yields RDD of (VAT Ref, VAT record)
 
     val df = getDataFrameFromParquet(appConfig, VAT)
 
-    // Only interested in a subset of columns
-    // Using SQL for more flexibility with conflicting datatypes in sample/real data
+    // Only interested in a subset of columns. SQL is easier to maintain here.
     df.registerTempTable("temp_vat")
     val extracted = sqlContext.sql(
       """

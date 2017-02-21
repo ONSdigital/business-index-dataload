@@ -1,18 +1,13 @@
 package uk.gov.ons.bi.dataload.model
 
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.types._
-
 /**
   * Created by websc on 16/02/2017.
   */
-// Source types
-
-
-// Data elements:
+// Data elements:  most fields are optional because they may not be present in source files.
 
 case class LinkRec(ubrn: String, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
 
+// BusinessElement trait allows us to mix different data records in Ubrn... classes below
 sealed trait BusinessElement
 
 case class CompanyRec(companyNo: Option[String], companyName: Option[String],
@@ -22,14 +17,12 @@ case class CompanyRec(companyNo: Option[String], companyName: Option[String],
 case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Option[String],
                   sic92: Option[Int], legalStatus: Option[Int], turnover: Option[Long]) extends BusinessElement
 
-case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postCode: Option[String],
+case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String])
   extends BusinessElement
 
-
-
-// Construct these:
+// These are intermediate structures that we use during the main Spark "link-and-join" processing.
 
 case class Business(ubrn: String, company: Option[CompanyRec],
                     vat: Option[Seq[VatRec]], paye: Option[Seq[PayeRec]])

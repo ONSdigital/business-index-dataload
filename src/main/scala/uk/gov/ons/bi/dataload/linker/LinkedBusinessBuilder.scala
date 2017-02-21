@@ -17,7 +17,8 @@ import scala.util.{Success, Try}
   * Created by websc on 16/02/2017.
   */
 object LinkedBusinessBuilder {
-
+  // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
+  // errors when there is a lot of nested RDD processing around here. Might be better in Spark 2.x?
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
     // Convert the Link into a list of UBRNs with business data keys
     val company = ln.ch match {
@@ -113,79 +114,111 @@ object LinkedBusinessBuilder {
 
     val businessRecords = uwls.map(buildBusinessRecord)
 
-
     // Next we convert Business records to Business Index entries
-    //
+
     def getCompanyName(br: Business): Option[String] = {
-      (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => co.companyName
-        case (_, Some(vats: Seq[VatRec]), _) =>
-          vats.headOption match {
-            case Some(r: VatRec) => r.nameLine1
-            case _ => None
-          }
-        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match {
-          case Some(r: PayeRec) => r.nameLine1
-          case _ => None
-        }
-        case _ => None
+      // Extract potential values from CH/VAT/PAYE records
+      // Take first VAT/PAYE record (if any)
+      val co: Option[String] = br.company.flatMap {
+        _.companyName
       }
+      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+        _.nameLine1
+      }
+      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+        _.nameLine1
+      }
+      // list in order of preference
+      val candidates = Seq(co, vat, paye)
+      // Take first non-empty name value from list
+      candidates.foldLeft[Option[String]](None)(_ orElse _)
     }
 
     def getPostcode(br: Business): Option[String] = {
-      (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => co.postcode
-        case (_, Some(vats: Seq[VatRec]), _) => vats.headOption match {
-          case Some(r: VatRec) => r.postcode
-          case _ => None
-        }
-        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match {
-          case Some(r: PayeRec) => r.postCode
-          case _ => None
-        }
-        case _ => None
+      // Extract potential values from CH/VAT/PAYE records
+      // Take first VAT/PAYE record (if any)
+      val co: Option[String] = br.company.flatMap {
+        _.postcode
       }
+      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+        _.postcode
+      }
+      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+        _.postcode
+      }
+
+      // list in order of preference
+      val candidates = Seq(co, vat, paye)
+      // Take first non-empty name value from list
+      candidates.foldLeft[Option[String]](None)(_ orElse _)
     }
 
     def getIndustryCode(br: Business): Option[String] = {
-      (br.company, br.vat) match {
-        case (Some(co: CompanyRec), _) => co.sicCode1
-        case (_, Some(vats: Seq[VatRec])) => vats.headOption match{
-          case Some(r: VatRec) => r.sic92.map(_.toString)
-          case _ => None
-        }
-        case _ => None
+
+      // Extract potential values from CH/VAT records
+      // Take first VATrecord (if any)
+      val co: Option[String] = br.company.flatMap {
+        _.sicCode1
       }
+      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+        _.sic92.map(_.toString)
+      }
+
+      // list in order of preference
+      val candidates = Seq(co, vat)
+      // Take first non-empty name value from list
+      candidates.foldLeft[Option[String]](None)(_ orElse _)
     }
 
     def getLegalStatus(br: Business): Option[String] = {
-      (br.company, br.vat, br.paye) match {
-        case (Some(co: CompanyRec), _, _) => co.companyStatus
-        case (_, Some(vats: Seq[VatRec]), _) => vats.headOption match{
-          case Some(r: VatRec) => r.legalStatus.map(_.toString)
-          case _ => None
-        }
-        case (_, _, Some(payes: Seq[PayeRec])) => payes.headOption match{
-          case Some(r: PayeRec) => r.legalStatus.map(_.toString)
-          case _ => None
-        }
-        case _ => None
+      // Extract potential values from CH/VAT/PAYE records
+      // Take first VAT/PAYE record (if any)
+      val co: Option[String] = br.company.flatMap {
+        _.companyStatus
       }
+      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+        _.legalStatus.map(_.toString)
+      }
+      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+        _.legalStatus.map(_.toString)
+      }
+
+      // list in order of preference
+      val candidates = Seq(co, vat, paye)
+      // Take first non-empty name value from list
+      candidates.foldLeft[Option[String]](None)(_ orElse _)
     }
 
     def getVatTurnover(br: Business): Option[Long] = {
-      // not clear what rule is for deriving this
-      br.vat.map { (vats: Seq[VatRec]) =>
-        vats.map(v => v.turnover.getOrElse(0L)).sum
+      // not clear what rule is for deriving this. just take 1st one for now.
+      br.vat.flatMap { vs => vs.headOption }.flatMap {
+        _.turnover
       }
     }
 
+    def bodgeToMMMYY(strOpt: Option[String]) = {
+      // Some PAYE "month" strings are 4 char, not 3 e.g. "Sept98"
+      // This function bodges them to 3 chars for consistency e.g. "Sep98".
+      strOpt.map { s =>
+        val (mon, yr) = s.partition(!_.isDigit)
+        val mmm = mon.substring(0,3)
+        (mmm + yr)
+      }
+
+    }
 
     def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
-
+      // Some PAYE month strings are 4 chars, not 3 e.g. "Sept98".
+      // This bit bodges them to 3 chars for consistency e.g. "Sep98".
+      val mmmYy = str.map { s =>
+        val (mon, yr) = s.partition(!_.isDigit)
+        val mmm = mon.substring(0,3)
+        (mmm + yr)
+      }
+      // Now convert the string to a MMMyy date (if possible)
       val fmt = DateTimeFormat.forPattern("MMMyy")
       // unpack the Option
-      str.getOrElse("") match {
+      mmmYy.getOrElse("") match {
         case "" => None
         case s: String => Try {
           DateTime.parse(s, fmt)
@@ -198,7 +231,7 @@ object LinkedBusinessBuilder {
 
     def getLatestJobsForPayeRec(rec: PayeRec) = {
 
-      // Convert josbLastUpd string to date
+      // Convert jobsLastUpd string to date
       val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
 
       // Use this to get corresponding jobd value from record
@@ -215,7 +248,7 @@ object LinkedBusinessBuilder {
     }
 
     def getNumEmployees(br: Business): Option[Double] = {
-      // not clear what rule is for deriving this
+      // not clear what rule is for deriving this.
       val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
       val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
       // Allow for empty sequence
@@ -252,10 +285,7 @@ object LinkedBusinessBuilder {
 
     uwks.unpersist()
 
-    sc.parallelize(Seq(s"businessIndexes contains ${businessIndexes.count} grouped records.")).saveAsTextFile("./DUMMY")
-
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame
-
 
     val biSchema = StructType(Seq(
       StructField("ubrn", StringType, true),
@@ -276,7 +306,7 @@ object LinkedBusinessBuilder {
     val biDf: DataFrame = sqlContext.createDataFrame(biRows, biSchema)
 
 
-    // **** TEMPORARY:  Write BI data to Parquet file
+    // Write BI data to Parquet file. We will load it into ElasticSearch separately.
 
     val parquetDataConfig = appConfig.ParquetDataConfig
     val parquetPath = parquetDataConfig.dir

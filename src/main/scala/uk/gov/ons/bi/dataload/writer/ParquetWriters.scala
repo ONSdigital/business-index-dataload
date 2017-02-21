@@ -66,7 +66,7 @@ class ParquetWriter (implicit sc: SparkContext) {
     ))
 
     def dfRowMapper(rec: PayeRec): Row = {
-      Row(rec.payeRef, rec.nameLine1, rec.postCode, rec.legalStatus,
+      Row(rec.payeRef, rec.nameLine1, rec.postcode, rec.legalStatus,
         rec.decJobs, rec.marJobs, rec.junJobs, rec.sepJobs, rec.jobsLastUpd)
     }
 
