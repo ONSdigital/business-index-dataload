@@ -17,8 +17,8 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
 
   spark-submit --class uk.gov.ons.bi.dataload.SourceDataToParquetApp
   --master local[*]
-  --driver-memory 2G --executor-memory 3G
-  --driver-java-options "-Xms1g -Xmx4g"
+  --driver-memory 2G --executor-memory 4G --num-executors 8
+  --driver-java-options "-Xms1g -Xmx5g"
   --jars ./lib/spark-csv_2.10-1.5.0.jar,./lib/univocity-parsers-1.5.1.jar,./lib/commons-csv-1.1.jar
   target/scala-2.10/business-index-dataload_2.10-1.0.jar
 
@@ -40,16 +40,15 @@ object SourceDataToParquetApp {
 
 
 object LinkDataApp {
-
   // Trying to use implicit voodoo to make SC available
-  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data to Business Index"))
+  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
 
   def main(args: Array[String]) {
 
     val appConfig = new AppConfig
-
+    // Use an object because defining builder as a class causes weird Spark errors here
     val linkedBusinessBuilder = LinkedBusinessBuilder
-
+    // pass SC explicitly to builder object
     linkedBusinessBuilder.buildLinkedBusinessIndexRecords(sc, appConfig)
   }
 }
