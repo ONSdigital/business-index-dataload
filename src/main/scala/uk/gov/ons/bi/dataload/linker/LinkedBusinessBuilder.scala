@@ -39,6 +39,170 @@ object LinkedBusinessBuilder {
     company ++ vat ++ paye
   }
 
+  // Now convert the grouped UWLs into Business records
+
+  def buildBusinessRecord(uwl: UbrnWithList) = {
+    val ubrn = uwl.ubrn
+    // Should only be ONE company
+    val company: Option[CompanyRec] = uwl.data.filter { r => r.src == CH }
+      .map { case UbrnWithData(u, CH, data: CompanyRec) => data }.headOption
+
+    val vats: Option[Seq[VatRec]] = Some(uwl.data.filter { r => r.src == VAT }
+      .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+
+    val payes: Option[Seq[PayeRec]] = Some(uwl.data.filter { r => r.src == PAYE }
+      .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
+
+    Business(ubrn, company, vats, payes)
+  }
+
+
+  def getCompanyName(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+    val co: Option[String] = br.company.flatMap {
+      _.companyName
+    }
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.nameLine1
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.nameLine1
+    }
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
+  def getPostcode(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
+  def getIndustryCode(br: Business): Option[String] = {
+
+    // Extract potential values from CH/VAT records
+    // Take first VATrecord (if any)
+    val co: Option[String] = br.company.flatMap {
+      _.sicCode1
+    }
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.sic92.map(_.toString)
+    }
+
+    // list in order of preference
+    val candidates = Seq(co, vat)
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
+  def getLegalStatus(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+    val co: Option[String] = br.company.flatMap {
+      _.companyStatus
+    }
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.legalStatus.map(_.toString)
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.legalStatus.map(_.toString)
+    }
+
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
+  def getVatTurnover(br: Business): Option[Long] = {
+    // not clear what rule is for deriving this. just take 1st one for now.
+    br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.turnover
+    }
+  }
+
+  def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
+    // Now convert the string to a MMMyy date (if possible)
+    val fmt = DateTimeFormat.forPattern("MMMyy")
+    // unpack the Option
+    str.getOrElse("") match {
+      case "" => None
+      case s: String => Try {
+        DateTime.parse(s, fmt)
+      } match {
+        case Success(d: DateTime) => Some(d)
+        case _ => None
+      }
+    }
+  }
+
+  def getLatestJobsForPayeRec(rec: PayeRec): (Option[DateTime], Option[Double]) = {
+
+    // Convert jobsLastUpd string to date if possible
+    val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
+
+    // Use this to get corresponding jobs value from record
+    val jobs: Option[Double] = upd.flatMap { d =>
+      d.getMonthOfYear match {
+        case 3 => rec.marJobs
+        case 6 => rec.junJobs
+        case 9 => rec.sepJobs
+        case 12 => rec.decJobs
+        case _ => None
+      }
+    }
+    (upd, jobs)
+  }
+
+  def getNumEmployees(br: Business): Option[Double] = {
+    // not clear what rule is for deriving this.
+    val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
+    val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
+    // Allow for empty sequence, get num emps for most recent date
+    jobUpdates.sorted.reverse match {
+      case Nil => None
+      case xs => xs.head._2
+    }
+  }
+
+
+  def convertToBusinessIndex(br: Business): BusinessIndex = {
+
+    val companyName: Option[String] = getCompanyName(br)
+    val postcode: Option[String] = getPostcode(br)
+    val industryCode: Option[String] = getIndustryCode(br)
+
+    // status needs to be string because CompanyStatus is a string in source data
+    val legalStatus: Option[String] = getLegalStatus(br)
+
+    // not clear what rule is for deriving this:
+    val totalTurnover: Option[Long] = getVatTurnover(br)
+
+    // Not clear how we calculate employees
+    val numEmps: Option[Double] = getNumEmployees(br)
+
+    // Build a BI record that we can later upload to ElasticSource
+    BusinessIndex(br.ubrn, companyName, postcode, industryCode,
+      legalStatus, totalTurnover, numEmps)
+  }
+
+
   def buildLinkedBusinessIndexRecords(implicit sc: SparkContext, appConfig: AppConfig) = {
 
     val sqlContext = new SQLContext(sc)
@@ -64,7 +228,6 @@ object LinkedBusinessBuilder {
 
     // Cache this data as we will be doing different things to it
     uwks.cache()
-
 
     // Join Links to corresponding company/VAT/PAYE data
 
@@ -93,170 +256,10 @@ object LinkedBusinessBuilder {
     val grouped: RDD[(String, Iterable[UbrnWithData])] = combined.map { r => (r.ubrn, r) }.groupByKey()
     val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
 
-    // Now convert the grouped UWLs into Business records
-
-    def buildBusinessRecord(uwl: UbrnWithList) = {
-      val ubrn = uwl.ubrn
-      // Should only be ONE company
-      val company: Option[CompanyRec] = uwl.data.filter { r => r.src == CH }
-        .map { case UbrnWithData(u, CH, data: CompanyRec) => data }.headOption
-
-      val vats: Option[Seq[VatRec]] = Some(uwl.data.filter { r => r.src == VAT }
-        .map { case UbrnWithData(u, VAT, data: VatRec) => data })
-
-      val payes: Option[Seq[PayeRec]] = Some(uwl.data.filter { r => r.src == PAYE }
-        .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
-
-      Business(ubrn, company, vats, payes)
-    }
 
     val businessRecords = uwls.map(buildBusinessRecord)
 
     // Now we can convert Business records to Business Index entries
-
-    def getCompanyName(br: Business): Option[String] = {
-      // Extract potential values from CH/VAT/PAYE records
-      // Take first VAT/PAYE record (if any)
-      val co: Option[String] = br.company.flatMap {
-        _.companyName
-      }
-      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
-        _.nameLine1
-      }
-      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
-        _.nameLine1
-      }
-      // list in order of preference
-      val candidates = Seq(co, vat, paye)
-      // Take first non-empty name value from list
-      candidates.foldLeft[Option[String]](None)(_ orElse _)
-    }
-
-    def getPostcode(br: Business): Option[String] = {
-      // Extract potential values from CH/VAT/PAYE records
-      // Take first VAT/PAYE record (if any)
-      val co: Option[String] = br.company.flatMap {
-        _.postcode
-      }
-      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
-        _.postcode
-      }
-      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
-        _.postcode
-      }
-
-      // list in order of preference
-      val candidates = Seq(co, vat, paye)
-      // Take first non-empty name value from list
-      candidates.foldLeft[Option[String]](None)(_ orElse _)
-    }
-
-    def getIndustryCode(br: Business): Option[String] = {
-
-      // Extract potential values from CH/VAT records
-      // Take first VATrecord (if any)
-      val co: Option[String] = br.company.flatMap {
-        _.sicCode1
-      }
-      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
-        _.sic92.map(_.toString)
-      }
-
-      // list in order of preference
-      val candidates = Seq(co, vat)
-      // Take first non-empty name value from list
-      candidates.foldLeft[Option[String]](None)(_ orElse _)
-    }
-
-    def getLegalStatus(br: Business): Option[String] = {
-      // Extract potential values from CH/VAT/PAYE records
-      // Take first VAT/PAYE record (if any)
-      val co: Option[String] = br.company.flatMap {
-        _.companyStatus
-      }
-      val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
-        _.legalStatus.map(_.toString)
-      }
-      val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
-        _.legalStatus.map(_.toString)
-      }
-
-      // list in order of preference
-      val candidates = Seq(co, vat, paye)
-      // Take first non-empty name value from list
-      candidates.foldLeft[Option[String]](None)(_ orElse _)
-    }
-
-    def getVatTurnover(br: Business): Option[Long] = {
-      // not clear what rule is for deriving this. just take 1st one for now.
-      br.vat.flatMap { vs => vs.headOption }.flatMap {
-        _.turnover
-      }
-    }
-
-    def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
-       // Now convert the string to a MMMyy date (if possible)
-      val fmt = DateTimeFormat.forPattern("MMMyy")
-      // unpack the Option
-      str.getOrElse("") match {
-        case "" => None
-        case s: String => Try {
-          DateTime.parse(s, fmt)
-        } match {
-          case Success(d: DateTime) => Some(d)
-          case _ => None
-        }
-      }
-    }
-
-    def getLatestJobsForPayeRec(rec: PayeRec): (Option[DateTime], Option[Double]) = {
-
-      // Convert jobsLastUpd string to date if possible
-      val upd: Option[DateTime] = getLastUpdOpt(rec.jobsLastUpd)
-
-      // Use this to get corresponding jobs value from record
-      val jobs: Option[Double] = upd.flatMap { d =>
-        d.getMonthOfYear match {
-          case 3 => rec.marJobs
-          case 6 => rec.junJobs
-          case 9 => rec.sepJobs
-          case 12 => rec.decJobs
-          case _ => None
-        }
-      }
-      (upd, jobs)
-    }
-
-    def getNumEmployees(br: Business): Option[Double] = {
-      // not clear what rule is for deriving this.
-      val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
-      val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
-      // Allow for empty sequence, get num emps for most recent date
-      jobUpdates.sorted.reverse match {
-        case Nil => None
-        case xs => xs.head._2
-      }
-    }
-
-    def convertToBusinessIndex(br: Business): BusinessIndex = {
-
-      val companyName: Option[String] = getCompanyName(br)
-      val postcode: Option[String] = getPostcode(br)
-      val industryCode: Option[String] = getIndustryCode(br)
-
-      // status needs to be string because CompanyStatus is a string in source data
-      val legalStatus: Option[String] = getLegalStatus(br)
-
-      // not clear what rule is for deriving this:
-      val totalTurnover: Option[Long] = getVatTurnover(br)
-
-      // Not clear how we calculate employees
-      val numEmps: Option[Double] = getNumEmployees(br)
-
-      // Build a BI record that we can later upload to ElasticSource
-      BusinessIndex(br.ubrn, companyName, postcode, industryCode,
-        legalStatus, totalTurnover, numEmps)
-    }
 
     val businessIndexes = businessRecords.map(convertToBusinessIndex)
 
