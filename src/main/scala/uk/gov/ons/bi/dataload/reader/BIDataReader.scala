@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
   * Created by websc on 10/02/2017.
   */
 
-abstract class BIDataReader(implicit val sc: SparkContext) {
+abstract class BIDataReader(sc: SparkContext) {
 
   val sqlContext = new SQLContext(sc)
 

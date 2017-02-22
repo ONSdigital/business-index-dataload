@@ -9,8 +9,8 @@ import org.apache.spark.sql.DataFrame
   */
 
 
-abstract class CsvReader(implicit sc: SparkContext)
-  extends BIDataReader {
+abstract class CsvReader(sc: SparkContext)
+  extends BIDataReader(sc: SparkContext) {
 
   def fixSchema(df: DataFrame): DataFrame = {
 
@@ -45,8 +45,8 @@ abstract class CsvReader(implicit sc: SparkContext)
 }
 
 @Singleton
-class CompaniesHouseCsvReader(implicit sc: SparkContext)
-  extends CsvReader {
+class CompaniesHouseCsvReader(sc: SparkContext)
+  extends CsvReader(sc: SparkContext) {
 
   val rawTable = "raw_companies"
 
@@ -65,8 +65,8 @@ class CompaniesHouseCsvReader(implicit sc: SparkContext)
 }
 
 @Singleton
-class PayeCsvReader(implicit sc: SparkContext)
-  extends CsvReader {
+class PayeCsvReader(sc: SparkContext)
+  extends CsvReader(sc: SparkContext) {
 
   val rawTable = "raw_paye"
 
@@ -86,8 +86,8 @@ class PayeCsvReader(implicit sc: SparkContext)
 }
 
 @Singleton
-class VatCsvReader(implicit sc: SparkContext)
-  extends CsvReader {
+class VatCsvReader(sc: SparkContext)
+  extends CsvReader(sc: SparkContext) {
 
   val rawTable = "raw_vat"
 

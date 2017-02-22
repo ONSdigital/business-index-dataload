@@ -15,14 +15,16 @@ lazy val Versions = new {
   val jodaConvert = "1.8.1"
   val json4s = "3.5.0"
   val nscala = "2.16.0"
+  val es = "2.4.4"
 }
 
-libraryDependencies++= Seq(
+libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % Versions.spark % "provided",
   "org.apache.spark" %% "spark-sql" % Versions.spark % "provided",
-  "joda-time" %  "joda-time" % Versions.joda,
+  "joda-time" % "joda-time" % Versions.joda,
   "org.json4s" %% "json4s-native" % Versions.json4s,
-  "com.github.nscala-time" %% "nscala-time" % Versions.nscala
+  "com.github.nscala-time" %% "nscala-time" % Versions.nscala,
+  "org.elasticsearch" %% "elasticsearch-spark" % Versions.es
 )
 
 

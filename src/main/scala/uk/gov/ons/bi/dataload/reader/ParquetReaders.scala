@@ -11,7 +11,7 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(implicit sc: SparkContext) {
+class ParquetReader(sc: SparkContext) {
 
   val sqlContext = new SQLContext(sc)
 
@@ -174,5 +174,18 @@ class ParquetReader(implicit sc: SparkContext) {
       }
       (vatRefStr, rec)
     }
+  }
+
+  def getBIEntriesFromParquet(appConfig: AppConfig): DataFrame = {
+    // Read Parquet data via SparkSQL
+
+    // Get data directories
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val parquetData = parquetDataConfig.bi
+
+    val dataFile = s"$parquetPath/$parquetData"
+
+    sqlContext.read.parquet(dataFile)
   }
 }

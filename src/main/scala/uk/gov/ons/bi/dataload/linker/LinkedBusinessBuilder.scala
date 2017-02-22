@@ -8,7 +8,7 @@ import org.apache.spark.sql.types._
 import org.joda.time.DateTime
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.ParquetReader
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, BandMappings}
 
 import scala.util.{Success, Try}
 
@@ -19,7 +19,6 @@ import scala.util.{Success, Try}
 object LinkedBusinessBuilder {
   // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
   // errors when there is a lot of nested RDD processing around here. Might be better in Spark 2.x?
-
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
     // Convert the Link into a list of UBRNs with business data keys
@@ -111,12 +110,16 @@ object LinkedBusinessBuilder {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getLegalStatus(br: Business): Option[String] = {
-    // Extract potential values from CH/VAT/PAYE records
-    // Take first VAT/PAYE record (if any)
-    val co: Option[String] = br.company.flatMap {
+  def getTradingStatus(br: Business): Option[String] = {
+    // Extract potential values from CH
+    br.company.flatMap {
       _.companyStatus
     }
+  }
+
+  def getLegalStatus(br: Business): Option[String] = {
+    // Extract potential values from VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
     val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.legalStatus.map(_.toString)
     }
@@ -125,7 +128,7 @@ object LinkedBusinessBuilder {
     }
 
     // list in order of preference
-    val candidates = Seq(co, vat, paye)
+    val candidates = Seq(vat, paye)
     // Take first non-empty name value from list
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
@@ -170,45 +173,98 @@ object LinkedBusinessBuilder {
     (upd, jobs)
   }
 
-  def getNumEmployees(br: Business): Option[Double] = {
+  def getNumEmployees(br: Business): Option[Int] = {
     // not clear what rule is for deriving this.
     val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
     val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
     // Allow for empty sequence, get num emps for most recent date
-    jobUpdates.sorted.reverse match {
+    val ju: Option[Double] = jobUpdates.sorted.reverse match {
       case Nil => None
       case xs => xs.head._2
     }
+    // BI mapping expects an integer
+    ju.map(_.toInt)
   }
 
+  def convertNumEmpsToBand(numEmps: Option[Double]) = {
+
+  }
 
   def convertToBusinessIndex(br: Business): BusinessIndex = {
 
-    val companyName: Option[String] = getCompanyName(br)
+    val businessName: Option[String] = getCompanyName(br)
     val postcode: Option[String] = getPostcode(br)
     val industryCode: Option[String] = getIndustryCode(br)
 
-    // status needs to be string because CompanyStatus is a string in source data
     val legalStatus: Option[String] = getLegalStatus(br)
 
-    // not clear what rule is for deriving this:
-    val totalTurnover: Option[Long] = getVatTurnover(br)
+    val tradingStatus: Option[String] = getTradingStatus(br)
+
+    // Not clear what rule is for deriving this:
+    val turnover: Option[Long] = getVatTurnover(br)
+
+    // Derive Turnover Band for BI
+    val turnoverBand: Option[String] = BandMappings.turnoverBand(turnover)
 
     // Not clear how we calculate employees
-    val numEmps: Option[Double] = getNumEmployees(br)
+    val numEmps: Option[Int] = getNumEmployees(br)
+
+    // Derive Employment Band for BI
+    val empBand: Option[String] = BandMappings.employmentBand(numEmps)
 
     // Build a BI record that we can later upload to ElasticSource
-    BusinessIndex(br.ubrn, companyName, postcode, industryCode,
-      legalStatus, totalTurnover, numEmps)
+    BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus, tradingStatus, turnoverBand, empBand)
   }
 
+  def writeBiRddToParquet(sc: SparkContext, appConfig: AppConfig, biRdd: RDD[BusinessIndex]) = {
+    // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame
 
-  def buildLinkedBusinessIndexRecords(implicit sc: SparkContext, appConfig: AppConfig) = {
+    val biSchema = StructType(Seq(
+      StructField("id", StringType, true), // not clear where this comes from.  use UBRN for now
+      StructField("businessName", StringType, true),
+      StructField("uprn", StringType, true), // spec says "UPRN", but we use UBRN
+      StructField("postCode", StringType, true),
+      StructField("industryCode", StringType, true),
+      StructField("legalStatus", StringType, true),
+      StructField("tradingStatus", StringType, true),
+      StructField("turnover", StringType, true),
+      StructField("employmentBand", StringType, true)
+    ))
 
-    val sqlContext = new SQLContext(sc)
+    // Use UBRN as ID and UPRN in index until we have better information
+    def biRowMapper(bi: BusinessIndex): Row = {
+      Row(bi.ubrn, bi.businessName, bi.ubrn, bi.postCode, bi.industryCode, bi.legalStatus, bi.tradingStatus,
+         bi.turnoverBand, bi.employmentBand)
+    }
+
+    val biRows: RDD[Row] = biRdd.map(biRowMapper)
+
+    val sqc = new SQLContext(sc)
+
+    val biDf: DataFrame = sqc.createDataFrame(biRows, biSchema)
+
+    // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
+
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val parquetBiFile = parquetDataConfig.bi
+    val biFile = s"$parquetPath/$parquetBiFile"
+
+    biDf.write.mode("overwrite").parquet(biFile)
+  }
+
+  def convertUwdsToBusinessRecords(uwds: RDD[UbrnWithData]): RDD[Business] = {
+    // Now we can group data for same UBRN back together
+    val grouped: RDD[(String, Iterable[UbrnWithData])] = uwds.map { r => (r.ubrn, r) }.groupByKey()
+    val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
+    // Convert each UBRN group to a Business record
+    uwls.map(buildBusinessRecord)
+  }
+
+  def buildLinkedBusinessIndexRecords(sc: SparkContext, appConfig: AppConfig) = {
 
     // Load Parquet source data and links
-    val pqReader = new ParquetReader
+    val pqReader = new ParquetReader(sc)
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
@@ -224,9 +280,9 @@ object LinkedBusinessBuilder {
     // flatMap(identity) then turns it from an RDD of Seqs of UbrnWithKey into an
     // RDD of UbrnWithKey, which is what we want.
 
-    val uwks = links.map { ln => explodeLink(ln) }.flatMap(identity)
+    val uwks: RDD[UbrnWithKey] = links.map { ln => explodeLink(ln) }.flatMap(identity)
 
-    // Cache this data as we will be doing different things to it
+    // Cache this data as we will be doing different things to it below
     uwks.cache()
 
     // Join Links to corresponding company/VAT/PAYE data
@@ -252,52 +308,18 @@ object LinkedBusinessBuilder {
     // Put the lists of UWDs  (UBRN, src, data) back together
     val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
 
-    // Now we can group data for same UBRN back together
-    val grouped: RDD[(String, Iterable[UbrnWithData])] = combined.map { r => (r.ubrn, r) }.groupByKey()
-    val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
-
-
-    val businessRecords = uwls.map(buildBusinessRecord)
+    // Now we can group data for same UBRN back together to make Business records
+    val businessRecords = convertUwdsToBusinessRecords(combined)
 
     // Now we can convert Business records to Business Index entries
 
     val businessIndexes = businessRecords.map(convertToBusinessIndex)
 
-    businessIndexes.cache()
+    // write BI data to parquet file
+    writeBiRddToParquet(sc, appConfig, businessIndexes)
 
+    // clear cached UWKs
     uwks.unpersist()
-
-    // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame
-
-    val biSchema = StructType(Seq(
-      StructField("ubrn", StringType, true),
-      StructField("companyName", StringType, true),
-      StructField("postcode", StringType, true),
-      StructField("industryCode", StringType, true),
-      StructField("legalStatus", StringType, true),
-      StructField("totalTurnover", LongType, true),
-      StructField("totalNumEmployees", DoubleType, true)
-    ))
-
-    def biRowMapper(bi: BusinessIndex): Row = {
-      Row(bi.ubrn, bi.companyName, bi.postcode, bi.industryCode, bi.legalStatus, bi.totalTurnover, bi.totalNumEmps)
-    }
-
-    val biRows: RDD[Row] = businessIndexes.map(biRowMapper)
-
-    val biDf: DataFrame = sqlContext.createDataFrame(biRows, biSchema)
-
-    // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
-
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetBiFile = parquetDataConfig.bi
-    val biFile = s"$parquetPath/$parquetBiFile"
-
-    biDf.write.mode("overwrite").parquet(biFile)
-
-    businessIndexes.unpersist()
-
   }
 
 }

@@ -35,7 +35,7 @@ case class UbrnWithData(ubrn: String, src: BIDataSource, data: BusinessElement)
 
 case class UbrnWithList(ubrn: String, data: Seq[UbrnWithData])
 
-case class BusinessIndex(ubrn: String, companyName: Option[String], postcode: Option[String],
-                         industryCode: Option[String], legalStatus: Option[String],
-                         totalTurnover: Option[Long], totalNumEmps: Option[Double])
+case class BusinessIndex(ubrn: String, businessName: Option[String], postCode: Option[String],
+                         industryCode: Option[String], legalStatus: Option[String], tradingStatus: Option[String],
+                         turnoverBand: Option[String], employmentBand: Option[String])
 

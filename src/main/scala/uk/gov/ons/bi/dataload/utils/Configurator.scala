@@ -7,15 +7,15 @@ import com.typesafe.config.{Config, ConfigFactory}
 /**
   * Created by websc on 03/02/2017.
   */
-class AppConfig  {
+class AppConfig {
 
   private val config: Config = ConfigFactory.load()
 
   private lazy val root = config.getConfig("dataload")
 
   def configPropertyNameAsEnv(name: String): String = {
-    // Assumes env variable for my-app.es-config.host would be
-    // MY_APP_ES_CONFIG_HOST:
+    // Assumes property called dataload.es.index would correspond to
+    // an environment variable such as DATALOAD_ES_INDEX, for example.
     name.toUpperCase.replaceAll("""\.""", "_").replaceAll("""-""", "_")
   }
 
@@ -74,14 +74,30 @@ class AppConfig  {
 
     // allows us to pass sub-configs around separately
 
-    private val esConfig = root.getConfig("es-config")
+    private val esConfig = root.getConfig("es")
 
-    lazy val host = envOrElseConfigStr("host", esConfig)
+    lazy val nodes = envOrElseConfigStr("nodes", esConfig)
 
     lazy val port = envOrElseConfigStr("port", esConfig).toInt
 
-    lazy val reps = envOrElseConfigStr("reps", esConfig).toInt
+    lazy val esUser = envOrElseConfigStr("es-user", esConfig)
+
+    lazy val esPass = envOrElseConfigStr("es-pass", esConfig)
+
+    lazy val index = envOrElseConfigStr("index", esConfig)
+
+    override def toString: String = {
+        s"""[
+          | nodes = $nodes,
+          | port = $port,
+          | user = $esUser,
+          | pass = $esPass,
+          | index = $index
+          | ]
+        """.stripMargin
+    }
   }
+
 }
 
 

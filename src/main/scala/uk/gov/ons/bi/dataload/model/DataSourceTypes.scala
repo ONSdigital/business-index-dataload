@@ -5,11 +5,10 @@ package uk.gov.ons.bi.dataload.model
   */
 sealed trait BIDataSource
 
-  case object CH extends BIDataSource {override val toString = "CH"}
+  case object CH extends BIDataSource
 
-  case object VAT extends BIDataSource {override val toString = "VAT"}
+  case object VAT extends BIDataSource
 
-  case object PAYE extends BIDataSource {override val toString = "PAYE"}
+  case object PAYE extends BIDataSource
 
-  case object LINKS extends BIDataSource {override val toString = "LINKS"}
-
+  case object LINKS extends BIDataSource

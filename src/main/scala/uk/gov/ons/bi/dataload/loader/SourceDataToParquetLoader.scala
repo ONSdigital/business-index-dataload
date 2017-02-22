@@ -11,7 +11,7 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
   */
 
 @Singleton
-class SourceDataToParquetLoader (implicit val sc: SparkContext){
+class SourceDataToParquetLoader (val sc: SparkContext){
 
     def loadDataToParquet(biSource: BIDataSource, appConfig: AppConfig) = {
 
@@ -34,10 +34,10 @@ class SourceDataToParquetLoader (implicit val sc: SparkContext){
 
       // Get corresponding reader based on BIDataSource
       val reader: BIDataReader = biSource match {
-        case VAT => new VatCsvReader
-        case CH => new CompaniesHouseCsvReader
-        case PAYE => new PayeCsvReader
-        case LINKS => new LinkJsonReader
+        case VAT => new VatCsvReader(sc)
+        case CH => new CompaniesHouseCsvReader(sc)
+        case PAYE => new PayeCsvReader(sc)
+        case LINKS => new LinkJsonReader(sc)
       }
 
       // Process the data

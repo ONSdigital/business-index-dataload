@@ -2,7 +2,7 @@ package uk.gov.ons.bi.dataload
 
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
-import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
+import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
 
@@ -25,14 +25,14 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
   */
   
 object SourceDataToParquetApp {
-  // Trying to use implicit voodoo to make SC available
-  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load raw data to Parquet"))
+
+  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load raw data to Parquet"))
 
   def main(args: Array[String]) {
 
     val appConfig = new AppConfig
 
-    val sourceDataLoader = new SourceDataToParquetLoader
+    val sourceDataLoader = new SourceDataToParquetLoader(sc)
 
     sourceDataLoader.loadSourceDataToParquet(appConfig)
   }
@@ -40,8 +40,8 @@ object SourceDataToParquetApp {
 
 
 object LinkDataApp {
-  // Trying to use implicit voodoo to make SC available
-  implicit val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
+
+  val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
 
   def main(args: Array[String]) {
 
@@ -50,5 +50,19 @@ object LinkDataApp {
     val linkedBusinessBuilder = LinkedBusinessBuilder
     // pass SC explicitly to builder object
     linkedBusinessBuilder.buildLinkedBusinessIndexRecords(sc, appConfig)
+  }
+}
+
+object LoadBiToEsApp {
+
+  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load BI entries from Parquet to ElasticSearch"))
+
+  def main(args: Array[String]) {
+
+    val appConfig = new AppConfig
+
+    val loader = new BusinessIndexesParquetToESLoader(sc)
+
+    loader.loadBIEntriesToES(appConfig)
   }
 }
