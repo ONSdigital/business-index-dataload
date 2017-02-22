@@ -1,12 +1,14 @@
 package uk.gov.ons.bi.dataload.utils
 
-import scala.util.Properties
+import com.google.inject.Singleton
 
+import scala.util.Properties
 import com.typesafe.config.{Config, ConfigFactory}
 
 /**
   * Created by websc on 03/02/2017.
   */
+@Singleton
 class AppConfig {
 
   private val config: Config = ConfigFactory.load()
@@ -80,22 +82,40 @@ class AppConfig {
 
     lazy val port = envOrElseConfigStr("port", esConfig).toInt
 
+    lazy val cluster = envOrElseConfigStr("cluster", esConfig)
+
     lazy val esUser = envOrElseConfigStr("es-user", esConfig)
 
     lazy val esPass = envOrElseConfigStr("es-pass", esConfig)
 
     lazy val index = envOrElseConfigStr("index", esConfig)
 
+    lazy val autocreate = envOrElseConfigStr("autocreate", esConfig)
+
+    lazy val wanOnly = envOrElseConfigStr("wan-only", esConfig)
+
     override def toString: String = {
-        s"""[
-          | nodes = $nodes,
-          | port = $port,
-          | user = $esUser,
-          | pass = $esPass,
-          | index = $index
-          | ]
+      s"""[nodes = $nodes,
+         | port = $port,
+         | cluster = $cluster,
+         | user = $esUser,
+         | pass = $esPass,
+         | index = $index,
+         | autocreate = $autocreate,
+         | wanOnly = $wanOnly
+         | ]
         """.stripMargin
     }
+  }
+
+  object SparkConfigInfo {
+
+    private val sparkConfig = root.getConfig("spark")
+
+    lazy val appName = envOrElseConfigStr("app-name", sparkConfig)
+
+    lazy val serializer = envOrElseConfigStr("serializer", sparkConfig)
+
   }
 
 }

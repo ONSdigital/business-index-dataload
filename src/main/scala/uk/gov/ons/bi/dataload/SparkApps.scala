@@ -3,7 +3,7 @@ package uk.gov.ons.bi.dataload
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, SparkProvider}
 
 
 /**
@@ -26,7 +26,7 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
   
 object SourceDataToParquetApp {
 
-  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load raw data to Parquet"))
+  private val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load raw data to Parquet"))
 
   def main(args: Array[String]) {
 
@@ -41,7 +41,7 @@ object SourceDataToParquetApp {
 
 object LinkDataApp {
 
-  val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
+  private val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
 
   def main(args: Array[String]) {
 
@@ -55,14 +55,18 @@ object LinkDataApp {
 
 object LoadBiToEsApp {
 
-  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load BI entries from Parquet to ElasticSearch"))
+  /*
+  spark-submit
+  --class uk.gov.ons.bi.dataload.LoadBiToEsApp
+  --master local[*]
+  --driver-memory 2G
+  "-Xms1g -Xmx4g"
+  --jars ./lib/elasticsearch-spark_2.10-2.4.4.jar
+  target/scala-2.10/business-index-dataload_2.10-1.0.jar
+   */
 
   def main(args: Array[String]) {
 
-    val appConfig = new AppConfig
-
-    val loader = new BusinessIndexesParquetToESLoader(sc)
-
-    loader.loadBIEntriesToES(appConfig)
+    BusinessIndexesParquetToESLoader.loadBIEntriesToES
   }
 }

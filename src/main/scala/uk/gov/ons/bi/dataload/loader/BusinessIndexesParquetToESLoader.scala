@@ -3,21 +3,27 @@ package uk.gov.ons.bi.dataload.loader
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
 import uk.gov.ons.bi.dataload.reader.ParquetReader
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils._
+import org.elasticsearch.spark.sql._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+
+import org.elasticsearch.spark.sql._
+import org.elasticsearch.spark._
 
 /**
   * Created by websc on 22/02/2017.
   */
-@Singleton
-class BusinessIndexesParquetToESLoader(sc: SparkContext) {
+object BusinessIndexesParquetToESLoader {
 
-  def loadBIEntriesToES(appConfig: AppConfig) = {
+  def loadBIEntriesToES = {
 
-    // initialise ES voodoo?
+    // Using SparkProvider (taken from Address Indexes) because we have
+    // to configure ES interface on SparkConf directly at outset.
 
-    val esConfig = appConfig.ESConfig
+    val sc = SparkProvider.sc
 
-    println(esConfig)
+    val appConfig = SparkProvider.appConfig
 
     // check connection to ES ????
 
@@ -26,11 +32,11 @@ class BusinessIndexesParquetToESLoader(sc: SparkContext) {
 
     val pqReader = new ParquetReader(sc)
 
-    val BiDf = pqReader.getBIEntriesFromParquet(appConfig)
+    val biDf = pqReader.getBIEntriesFromParquet(appConfig)
+
+    println(s"BI index file contained ${biDf.count} records.")
 
     // write them to ES
-
-    BiDf.printSchema()
-
+    biDf.saveToEs("bi-dev/business")
   }
 }

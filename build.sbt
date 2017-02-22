@@ -24,7 +24,14 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % Versions.joda,
   "org.json4s" %% "json4s-native" % Versions.json4s,
   "com.github.nscala-time" %% "nscala-time" % Versions.nscala,
-  "org.elasticsearch" %% "elasticsearch-spark" % Versions.es
+  "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
 )
+
+resolvers ++= Seq(
+  // allows us to include spark packages
+  "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/",
+  "conjars" at "http://conjars.org/repo"
+)
+
 
 
