@@ -3,8 +3,15 @@
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-2.jpg)
 
-## Why? ##
+## What and why? ##
 
+* This step reads the Parquet files of source data i.e. Companies House, PAYE and VAT.
+* It also reads the Parquet file of Links.
+* It then joins the Links to the corresponding CH/PAYE/VAT data and builds the corresponding Business Index entry.
+* The Business Idnex entries are then written to a Parquet file.
+* This allows us to separate the initial raw data-load in Step 1 from the more complicated processing requried to join the different data-sets and extract the required information.
+* The BI entries are written to a Parquet file so we can explore the data if necessary using Python Spark notebooks e.g. for investigating errors or validating the generated data.
+* The BI entries will be uploaded to ElasticSearch in [step 3]().
 
 ## How? ##
 
@@ -13,7 +20,7 @@
 * All files are held in HDFS.
 * The locations are specified via various configuration properties.
 * See [step 1](./bi-dataload-ste-1.md) for default file locations.
-
+* The Parquet files are all stored in the specified Parquet working data directory.
 
 ### Data formats ###
 
@@ -53,7 +60,7 @@ Main class | uk.gov.ons.bi.dataload.LinkDataApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/user/webstc1/libs/nscala-time_2.10-2.16.0.jar --driver-java-options "-Xms1g -Xmx6g"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/nscala-time_2.10-2.16.0.jar --driver-java-options "-Xms1g -Xmx6g"
 
 
 
