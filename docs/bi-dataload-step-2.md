@@ -7,9 +7,9 @@
 
 * This step reads the Parquet files of source data i.e. Companies House, PAYE and VAT.
 * It also reads the Parquet file of Links.
-* It then joins the Links to the corresponding CH/PAYE/VAT data and builds the corresponding Business Index entry.
+* It joins the Links to the corresponding CH/PAYE/VAT data and builds the corresponding Business Index entry.
 * The Business Idnex entries are then written to a Parquet file.
-* This allows us to separate the initial raw data-load in Step 1 from the more complicated processing requried to join the different data-sets and extract the required information.
+* This allows us to separate the initial raw data-load in Step 1 from the more complicated processing needed to join the different data-sets and extract the required information.
 * The BI entries are written to a Parquet file so we can explore the data if necessary using Python Spark notebooks e.g. for investigating errors or validating the generated data.
 * The BI entries will be uploaded to ElasticSearch in [step 3]().
 
@@ -24,7 +24,7 @@
 
 ### Data formats ###
 
-* Parquet files hold their data schema, and store data in a compressed columnar format.
+* Parquet files hold their data schema and store data in an indexed and compressed columnar format.
 * This means Spark can select specific columns much more efficiently without having to load the entire data-set e.g. for joining the Links to CH/PAYE/VAT data.
 * The output Parquet file of Business Index entries contains only those fields that will be uploaded into ElasticSearch in Step 3.
  
@@ -46,7 +46,6 @@
 #### Oozie Task Definition ####
 
 * Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
-* Current implementation completes Step 2 in around 4 minutes on the Dev4 cluster.
 * This example specifies 8 Spark executors to ensure sufficient resources when performing the joins on large data-sets.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 

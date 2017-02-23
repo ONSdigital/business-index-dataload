@@ -26,7 +26,7 @@
 
 > `-Ddataload.es.index=bi-dev -Ddataload.es.nodes=127.0.0.1`
  
-* These values are sed by the ElasticSearch Spark API when writing to the ES index.
+* These values are used by the ElasticSearch Spark API when writing to the ES index.
 
 ### Oozie task specification ###
 
@@ -37,7 +37,6 @@
 #### Oozie Task Definition ####
 
 * Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
-* Current implementation completes Step 3 in around 6 minutes on the Dev4 cluster.
 * Performance may depend on ElasticSearch cluster resources which are outside the scope of this application.
 * This example specifies 8 Spark executors.
 * It may be possible to tweak the various Spark settings to use less memory etc, but this configuration seems to work OK with current data-sets.
