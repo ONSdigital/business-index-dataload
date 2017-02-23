@@ -1,15 +1,8 @@
 package uk.gov.ons.bi.dataload.loader
 
-import com.google.inject.Singleton
-import org.apache.spark.SparkContext
+import org.elasticsearch.spark.sql._
 import uk.gov.ons.bi.dataload.reader.ParquetReader
 import uk.gov.ons.bi.dataload.utils._
-import org.elasticsearch.spark.sql._
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-
-import org.elasticsearch.spark.sql._
-import org.elasticsearch.spark._
 
 /**
   * Created by websc on 22/02/2017.
@@ -25,10 +18,11 @@ object BusinessIndexesParquetToESLoader {
 
     val appConfig = SparkProvider.appConfig
 
-    // check connection to ES ????
+    val esConf = appConfig.ESConfig
 
+    val index = esConf.index
 
-    // read BI entries
+     // read BI entries
 
     val pqReader = new ParquetReader(sc)
 
@@ -36,7 +30,8 @@ object BusinessIndexesParquetToESLoader {
 
     println(s"BI index file contained ${biDf.count} records.")
 
-    // write them to ES
-    biDf.saveToEs("bi-dev/business")
+    // write Business Index entries to ES
+
+    biDf.saveToEs(s"$index/business")
   }
 }

@@ -3,7 +3,7 @@ package uk.gov.ons.bi.dataload
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.utils.{AppConfig, SparkProvider}
+import uk.gov.ons.bi.dataload.utils.{AppConfig}
 
 
 /**
@@ -56,13 +56,15 @@ object LinkDataApp {
 object LoadBiToEsApp {
 
   /*
-  spark-submit
-  --class uk.gov.ons.bi.dataload.LoadBiToEsApp
-  --master local[*]
-  --driver-memory 2G
-  "-Xms1g -Xmx4g"
+
+  Need to specify ES host node IP address and index name at runtime:
+
+  spark-submit --class uk.gov.ons.bi.dataload.LoadBiToEsApp
+  --driver-memory 2G --executor-memory 2G
+  --driver-java-options "-Xms1g -Xmx4g -Ddataload.es.index=chris-bi-dev -Ddataload.es.nodes=10.50.33.20"
   --jars ./lib/elasticsearch-spark_2.10-2.4.4.jar
   target/scala-2.10/business-index-dataload_2.10-1.0.jar
+
    */
 
   def main(args: Array[String]) {

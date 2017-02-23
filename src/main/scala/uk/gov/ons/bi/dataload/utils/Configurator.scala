@@ -11,6 +11,10 @@ import com.typesafe.config.{Config, ConfigFactory}
 @Singleton
 class AppConfig {
 
+  /*
+   * Allows us to manage configs via objects instead of raw strings.
+   */
+
   private val config: Config = ConfigFactory.load()
 
   private lazy val root = config.getConfig("dataload")
@@ -82,8 +86,6 @@ class AppConfig {
 
     lazy val port = envOrElseConfigStr("port", esConfig).toInt
 
-    lazy val cluster = envOrElseConfigStr("cluster", esConfig)
-
     lazy val esUser = envOrElseConfigStr("es-user", esConfig)
 
     lazy val esPass = envOrElseConfigStr("es-pass", esConfig)
@@ -97,7 +99,6 @@ class AppConfig {
     override def toString: String = {
       s"""[nodes = $nodes,
          | port = $port,
-         | cluster = $cluster,
          | user = $esUser,
          | pass = $esPass,
          | index = $index,
