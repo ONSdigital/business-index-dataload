@@ -93,7 +93,7 @@ class ParquetReader(sc: SparkContext) {
 
   def loadPayeRecsFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
-    // Yields (PAYE Ref, PAYE record)
+    // Yields RDD of (PAYE Ref, PAYE record)
 
     val df = getDataFrameFromParquet(appConfig, PAYE)
 
@@ -177,7 +177,7 @@ class ParquetReader(sc: SparkContext) {
   }
 
   def getBIEntriesFromParquet(appConfig: AppConfig): DataFrame = {
-    // Read Parquet data via SparkSQL
+    // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
     val parquetDataConfig = appConfig.ParquetDataConfig

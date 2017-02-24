@@ -2,7 +2,7 @@ name := """business-index-dataload"""
 
 version := "1.0"
 
-// Cloudera Spark 1.6.0 is still on Scala 2.10
+// Building with Scala 2.10 because Cloudera Spark 1.6.0 is still on Scala 2.10
 scalaVersion := "2.10.6"
 
 // Change this to another test framework if you prefer
@@ -28,7 +28,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= Seq(
-  // allows us to include spark packages
+  // allows us to include spark packages (not sure how well this works on Cloudera)
   "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/",
   "conjars" at "http://conjars.org/repo"
 )
