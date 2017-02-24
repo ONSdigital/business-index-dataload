@@ -18,7 +18,7 @@ abstract class CsvReader(sc: SparkContext)
     // This code removes any spaces or dots in the column names
     var newDf = df
     for (col <- df.columns) {
-      newDf = newDf.withColumnRenamed(col, col.replaceAll("\\s", "").replaceAllLiterally(".", ""))
+      newDf = newDf.withColumnRenamed(col, col.trim.replaceAll("\\s", "").replaceAllLiterally(".", ""))
     }
     newDf
   }

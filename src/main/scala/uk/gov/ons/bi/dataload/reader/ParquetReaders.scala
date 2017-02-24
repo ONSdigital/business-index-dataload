@@ -55,13 +55,14 @@ class ParquetReader(sc: SparkContext) {
         |FROM temp_comp
         |WHERE CompanyNumber IS NOT NULL""".stripMargin)
 
+    // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
       val companyNoStr = if (row.isNullAt(0)) "" else row.getString(0)
-      val companyNo = if (row.isNullAt(0)) None else Some(row.getString(0))
-      val companyName = if (row.isNullAt(1)) None else Some(row.getString(1))
-      val companyStatus = if (row.isNullAt(2)) None else Some(row.getString(2))
-      val sicCode1 = if (row.isNullAt(3)) None else Some(row.getString(3))
-      val postcode = if (row.isNullAt(4)) None else Some(row.getString(4))
+      val companyNo = if (row.isNullAt(0)) None else Option(row.getString(0))
+      val companyName = if (row.isNullAt(1)) None else Option(row.getString(1))
+      val companyStatus = if (row.isNullAt(2)) None else Option(row.getString(2))
+      val sicCode1 = if (row.isNullAt(3)) None else Option(row.getString(3))
+      val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
 
       (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode))
     }
@@ -83,8 +84,8 @@ class ParquetReader(sc: SparkContext) {
       val ubrn = row.getString(0)
       // CH is currently provided as an array but we only want the first entry (if any)
       val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
-      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Some(row.getSeq[String](2))
-      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Some(row.getSeq[String](3))
+      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
+      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
       LinkRec(ubrn, ch, vat, paye)
     }
@@ -115,22 +116,23 @@ class ParquetReader(sc: SparkContext) {
         |FROM temp_paye
         |WHERE payeref IS NOT NULL""".stripMargin)
 
+    // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
 
     extracted.map { row =>
       val payeRefStr = if (row.isNullAt(0)) "" else row.getString(0)
       // Can't re-factor this to a separate function as you get Task not serializable errors
       val rec = {
-        val payeRef = if (row.isNullAt(0)) None else Some(row.getString(0))
-        val nameLine1 = if (row.isNullAt(1)) None else Some(row.getString(1))
-        val postcode = if (row.isNullAt(2)) None else Some(row.getString(2))
-        val legalStatus = if (row.isNullAt(3)) None else Some(row.getInt(3))
+        val payeRef = if (row.isNullAt(0)) None else Option(row.getString(0))
+        val nameLine1 = if (row.isNullAt(1)) None else Option(row.getString(1))
+        val postcode = if (row.isNullAt(2)) None else Option(row.getString(2))
+        val legalStatus = if (row.isNullAt(3)) None else Option(row.getInt(3))
 
-        val decJobs = if (row.isNullAt(4)) None else Some(row.getDouble(4))
-        val marJobs = if (row.isNullAt(5)) None else Some(row.getDouble(5))
-        val junJobs = if (row.isNullAt(6)) None else Some(row.getDouble(6))
-        val sepJobs = if (row.isNullAt(7)) None else Some(row.getDouble(7))
+        val decJobs = if (row.isNullAt(4)) None else Option(row.getDouble(4))
+        val marJobs = if (row.isNullAt(5)) None else Option(row.getDouble(5))
+        val junJobs = if (row.isNullAt(6)) None else Option(row.getDouble(6))
+        val sepJobs = if (row.isNullAt(7)) None else Option(row.getDouble(7))
 
-        val jobsLastUpd = if (row.isNullAt(8)) None else Some(row.getString(8))
+        val jobsLastUpd = if (row.isNullAt(8)) None else Option(row.getString(8))
 
         PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd)
       }
@@ -159,16 +161,17 @@ class ParquetReader(sc: SparkContext) {
         |FROM temp_vat
         |WHERE vatref IS NOT NULL""".stripMargin)
 
+    // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
       val vatRefStr = if (row.isNullAt(0)) "" else row.getLong(0).toString
       // Can't re-factor this to a separate function as you get Task not serializable errors
       val rec = {
-        val vatRef = if (row.isNullAt(0)) None else Some(row.getLong(0))
-        val nameLine1 = if (row.isNullAt(1)) None else Some(row.getString(1))
-        val postcode = if (row.isNullAt(2)) None else Some(row.getString(2))
-        val sic92 = if (row.isNullAt(3)) None else Some(row.getInt(3))
-        val legalStatus = if (row.isNullAt(4)) None else Some(row.getInt(4))
-        val turnover = if (row.isNullAt(5)) None else Some(row.getLong(5))
+        val vatRef = if (row.isNullAt(0)) None else Option(row.getLong(0))
+        val nameLine1 = if (row.isNullAt(1)) None else Option(row.getString(1))
+        val postcode = if (row.isNullAt(2)) None else Option(row.getString(2))
+        val sic92 = if (row.isNullAt(3)) None else Option(row.getInt(3))
+        val legalStatus = if (row.isNullAt(4)) None else Option(row.getInt(4))
+        val turnover = if (row.isNullAt(5)) None else Option(row.getLong(5))
 
         VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover)
       }

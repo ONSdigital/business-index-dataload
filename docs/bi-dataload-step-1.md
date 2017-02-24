@@ -97,5 +97,10 @@ Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/spark-csv_2.10-1.5.0.jar,hdfs://dev4/user/appUser/libs/univocity-parsers-1.5.1.jar,hdfs://dev4/user/appUser/libs/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
 
+-----
 
+* [README](../README.md)
 
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).

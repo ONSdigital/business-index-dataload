@@ -1,5 +1,6 @@
 package uk.gov.ons.bi.dataload.loader
 
+import org.apache.spark.SparkContext
 import org.elasticsearch.spark.sql._
 import uk.gov.ons.bi.dataload.reader.ParquetReader
 import uk.gov.ons.bi.dataload.utils._
@@ -9,14 +10,7 @@ import uk.gov.ons.bi.dataload.utils._
   */
 object BusinessIndexesParquetToESLoader {
 
-  def loadBIEntriesToES = {
-
-    // Using SparkProvider (taken from Address Indexes) because we have
-    // to configure ES interface on SparkConf directly at outset.
-
-    val sc = SparkProvider.sc
-
-    val appConfig = SparkProvider.appConfig
+  def loadBIEntriesToES(sc: SparkContext, appConfig: AppConfig) = {
 
     val esConf = appConfig.ESConfig
 

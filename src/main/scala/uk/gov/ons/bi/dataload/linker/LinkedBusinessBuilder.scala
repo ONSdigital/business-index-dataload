@@ -1,14 +1,11 @@
 package uk.gov.ons.bi.dataload.linker
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.types._
-import org.joda.time.DateTime
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.ParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, Transformers}
-
-import scala.util.{Success, Try}
 
 
 /**

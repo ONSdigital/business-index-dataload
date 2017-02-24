@@ -1,9 +1,8 @@
 package uk.gov.ons.bi.dataload.utils
 
 
-import com.github.nscala_time.time.Imports._
-import com.github.nscala_time.time.Imports.DateTimeFormat
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model._
 
 import scala.util.{Success, Try}
@@ -153,8 +152,13 @@ object Transformers {
     // not clear what rule is for deriving this.
     val payes: Seq[PayeRec] = br.paye.getOrElse(Nil)
     val jobUpdates: Seq[(Option[DateTime], Option[Double])] = payes.map { p => getLatestJobsForPayeRec(p) }
-    // Allow for empty sequence, or multiple PAYE entries, get num emps for most recent date
-    val ju: Option[Double] = jobUpdates.sorted.reverse match {
+    // Allow for empty sequence, or multiple PAYE entries, get num emps for most recent date.
+    // - need to provide explicit sort order for tuple.
+    val ju: Option[Double] = jobUpdates.sortBy {
+      case (Some(dt: DateTime), _) => dt.getMillis
+      case _ => -1
+    }
+      .reverse match {
       case Nil => None
       case xs => xs.head._2
     }
@@ -168,9 +172,7 @@ object Transformers {
     val businessName: Option[String] = getCompanyName(br)
     val postcode: Option[String] = getPostcode(br)
     val industryCode: Option[String] = getIndustryCode(br)
-
     val legalStatus: Option[String] = getLegalStatus(br)
-
     val tradingStatus: Option[String] = getTradingStatus(br)
 
     // Not clear what rule is for deriving this:

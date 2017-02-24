@@ -53,8 +53,10 @@ Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Xms1g -Xmx4g -Ddataload.es.index=bi-dev -Ddataload.es.nodes=127.0.0.1"
 
----
+-----
 
+* [README](../README.md)
 
-
-
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).

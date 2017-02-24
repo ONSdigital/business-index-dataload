@@ -11,7 +11,7 @@
 * The Business Idnex entries are then written to a Parquet file.
 * This allows us to separate the initial raw data-load in Step 1 from the more complicated processing needed to join the different data-sets and extract the required information.
 * The BI entries are written to a Parquet file so we can explore the data if necessary using Python Spark notebooks e.g. for investigating errors or validating the generated data.
-* The BI entries will be uploaded to ElasticSearch in [step 3]().
+* The BI entries will be uploaded to ElasticSearch in [step 3](./bi-dataload-step-3.md).
 
 ## How? ##
 
@@ -26,17 +26,8 @@
 
 * Parquet files hold their data schema and store data in an indexed and compressed columnar format.
 * This means Spark can select specific columns much more efficiently without having to load the entire data-set e.g. for joining the Links to CH/PAYE/VAT data.
-* The output Parquet file of Business Index entries contains only those fields that will be uploaded into ElasticSearch in Step 3.
+* The output Parquet file of Business Index entries contains only those fields that will be uploaded into ElasticSearch in [step 3](./bi-dataload-step-3.md).
  
-### Scala date processing ###
-
-* This step uses the [nscala-time](https://github.com/nscala-time/nscala-time) libary to make it easier to format date values that were loaded as strings from the source CSV files.
-* This library needs to be provided as a JAR file at runtime.
-
-> * `nscala-time_2.10-2.16.0.jar`
-
-* The JAR should be stored in HDFS so that it can be loaded by the Oozie job at runtime.
-
 ### Oozie task specification ###
 
 * We use Oozie to execute the Spark processing on Cloudera.
@@ -59,7 +50,13 @@ Main class | uk.gov.ons.bi.dataload.LinkDataApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/nscala-time_2.10-2.16.0.jar --driver-java-options "-Xms1g -Xmx6g"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --driver-java-options "-Xms1g -Xmx6g"
 
+-----
 
+* [README](../README.md)
+
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
 
