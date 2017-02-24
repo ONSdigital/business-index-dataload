@@ -8,8 +8,8 @@
 * This step reads the Parquet files of source data i.e. Companies House, PAYE and VAT.
 * It also reads the Parquet file of Links.
 * It joins the Links to the corresponding CH/PAYE/VAT data and builds the corresponding Business Index entry.
-* The Business Idnex entries are then written to a Parquet file.
-* This allows us to separate the initial raw data-load in Step 1 from the more complicated processing needed to join the different data-sets and extract the required information.
+* The Business Index entries are then written to a Parquet file.
+* This allows us to separate the initial raw data-load in [step 1](./bi-dataload-step-1.md) from the more complicated processing needed to join the different data-sets and extract the required information.
 * The BI entries are written to a Parquet file so we can explore the data if necessary using Python Spark notebooks e.g. for investigating errors or validating the generated data.
 * The BI entries will be uploaded to ElasticSearch in [step 3](./bi-dataload-step-3.md).
 
@@ -19,7 +19,7 @@
 
 * All files are held in HDFS.
 * The locations are specified via various configuration properties.
-* See [step 1](./bi-dataload-ste-1.md) for default file locations.
+* See [step 1](./bi-dataload-step-1.md) for default file locations.
 * The Parquet files are all stored in the specified Parquet working data directory.
 
 ### Data formats ###
