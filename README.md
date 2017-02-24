@@ -14,7 +14,7 @@
 
 ### Cloudera Hadoop ###
 
-* The ONS Cloudera cluster was mandated as the core platform for the BI Data Integration process.
+* The ONS Cloudera cluster was mandated as the core platform for the BI data ingestion process.
 * This application uses the following components:
 
 > * Apache Spark (currently version 1.6.0)
