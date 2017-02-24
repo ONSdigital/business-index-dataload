@@ -3,6 +3,12 @@
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-1.jpg)
 
+* [README](../README.md)
+
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
+
 ## Why? ##
 
 * Initially, the application will consume data in different text-based formats.
@@ -32,13 +38,9 @@
 > *  `bi-data`
 
 >> * `CH`: Companies House CSV file(s) - CH download is multiple files.
-
 >> * `LINKS`: Links JSON file
-
 >> * `PAYE`: PAYE CSV file
-
 >> * `VAT`: VAT CSV file
-
 >> * `WORKINGDATA`:  All generated Parquet files.
 
 
@@ -97,10 +99,3 @@ Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/spark-csv_2.10-1.5.0.jar,hdfs://dev4/user/appUser/libs/univocity-parsers-1.5.1.jar,hdfs://dev4/user/appUser/libs/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
 
------
-
-* [README](../README.md)
-
-> * [Step 1](./bi-dataload-step-1.md).
-> * [Step 2](./bi-dataload-step-2.md).
-> * [Step 3](./bi-dataload-step-3.md).

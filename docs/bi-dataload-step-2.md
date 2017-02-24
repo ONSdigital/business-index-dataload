@@ -3,6 +3,12 @@
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-2.jpg)
 
+* [README](../README.md)
+
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
+
 ## What and why? ##
 
 * This step reads the Parquet files of source data i.e. Companies House, PAYE and VAT.
@@ -53,10 +59,3 @@ Page 2 Field | Contents
 Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --driver-java-options "-Xms1g -Xmx6g"
 
 -----
-
-* [README](../README.md)
-
-> * [Step 1](./bi-dataload-step-1.md).
-> * [Step 2](./bi-dataload-step-2.md).
-> * [Step 3](./bi-dataload-step-3.md).
-
