@@ -6,7 +6,7 @@
 * Source data files are received on a monthly basis.
 * These are then processed by a separate machine learning application which attempts to match data for a given business from the different sources i.e. Companies House, HMRC/PAYE, HMRC/VAT.
 * The ML process generates a file of possible links (currently in JSON format). 
-* The data ingestion process consumes the links and source data files and generates corresponding entries for an ElasticSeearch index of businesses.
+* The data ingestion process consumes the links and source data files and generates corresponding entries for an ElasticSearch index of businesses.
 * The ElasticSearch index is used by a separate application to support queries for business data.
 * See [step 1 processing](./docs/bi-dataload-step-1.md) for more information on data sources and initial data-load.
 
@@ -76,7 +76,7 @@
 ## Deploying the application ##
 
 * The initial implementation is deployed manually.
-* The application JAR and the 3rd party libfrary JARs are all placed in a directory in HDFS that can be accessed by Oozie.
+* The application JAR and the 3rd party library JARs are all placed in a directory in HDFS that can be accessed by Oozie.
 * Data files are also stored in HDFS.
 * The data file names and locations are specified in `application.conf`, but can be provided at runtime via "-D" parameters.
 * The application is executed as a 3-step Oozie workflow.
