@@ -58,6 +58,15 @@
 * We copy ALL fields from the source data and store them in the corresponding Parquet files.
 * Parquet files hodl their data schema, and store data in a compressed columnar format.
 * This means subsequent processing steps can select specific columns much more efficiently without having to load the entire data-set e.g. for joining the Links to CH/PAYE/VAT data.
+
+#### Column headings ####
+
+* We want to use Spark SQL and data-frames wherever possible for processing this data.
+* This is easier if our column names meet SQL standards for column identifiers.
+* Several of the CSV columns (e.g. for Companies House) include dots and spaces which cause problems in SQL.
+* We therefore remove dots and spaces from the column headings during the CSV upload process.
+* For example CH column `SICCode.SicText_1` is re-named as `SICCodeSicText_1`.
+* You may need to check these conversions if the CSV file formats change.
  
 ### Spark CSV ###
 
