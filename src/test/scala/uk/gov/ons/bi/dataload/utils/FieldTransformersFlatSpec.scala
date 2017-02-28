@@ -39,6 +39,16 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "return total VAT turnover" in {
+
+    val expected = Option(fullVatRec.turnover.getOrElse(0L) + fullVatRec.turnover.getOrElse(0L))
+    val vatRecs = Some(Seq(fullVatRec, fullVatRec))
+    val br = Business("UBRN001", None, vatRecs, None)
+    val result = Transformers.getVatTotalTurnover(br)
+
+    result should be(expected)
+  }
+
   "A Transformer" should "return correct Industry Code (from VAT record)" in {
 
     val expected = fullVatRec.sic92.map(_.toString)

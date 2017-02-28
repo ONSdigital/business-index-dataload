@@ -115,6 +115,14 @@ object Transformers {
     }
   }
 
+  def getVatTotalTurnover(br: Business): Option[Long] = {
+    // not clear what rule is for deriving this. Add up all VAT turnovers?
+    br.vat match {
+      case Some(vats: Seq[VatRec]) => Option(vats.map(_.turnover.getOrElse(0L)).sum)
+      case _ => None
+    }
+  }
+
   def getLastUpdOpt(str: Option[String]): Option[DateTime] = {
     // Now convert the string to a MMMyy date (if possible)
     val fmt = DateTimeFormat.forPattern("MMMyy")
@@ -176,7 +184,7 @@ object Transformers {
     val tradingStatus: Option[String] = getTradingStatus(br)
 
     // Not clear what rule is for deriving this:
-    val turnover: Option[Long] = getVatTurnover(br)
+    val turnover: Option[Long] = getVatTotalTurnover(br)
 
     // Derive Turnover Band for BI
     val turnoverBand: Option[String] = BandMappings.turnoverBand(turnover)
