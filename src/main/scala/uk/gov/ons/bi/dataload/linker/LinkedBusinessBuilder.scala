@@ -1,4 +1,5 @@
 package uk.gov.ons.bi.dataload.linker
+
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types._
@@ -41,13 +42,16 @@ object LinkedBusinessBuilder {
       StructField("legalStatus", StringType, true),
       StructField("tradingStatus", StringType, true),
       StructField("turnover", StringType, true),
-      StructField("employmentBand", StringType, true)
+      StructField("employmentBand", StringType, true),
+      StructField("companyNo", StringType, true),
+      StructField("vatRefs", ArrayType(LongType), true), // sequence of Long VAT refs
+      StructField("payeRefs", ArrayType(StringType), true) // seq of String PAYE refs
     ))
 
     // Use UBRN as ID and UPRN in index until we have better information
     def biRowMapper(bi: BusinessIndex): Row = {
-      Row(bi.ubrn, bi.businessName, bi.ubrn, bi.postCode, bi.industryCode, bi.legalStatus, bi.tradingStatus,
-        bi.turnoverBand, bi.employmentBand)
+      Row(bi.ubrn, bi.businessName, bi.ubrn, bi.postCode, bi.industryCode, bi.legalStatus,
+        bi.tradingStatus, bi.turnoverBand, bi.employmentBand, bi.companyNo, bi.vatRefs, bi.payeRefs)
     }
 
     val biRows: RDD[Row] = biRdd.map(biRowMapper)
@@ -153,11 +157,11 @@ object LinkedBusinessBuilder {
     val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
 
     // Now we can group data for same UBRN back together to make Business records
-    val businessRecords = convertUwdsToBusinessRecords(combined)
+    val businessRecords: RDD[Business] = convertUwdsToBusinessRecords(combined)
 
     // Now we can convert Business records to Business Index entries
 
-    val businessIndexes = businessRecords.map(Transformers.convertToBusinessIndex)
+    val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
     // write BI data to parquet file
     writeBiRddToParquet(sc, appConfig, businessIndexes)

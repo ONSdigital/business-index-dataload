@@ -174,6 +174,15 @@ object Transformers {
     ju.map(_.toInt)
   }
 
+  def getVatRefs(br: Business): Option[Seq[Long]] = {
+    // VAT Refs may not be present
+    Option(br.vat.getOrElse(Nil).flatMap { v => v.vatRef })
+  }
+
+  def getPayeRefs(br: Business): Option[Seq[String]] = {
+    // PAYE Refs may not be present
+    Option(br.paye.getOrElse(Nil).flatMap { p => p.payeRef })
+  }
 
   def convertToBusinessIndex(br: Business): BusinessIndex = {
 
@@ -195,8 +204,17 @@ object Transformers {
     // Derive Employment Band for BI
     val empBand: Option[String] = BandMappings.employmentBand(numEmps)
 
+    // include CompanyNo
+
+    val companyNo: Option[String] = br.company.flatMap(_.companyNo)
+
+    // Include *all* PAYE and VAT Refs
+    val vatRefs: Option[Seq[Long]] = getVatRefs(br)
+    val payeRefs: Option[Seq[String]] = getPayeRefs(br)
+
     // Build a BI record that we can later upload to ElasticSource
-    BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus, tradingStatus, turnoverBand, empBand)
+    BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
+      tradingStatus, turnoverBand, empBand, companyNo, vatRefs, payeRefs)
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {

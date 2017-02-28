@@ -59,6 +59,30 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "return all VAT references" in {
+
+    val vat1 = fullVatRec
+    val vat2 = fullVatRec.copy(vatRef = Some(98765L))
+    val vatRecs = Seq(vat1, vat2)
+    val expected: Seq[Long] = vatRecs.flatMap(_.vatRef)
+    val br = Business("UBRN001", None, Some(vatRecs), None)
+    val result: Option[Seq[Long]] = Transformers.getVatRefs(br)
+
+    result should be(Option(expected))
+  }
+
+  "A Transformer" should "return all PAYE references" in {
+
+    val rec1 = fullPayeRec
+    val rec2 = fullPayeRec.copy(payeRef = Some("PAYE2"))
+    val recs = Seq(rec1, rec2)
+    val expected: Seq[String] = recs.flatMap(_.payeRef)
+    val br = Business("UBRN001", None, None, Some(recs))
+    val result: Option[Seq[String]] = Transformers.getPayeRefs(br)
+
+    result should be(Option(expected))
+  }
+
   "A Transformer" should "return correct Legal Status (from VAT record)" in {
 
     val expected = fullVatRec.legalStatus.map(_.toString)
