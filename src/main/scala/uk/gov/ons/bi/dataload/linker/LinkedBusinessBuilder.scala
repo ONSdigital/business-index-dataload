@@ -23,7 +23,7 @@ object LinkedBusinessBuilder {
 
   def convertUwdsToBusinessRecords(uwds: RDD[UbrnWithData]): RDD[Business] = {
     // Now we can group data for same UBRN back together
-    val grouped: RDD[(String, Iterable[UbrnWithData])] = uwds.map { r => (r.ubrn, r) }.groupByKey()
+    val grouped: RDD[(BiTypes.Ubrn, Iterable[UbrnWithData])] = uwds.map { r => (r.ubrn, r) }.groupByKey()
     val uwls: RDD[UbrnWithList] = grouped.map { case (ubrn, uwds) => UbrnWithList(ubrn, uwds.toList) }
     // Convert each UBRN group to a Business record
     uwls.map(Transformers.buildBusinessRecord)
@@ -34,18 +34,18 @@ object LinkedBusinessBuilder {
     // This effectively defines the format of the final BI record in ElasticSearch.
 
     val biSchema = StructType(Seq(
-      StructField("id", StringType, true), // not clear where this comes from.  use UBRN for now
-      StructField("businessName", StringType, true),
-      StructField("uprn", StringType, true), // spec says "UPRN", but we use UBRN
-      StructField("postCode", StringType, true),
-      StructField("industryCode", StringType, true),
-      StructField("legalStatus", StringType, true),
-      StructField("tradingStatus", StringType, true),
-      StructField("turnover", StringType, true),
-      StructField("employmentBand", StringType, true),
-      StructField("companyNo", StringType, true),
-      StructField("vatRefs", ArrayType(LongType), true), // sequence of Long VAT refs
-      StructField("payeRefs", ArrayType(StringType), true) // seq of String PAYE refs
+      StructField("id", LongType, true), // not clear where this comes from.  use UBRN for now
+      StructField("BusinessName", StringType, true),
+      StructField("UPRN", LongType, true), // spec says "UPRN", but we use UBRN
+      StructField("PostCode", StringType, true),
+      StructField("IndustryCode", LongType, true),
+      StructField("LegalStatus", StringType, true),
+      StructField("TradingStatus", StringType, true),
+      StructField("Turnover", StringType, true),
+      StructField("EmploymentBands", StringType, true),
+      StructField("CompanyNo", StringType, true),
+      StructField("VatRefs", ArrayType(LongType), true), // sequence of Long VAT refs
+      StructField("PayeRefs", ArrayType(StringType), true) // seq of String PAYE refs
     ))
 
     // Use UBRN as ID and UPRN in index until we have better information
