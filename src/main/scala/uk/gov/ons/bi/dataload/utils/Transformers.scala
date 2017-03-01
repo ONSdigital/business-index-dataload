@@ -56,7 +56,7 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(co, vat, paye)
     // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
+    candidates.foldLeft[Option[String]](None)(_ orElse _).map(_.toUpperCase)
   }
 
   def getPostcode(br: Business): Option[String] = {

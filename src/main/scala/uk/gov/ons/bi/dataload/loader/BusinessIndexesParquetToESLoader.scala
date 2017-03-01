@@ -26,6 +26,9 @@ object BusinessIndexesParquetToESLoader {
 
     // write Business Index entries to ES
 
-    biDf.saveToEs(s"$index/business")
+    // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
+    val extraEsConfig = Map("es.mapping.id" -> "id")
+
+    biDf.saveToEs(s"$index/business",extraEsConfig)
   }
 }

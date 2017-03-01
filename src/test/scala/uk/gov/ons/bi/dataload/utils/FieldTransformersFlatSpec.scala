@@ -105,7 +105,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   "A Transformer" should "return correct Company Name (from Company record)" in {
 
-    val expected = fullCompanyRec.companyName
+    val expected = fullCompanyRec.companyName.map(_.toUpperCase)
 
     val br = Business(100, Some(fullCompanyRec), None, None)
     val result = Transformers.getCompanyName(br)
@@ -116,7 +116,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   "A Transformer" should "return correct Company Name (from VAT record)" in {
 
-    val expected = fullVatRec.nameLine1
+    val expected = fullVatRec.nameLine1.map(_.toUpperCase)
     val vatRecs = Some(Seq(fullVatRec))
     val br = Business(100, None, vatRecs, None)
     val result = Transformers.getCompanyName(br)
@@ -126,7 +126,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   "A Transformer" should "return correct Company Name (from PAYE record)" in {
 
-    val expected = fullPayeRec.nameLine1
+    val expected = fullPayeRec.nameLine1.map(_.toUpperCase)
     val payeRecs = Some(Seq(fullPayeRec))
     val br = Business(100, None, None, payeRecs)
     val result = Transformers.getCompanyName(br)
