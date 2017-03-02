@@ -78,6 +78,14 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
+  def getPostcodeArea(pc: Option[String]): Option[String] = {
+    // Postcode area is first character portion of postcode.
+    // e.g. G12 1AB --> G
+    //      CF12 8AB --> CF
+    val pattern = "[A-Z]+".r
+    pc.flatMap(pattern.findFirstIn(_))
+  }
+
   def getIndustryCode(br: Business): Option[Long] = {
 
     // Extract potential values from CH/VAT records
@@ -200,6 +208,7 @@ object Transformers {
 
     val businessName: Option[String] = getCompanyName(br)
     val postcode: Option[String] = getPostcode(br)
+    val postcodeArea: Option[String] = getPostcodeArea(postcode)
     val industryCode: Option[Long] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
     val tradingStatus: Option[String] = getTradingStatus(br)
@@ -227,7 +236,8 @@ object Transformers {
     val payeRefs: Option[Seq[String]] = getPayeRefs(br)
 
     // Build a BI record that we can later upload to ElasticSource
-    BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
+    // Use postcode area instead of full postcode in index
+    BusinessIndex(br.ubrn, businessName, postcodeArea, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs)
   }
 
