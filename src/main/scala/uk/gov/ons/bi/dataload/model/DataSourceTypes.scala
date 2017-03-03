@@ -3,12 +3,19 @@ package uk.gov.ons.bi.dataload.model
 /**
   * Created by websc on 10/02/2017.
   */
-sealed trait BIDataSource
 
-  case object CH extends BIDataSource
 
-  case object VAT extends BIDataSource
+trait BIDataSource
 
-  case object PAYE extends BIDataSource
+sealed trait BusinessDataSource extends BIDataSource
 
-  case object LINKS extends BIDataSource
+  case object CH extends BusinessDataSource
+
+  case object VAT extends BusinessDataSource
+
+  case object PAYE extends BusinessDataSource
+
+
+sealed trait LinksData extends BIDataSource
+
+  case object LINKS extends LinksData

@@ -21,13 +21,6 @@ case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode:
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String])
   extends BusinessElement
 
-object BiTypes {
-  // UBRN is currently defined as a Long number, but this may change, so use a synonym
-  // for the data-type to make it easier to change all the references later.
-  type Ubrn = Long
-}
-
-case class LinkRec(ubrn: BiTypes.Ubrn, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
 
 // These are intermediate structures that we use during the main Spark "link-and-join" processing.
 

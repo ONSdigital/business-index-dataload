@@ -71,6 +71,11 @@ class AppConfig {
 
     lazy val ch = envOrElseConfigStr("ch", parquetDataConfig)
 
+    //lazy val newLinks = envOrElseConfigStr("new-links", parquetDataConfig)
+
+    // This is for the old links file from last run
+    //lazy val oldLinks = envOrElseConfigStr("old-links", parquetDataConfig)
+
     lazy val links = envOrElseConfigStr("links", parquetDataConfig)
 
     lazy val bi = envOrElseConfigStr("bi", parquetDataConfig)
