@@ -4,8 +4,11 @@ import com.google.inject.Singleton
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.joda.time.DateTime
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.AppConfig
+
+import scala.util.{Success, Try}
 
 /**
   * Created by websc on 16/02/2017.
@@ -69,9 +72,9 @@ class ParquetReader(sc: SparkContext) {
 
   }
 
+
   def loadLinkRecsFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
-
     val df = getDataFrameFromParquet(appConfig, LINKS)
 
     // NB: This is a nested data structure where CH/PAYE/VAT are lists, and only UBRN is mandatory
@@ -81,14 +84,20 @@ class ParquetReader(sc: SparkContext) {
       $"VAT",
       $"PAYE"
     ).map { row =>
-      val ubrn = row.getString(0)
+      // UBRN is String in original JSON but we need to convert it to long (or use -1 for bad strings)
+      val ubrnStr = row.getString(0)
+      val ubrn = Try {ubrnStr.toLong}
+      match {
+        case Success(n: Long) => n
+        case _ => -1L
+      }
       // CH is currently provided as an array but we only want the first entry (if any)
       val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
       val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
       val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
       LinkRec(ubrn, ch, vat, paye)
-    }
+    }.filter(lr => lr.ubrn > 0)  // Throw away Links with bad UBRNs
 
   }
 

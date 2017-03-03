@@ -21,21 +21,27 @@ case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode:
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String])
   extends BusinessElement
 
+object BiTypes {
+  // UBRN is currently defined as a Long number, but this may change, so use a synonym
+  // for the data-type to make it easier to change all the references later.
+  type Ubrn = Long
+}
 
-case class LinkRec(ubrn: String, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
+case class LinkRec(ubrn: BiTypes.Ubrn, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
 
 // These are intermediate structures that we use during the main Spark "link-and-join" processing.
 
-case class Business(ubrn: String, company: Option[CompanyRec],
+case class Business(ubrn: BiTypes.Ubrn, company: Option[CompanyRec],
                     vat: Option[Seq[VatRec]], paye: Option[Seq[PayeRec]])
 
-case class UbrnWithKey(ubrn: String, src: BIDataSource, key: String)
+case class UbrnWithKey(ubrn: BiTypes.Ubrn, src: BIDataSource, key: String)
 
-case class UbrnWithData(ubrn: String, src: BIDataSource, data: BusinessElement)
+case class UbrnWithData(ubrn: BiTypes.Ubrn, src: BIDataSource, data: BusinessElement)
 
-case class UbrnWithList(ubrn: String, data: Seq[UbrnWithData])
+case class UbrnWithList(ubrn: BiTypes.Ubrn, data: Seq[UbrnWithData])
 
-case class BusinessIndex(ubrn: String, businessName: Option[String], postCode: Option[String],
-                         industryCode: Option[String], legalStatus: Option[String], tradingStatus: Option[String],
-                         turnoverBand: Option[String], employmentBand: Option[String])
+case class BusinessIndex(ubrn: BiTypes.Ubrn, businessName: Option[String], postCode: Option[String],
+                         industryCode: Option[Long], legalStatus: Option[String], tradingStatus: Option[String],
+                         turnoverBand: Option[String], employmentBand: Option[String], companyNo: Option[String],
+                         vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]])
 

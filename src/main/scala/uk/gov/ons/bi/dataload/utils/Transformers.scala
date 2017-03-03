@@ -12,6 +12,16 @@ import scala.util.{Success, Try}
   */
 object Transformers {
 
+  def extractNumericSicCode(sic: String): Long = {
+    // Extracts numeric SIC code, assuming it is first element in string
+    val NumStartRegex = "(\\d+).*".r
+
+    sic match {
+      case NumStartRegex(x) => x.toLong
+      case _ => 0L
+    }
+  }
+
   // Convert the grouped UBRN + Lists into Business records
 
   def buildBusinessRecord(uwl: UbrnWithList) = {
@@ -46,7 +56,7 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(co, vat, paye)
     // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
+    candidates.foldLeft[Option[String]](None)(_ orElse _).map(_.toUpperCase)
   }
 
   def getPostcode(br: Business): Option[String] = {
@@ -68,7 +78,15 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getIndustryCode(br: Business): Option[String] = {
+  def getPostcodeArea(pc: Option[String]): Option[String] = {
+    // Postcode area is first character portion of postcode.
+    // e.g. G12 1AB --> G
+    //      CF12 8AB --> CF
+    val pattern = "[A-Z]+".r
+    pc.flatMap(pattern.findFirstIn(_))
+  }
+
+  def getIndustryCode(br: Business): Option[Long] = {
 
     // Extract potential values from CH/VAT records
     // Take first VATrecord (if any)
@@ -82,7 +100,9 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(co, vat)
     // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
+    val indCode = candidates.foldLeft[Option[String]](None)(_ orElse _)
+
+    indCode.map(extractNumericSicCode)
   }
 
   def getTradingStatus(br: Business): Option[String] = {
@@ -112,6 +132,14 @@ object Transformers {
     // not clear what rule is for deriving this. just take 1st one for now.
     br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.turnover
+    }
+  }
+
+  def getVatTotalTurnover(br: Business): Option[Long] = {
+    // not clear what rule is for deriving this. Add up all VAT turnovers?
+    br.vat match {
+      case Some(vats: Seq[VatRec]) => Option(vats.map(_.turnover.getOrElse(0L)).sum)
+      case _ => None
     }
   }
 
@@ -166,17 +194,29 @@ object Transformers {
     ju.map(_.toInt)
   }
 
+  def getVatRefs(br: Business): Option[Seq[Long]] = {
+    // VAT Refs may not be present
+    Option(br.vat.getOrElse(Nil).flatMap { v => v.vatRef })
+  }
+
+  def getPayeRefs(br: Business): Option[Seq[String]] = {
+    // PAYE Refs may not be present
+    Option(br.paye.getOrElse(Nil).flatMap { p => p.payeRef })
+  }
 
   def convertToBusinessIndex(br: Business): BusinessIndex = {
 
     val businessName: Option[String] = getCompanyName(br)
     val postcode: Option[String] = getPostcode(br)
-    val industryCode: Option[String] = getIndustryCode(br)
+    val postcodeArea: Option[String] = getPostcodeArea(postcode)
+    val industryCode: Option[Long] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
     val tradingStatus: Option[String] = getTradingStatus(br)
 
+    val tradingStatusBand = BandMappings.tradingStatusBand(tradingStatus)
+
     // Not clear what rule is for deriving this:
-    val turnover: Option[Long] = getVatTurnover(br)
+    val turnover: Option[Long] = getVatTotalTurnover(br)
 
     // Derive Turnover Band for BI
     val turnoverBand: Option[String] = BandMappings.turnoverBand(turnover)
@@ -187,8 +227,18 @@ object Transformers {
     // Derive Employment Band for BI
     val empBand: Option[String] = BandMappings.employmentBand(numEmps)
 
+    // include CompanyNo
+
+    val companyNo: Option[String] = br.company.flatMap(_.companyNo)
+
+    // Include *all* PAYE and VAT Refs
+    val vatRefs: Option[Seq[Long]] = getVatRefs(br)
+    val payeRefs: Option[Seq[String]] = getPayeRefs(br)
+
     // Build a BI record that we can later upload to ElasticSource
-    BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus, tradingStatus, turnoverBand, empBand)
+    // Use postcode area instead of full postcode in index
+    BusinessIndex(br.ubrn, businessName, postcodeArea, industryCode, legalStatus,
+      tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs)
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
