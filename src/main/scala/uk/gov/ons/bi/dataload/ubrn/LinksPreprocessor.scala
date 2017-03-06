@@ -2,7 +2,7 @@ package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
 import uk.gov.ons.bi.dataload.reader.LinkJsonReader
 import uk.gov.ons.bi.dataload.utils.AppConfig
@@ -30,13 +30,22 @@ class LinksPreprocessor(sc: SparkContext) {
   }
 
   def applyNewUbrn(df: DataFrame, baseUbrn: Option[Long] = None) = {
+    // First drop any rogue UBRN column (if any) from the input DF
+    val noUbrn = df.drop("UBRN")
+
     // Set the base UBRN for adding to the monotonic sequential value
     val base = baseUbrn.getOrElse(0L)
 
-    // First drop any rogue UBRN column (if any) from the input JSON file
-    val noUbrn = df.drop("UBRN")
-    // Now add a new generated UBRN column
-    noUbrn.withColumn("UBRN", monotonicallyIncreasingId + base)
+    // Repartition to one partition so sequence is a fairly continuous range.
+    // This will force data to be shuffled, which is inefficient.
+    val numPartitions = df.rdd.getNumPartitions
+    val df1partition = df.repartition(1)
+
+    // Now add the new generated UBRN column and sequence value
+    val df1partWithUbrn = df1partition.withColumn("UBRN", monotonicallyIncreasingId + base)
+
+    // Repartition back to original num partitions (more data shuffling)
+    df1partWithUbrn.repartition(numPartitions)
   }
 
   def preProcessLinks(df: DataFrame, baseUbrn: Option[Long] = None): DataFrame = {
