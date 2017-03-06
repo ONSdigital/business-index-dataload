@@ -99,7 +99,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 1 Load Source Data To Parquet
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.0.jar
+Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
 Main class | uk.gov.ons.bi.dataload.SourceDataToParquetApp
 
 Page 2 Field | Contents

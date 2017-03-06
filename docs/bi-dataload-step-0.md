@@ -25,7 +25,7 @@
 
 * The UBRN is intended to be a unique reference number that will apply to a given set of linked business records i.e. each Link generated from the data science process should have its own UBRN.
 * It should be a unique numeric value provided from a sequence.
-* It should also be consistent over time i.e. if the same Link appears in a subsequent run of the BI ingestion process, it should receive the oiriginal UBRN, not a new one.
+* It should also be consistent over time i.e. if the same Link appears in a subsequent run of the BI ingestion process, it should receive the original UBRN, not a new one.
 * The intention is that end users would in future use the UBRN to identify the business data they are interested in.
 * There are no specific user requirements for the UBRN, so the management and use of this value may change in future.
 
@@ -53,9 +53,9 @@
 * We therefore assume we can allocate UBRNs freely, without worrying about clashing with any previous values because there are no previous values.
 * So the month 1 process is:
 
->> * Read the incoming Links JSON file into Spark. 
->> * Pass the data through our UBRN allocation process.
->> * Write the data to a Links Parquet file.
+> * Read the incoming Links JSON file into Spark. 
+> * Pass the data through our UBRN allocation process.
+> * Write the data to a Links Parquet file.
 
 * The Links Parquet file will be processed further by a later step in the overall BI data ingestion pipeline.
 
@@ -65,7 +65,10 @@
 * The plan is that when we load subsequent sets of Links from the data science process, we will try to match any Links that have already been loaded previously.
 * This will involve looking at the Links wth UBRNs that have been loaded previously.
 * There will be business rules to determine whether a link should re-use an existing UBRN, or be allocated a fresh UBRN.
+* We will need to work out how to ensure that the new UBRN does not clash with existing UBRNs.
+* Probably the easiest way to do this will be to get the maximum rpevious UBRN prior to running this process, then add this as an offset to the new UBRN.
 * It is not currently clear how or where the old Links data will be stored, but presumably it will be held somewhere in HDFS.
+* We will need to check **all previous BI Links** for any previous occurrence sof the same Link.
 * **Further work is required here to identify the detailed requirements and design an appropriate solution**.
 
 ## Running step 0 ##
