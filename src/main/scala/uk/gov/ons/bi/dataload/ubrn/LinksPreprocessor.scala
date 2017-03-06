@@ -16,6 +16,8 @@ import scala.util.{Success, Try}
 @Singleton
 class LinksPreprocessor(sc: SparkContext) {
 
+  val defaultBaseUbrn = 1L
+
   def getMaxUbrn(df: DataFrame, ubrnColName: String = "UBRN"): Option[Long] = {
     // This will scan the DF column to extract the max value, assumes values are numeric.
     // Defaults to zero.
@@ -25,7 +27,7 @@ class LinksPreprocessor(sc: SparkContext) {
     }
     match {
       case Success(n: Long) => Some(n)
-      case _ => Some(0L)
+      case _ => Some(defaultBaseUbrn)
     }
   }
 
@@ -34,11 +36,12 @@ class LinksPreprocessor(sc: SparkContext) {
     val noUbrn = df.drop("UBRN")
 
     // Set the base UBRN for adding to the monotonic sequential value
-    val base = baseUbrn.getOrElse(0L)
+    val base = baseUbrn.getOrElse(defaultBaseUbrn)
 
     // Repartition to one partition so sequence is a fairly continuous range.
     // This will force data to be shuffled, which is inefficient.
     val numPartitions = df.rdd.getNumPartitions
+
     val df1partition = df.repartition(1)
 
     // Now add the new generated UBRN column and sequence value
