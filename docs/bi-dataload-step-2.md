@@ -52,7 +52,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 2 Build BI Entries From Links And Business Data
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.0.jar
+Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
 Main class | uk.gov.ons.bi.dataload.LinkDataApp
 
 Page 2 Field | Contents
