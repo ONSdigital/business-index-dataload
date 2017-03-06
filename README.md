@@ -82,6 +82,29 @@
 * The application is executed as a 3-step Oozie workflow.
 * The individual steps and their Oozie task parameters are documented separately below.
 
+
+## Data file locations ##
+
+* All files are held in HDFS.
+* The locations are specified via various configuration properties.
+* These have default values in the `src/main/resources/application.conf` file.
+* They can be modified via environment variables - see the configuration file for details.
+* We can also provide values at runtime here using "-D" Java options in the Oozie task specification.
+* For example, to set the source data directory:
+
+> * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
+
+* The default directory structure is:
+
+> *  `bi-data`
+
+>> * `CH`: Companies House CSV file(s) - CH download is multiple files.
+>> * `LINKS`: Links JSON file
+>> * `PAYE`: PAYE CSV file
+>> * `VAT`: VAT CSV file
+>> * `WORKINGDATA`:  All generated Parquet files.
+
+
 ## Detailed processing ##
 
 * [Step 1: Load raw data to parquet files](./docs/bi-dataload-step-1.md)

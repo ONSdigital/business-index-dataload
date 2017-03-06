@@ -5,6 +5,7 @@
 
 * [README](../README.md)
 
+> * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
