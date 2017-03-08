@@ -1,10 +1,11 @@
-# BI Dataload step 1: convert raw data to Parquet files #
+# BI Dataload step 1: convert business data to Parquet files #
 
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-1.jpg)
 
 * [README](../README.md)
 
+> * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
@@ -14,11 +15,17 @@
 * Initially, the application will consume data in different text-based formats.
 * PAYE and VAT data will be provided via CSV extracts from the IDBR.
 * Companies House data will be provided from the monthly CSV extract from the Companies House website.
-* Links between CH and PAYE/VAT data are provided as a JSON file which is generated from a separate machine learning application.
 * We will be processing the data with Apache Spark on Cloudera.
 * Spark can process Parquet files much more flexibly and efficiently than raw CSV or JSON data.
 * Also, the incoming data formats may change.
 * We convert the incoming files to Parquet as a first step, so that we can perform subsequent processing steps more efficiently.
+
+### Links data pre-processed separately ###
+
+* Links between CH and PAYE/VAT data are provided as a JSON file which is generated from a separate machine learning application.
+* However, Linbks require extra pre-processing which is performed in [step 0](./bi-dataload-step-0.md).
+* We do not process Links data in step 1.
+
 
 ## How? ##
 
@@ -46,18 +53,12 @@
 
 ### Data formats ###
 
-* Links data is provided in a nested JSON format like this:
-
-`{"UBRN":"12345678","CH":["COMPANYNO"],"VAT":["VATREFERENCE"],"PAYE":["PAYEREFERENCE"]}`
-  
-* The UBRN is currently generated as part of the Linking process (this may change).
-* In theory, there could be several VAT or PAYE entries for a given UBRN.
-* We expect there only to be ONE Company for each UBRN i.e. there is no real need for the "CH" field to be a list here.
 * VAT and PAYE data is currently provided in a CSV format generated from the IDBR.
 * Companies House data is provided in a [publicly available CSV format](http://resources.companieshouse.gov.uk/toolsToHelp/pdf/freeDataProductDataset.pdf).
 * We copy ALL fields from the source data and store them in the corresponding Parquet files.
-* Parquet files hodl their data schema, and store data in a compressed columnar format.
-* This means subsequent processing steps can select specific columns much more efficiently without having to load the entire data-set e.g. for joining the Links to CH/PAYE/VAT data.
+* Parquet files hold their data schema, and store data in a compressed columnar format.
+* This means subsequent processing steps can select specific columns much more efficiently without having to load the entire data-set e.g. for joining the Links to CH/PAYE/VAT data in [step 2](./bi-dataload-step-2.md).
+
 
 #### Column headings ####
 
@@ -91,9 +92,6 @@
 #### Oozie Task Definition ####
 
 * Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
-* Current implementation completes Step 1 in around 7 minutes on the Dev4 cluster.
-* Most of this time is taken for loading the Links file, because processing JSON demands more resources than loading the CSV data.
-* This example specifies 8 Spark executors to ensure sufficient resources when loading the JSON file.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 
 Page 1 Field | Contents
@@ -101,7 +99,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 1 Load Source Data To Parquet
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.0.jar
+Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
 Main class | uk.gov.ons.bi.dataload.SourceDataToParquetApp
 
 Page 2 Field | Contents

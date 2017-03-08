@@ -13,7 +13,7 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
 @Singleton
 class SourceDataToParquetLoader (val sc: SparkContext){
 
-    def loadDataToParquet(biSource: BIDataSource, appConfig: AppConfig) = {
+    def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
       // Get source/target directories
       val sourceDataConfig = appConfig.SourceDataConfig
@@ -27,7 +27,6 @@ class SourceDataToParquetLoader (val sc: SparkContext){
         case VAT => (sourceDataConfig.vat, sourceDataConfig.vatDir, parquetDataConfig.vat)
         case CH => (sourceDataConfig.ch, sourceDataConfig.chDir, parquetDataConfig.ch)
         case PAYE => (sourceDataConfig.paye, sourceDataConfig.payeDir, parquetDataConfig.paye)
-        case LINKS => (sourceDataConfig.links, sourceDataConfig.linksDir, parquetDataConfig.links)
       }
 
       val srcFilePath = s"$srcPath/$dataDir/$srcFile"
@@ -37,7 +36,6 @@ class SourceDataToParquetLoader (val sc: SparkContext){
         case VAT => new VatCsvReader(sc)
         case CH => new CompaniesHouseCsvReader(sc)
         case PAYE => new PayeCsvReader(sc)
-        case LINKS => new LinkJsonReader(sc)
       }
 
       // Process the data
@@ -49,15 +47,13 @@ class SourceDataToParquetLoader (val sc: SparkContext){
       reader.writeParquet(data, targetFilePath)
     }
 
-    def loadSourceDataToParquet(appConfig: AppConfig) = {
+    def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
 
-      loadDataToParquet(CH, appConfig)
+      loadBusinessDataToParquet(CH, appConfig)
 
-      loadDataToParquet(VAT, appConfig)
+      loadBusinessDataToParquet(VAT, appConfig)
 
-      loadDataToParquet(PAYE, appConfig)
-
-      loadDataToParquet(LINKS, appConfig)
+      loadBusinessDataToParquet(PAYE, appConfig)
     }
 
   }

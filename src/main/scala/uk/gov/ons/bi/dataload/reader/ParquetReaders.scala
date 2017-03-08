@@ -84,20 +84,14 @@ class ParquetReader(sc: SparkContext) {
       $"VAT",
       $"PAYE"
     ).map { row =>
-      // UBRN is String in original JSON but we need to convert it to long (or use -1 for bad strings)
-      val ubrnStr = row.getString(0)
-      val ubrn = Try {ubrnStr.toLong}
-      match {
-        case Success(n: Long) => n
-        case _ => -1L
-      }
+      val ubrn = if (row.isNullAt(0)) 1L else row.getLong(0)
       // CH is currently provided as an array but we only want the first entry (if any)
       val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
       val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
       val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
       LinkRec(ubrn, ch, vat, paye)
-    }.filter(lr => lr.ubrn > 0)  // Throw away Links with bad UBRNs
+    }.filter(lr => lr.ubrn >= 0)  // Throw away Links with bad UBRNs
 
   }
 

@@ -6,6 +6,7 @@ import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
+import uk.gov.ons.bi.dataload.ubrn._
 
 /**
   * Created by websc on 02/02/2017.
@@ -35,11 +36,11 @@ trait DataloadApp extends App {
 
 object SourceDataToParquetApp extends DataloadApp {
 
-  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load raw data to Parquet"))
+  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet"))
 
   val sourceDataLoader = new SourceDataToParquetLoader(sc)
 
-  sourceDataLoader.loadSourceDataToParquet(appConfig)
+  sourceDataLoader.loadSourceBusinessDataToParquet(appConfig)
 
 }
 
@@ -99,5 +100,13 @@ object LoadBiToEsApp extends DataloadApp {
   val sc = SparkContext.getOrCreate(sparkConf)
 
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(sc, appConfig)
+
+}
+
+object PreprocessLinksApp extends DataloadApp {
+  // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
+  val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data"))
+  val lpp = new LinksPreprocessor(sc)
+  lpp.loadAndPreprocessLinks(appConfig)
 
 }

@@ -8,7 +8,8 @@
 * The ML process generates a file of possible links (currently in JSON format). 
 * The data ingestion process consumes the links and source data files and generates corresponding entries for an ElasticSearch index of businesses.
 * The ElasticSearch index is used by a separate application to support queries for business data.
-* See [step 1 processing](./docs/bi-dataload-step-1.md) for more information on data sources and initial data-load.
+* * See [step 0 processing](./docs/bi-dataload-step-10.md) for more information on pre-processing and UBRN allocaiotn for Links data.
+* See [step 1 processing](./docs/bi-dataload-step-1.md) for more information on business data sources and initial data-load.
 
 ## Platform ##
 
@@ -82,9 +83,34 @@
 * The application is executed as a 3-step Oozie workflow.
 * The individual steps and their Oozie task parameters are documented separately below.
 
+
+## Data file locations ##
+
+* All files are held in HDFS.
+* The locations are specified via various configuration properties.
+* These have default values in the `src/main/resources/application.conf` file.
+* They can be modified via environment variables - see the configuration file for details.
+* We can also provide values at runtime here using "-D" Java options in the Oozie task specification.
+* For example, to set the source data directory:
+
+> * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
+
+* The default directory structure is:
+
+> *  `bi-data`
+
+>> * `CH`: Companies House CSV file(s) - CH download is multiple files.
+>> * `LINKS`: Links JSON file
+>> * `PAYE`: PAYE CSV file
+>> * `VAT`: VAT CSV file
+>> * `WORKINGDATA`:  All generated Parquet files.
+
+
 ## Detailed processing ##
 
-* [Step 1: Load raw data to parquet files](./docs/bi-dataload-step-1.md)
+* [Step 0: Pre-process Links data](./docs/bi-dataload-step-0.md)
+
+* [Step 1: Load business data to parquet files](./docs/bi-dataload-step-1.md)
 
 * [Step 2: Build business index entries](./docs/bi-dataload-step-2.md)
 
