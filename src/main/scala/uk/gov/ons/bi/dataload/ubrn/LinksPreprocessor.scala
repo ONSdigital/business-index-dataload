@@ -16,9 +16,10 @@ import scala.util.{Success, Try}
 @Singleton
 class LinksPreprocessor(sc: SparkContext) {
 
-  val defaultBaseUbrn = 1L
+  val defaultBaseUbrn = 100000000000L
+  val defaultUbrnColName = "UBRN"
 
-  def getMaxUbrn(df: DataFrame, ubrnColName: String = "UBRN"): Option[Long] = {
+  def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
     // This will scan the DF column to extract the max value, assumes values are numeric.
     // Defaults to zero.
     Try {
@@ -33,7 +34,7 @@ class LinksPreprocessor(sc: SparkContext) {
 
   def applyNewUbrn(df: DataFrame, baseUbrn: Option[Long] = None) = {
     // First drop any rogue UBRN column (if any) from the input DF
-    val noUbrn = df.drop("UBRN")
+    val noUbrn = df.drop(defaultUbrnColName)
 
     // Set the base UBRN for adding to the monotonic sequential value
     val base = baseUbrn.getOrElse(defaultBaseUbrn)
@@ -45,7 +46,7 @@ class LinksPreprocessor(sc: SparkContext) {
     val df1partition = df.repartition(1)
 
     // Now add the new generated UBRN column and sequence value
-    val df1partWithUbrn = df1partition.withColumn("UBRN", monotonicallyIncreasingId + base)
+    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, monotonicallyIncreasingId + base)
 
     // Repartition back to original num partitions (more data shuffling)
     df1partWithUbrn.repartition(numPartitions)
@@ -77,14 +78,12 @@ class LinksPreprocessor(sc: SparkContext) {
     val reader = new LinkJsonReader(sc)
 
     // Load the JSON links data
-    println(s"Reading from: $srcFilePath")
     val data = reader.readFromSourceFile(srcFilePath)
 
     // Do pre-processing
     val preproc = preProcessLinks(data)
 
     // Write the data to a Parquet output file
-    println(s"Writing to: $targetFilePath")
     reader.writeParquet(preproc, targetFilePath)
   }
 
