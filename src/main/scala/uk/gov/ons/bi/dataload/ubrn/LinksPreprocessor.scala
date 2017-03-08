@@ -1,10 +1,13 @@
 package uk.gov.ons.bi.dataload.ubrn
 
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
-import uk.gov.ons.bi.dataload.reader.LinkJsonReader
+import uk.gov.ons.bi.dataload.reader.{BIDataReader, LinkJsonReader, ParquetReader}
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
 import scala.util.{Success, Try}
@@ -61,8 +64,7 @@ class LinksPreprocessor(sc: SparkContext) {
     withUbrn
   }
 
-  def loadAndPreprocessLinks(appConfig: AppConfig) = {
-
+  def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // Get source/target directories
     val sourceDataConfig = appConfig.SourceDataConfig
     val srcPath = sourceDataConfig.dir
@@ -70,21 +72,63 @@ class LinksPreprocessor(sc: SparkContext) {
     val srcFile = sourceDataConfig.links
     val srcFilePath = s"$srcPath/$dataDir/$srcFile"
 
+    // Load the JSON links data
+    reader.readFromSourceFile(srcFilePath)
+  }
+
+  def writeAsPrevLinks(appConfig: AppConfig, df: DataFrame, timestamped: Boolean = false) = {
+    // Use timestamp as YYYYMMDD
+    val ts = if (timestamped) {
+                val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
+
+                val now = DateTime.now()
+                now.toString(fmt)
+              }
+              else ""
+
+    // Parquet file locations from configuration (or runtime params)
+    val parquetDataConfig = appConfig.ParquetDataConfig
+    val parquetPath = parquetDataConfig.dir
+    val parquetFile = parquetDataConfig.links
+    val prevDir = parquetDataConfig.prevDir
+    val prevLinksFile = s"$prevDir/$ts/$parquetFile"
+
+    // We will also write a copy of the preprocessed Links data to the "previous" dir
+    df.write.mode("overwrite").parquet(prevLinksFile)
+  }
+
+  def loadAndPreprocessLinks(appConfig: AppConfig) = {
+
+    // Load the new Links from JSON
+    val jsonReader = new LinkJsonReader(sc)
+    val newLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+
+    // Parquet file locations from configuration (or runtime params)
     val parquetDataConfig = appConfig.ParquetDataConfig
     val parquetPath = parquetDataConfig.dir
     val parquetFile = parquetDataConfig.links
     val targetFilePath = s"$parquetPath/$parquetFile"
-
-    val reader = new LinkJsonReader(sc)
-
-    // Load the JSON links data
-    val data = reader.readFromSourceFile(srcFilePath)
+    val prevDir = parquetDataConfig.prevDir
+    val prevLinksFile = s"$prevDir/$parquetFile"
 
     // Do pre-processing
-    val preproc = preProcessLinks(data)
+    val preproc = preProcessLinks(newLinks)
 
-    // Write the data to a Parquet output file
-    reader.writeParquet(preproc, targetFilePath)
+    // Cache the results because we want to write them to multiple files
+    preproc.cache()
+
+    // Write preprocessed Links data to a Parquet output file ready for subsequent processing
+    jsonReader.writeParquet(preproc, targetFilePath)
+
+    // We will also write a copy of the new preprocessed Links data to the "previous" dir:
+    // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
+    writeAsPrevLinks(appConfig, preproc)
+
+    // 2. As e.g. 201703081145/LINKS_Output.parquet so it does not get over-written later
+    writeAsPrevLinks(appConfig, preproc, true)
+
+    // Free the cached data
+    preproc.unpersist()
   }
 
 }

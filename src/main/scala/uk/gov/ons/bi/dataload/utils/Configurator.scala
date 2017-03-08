@@ -78,6 +78,8 @@ class AppConfig {
 
     lazy val links = envOrElseConfigStr("links", parquetDataConfig)
 
+    lazy val prevDir = envOrElseConfigStr("prev-dir", parquetDataConfig)
+
     lazy val bi = envOrElseConfigStr("bi", parquetDataConfig)
   }
 
