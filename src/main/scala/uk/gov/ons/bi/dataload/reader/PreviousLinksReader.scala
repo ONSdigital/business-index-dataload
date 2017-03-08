@@ -4,13 +4,12 @@ import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
 
 /**
-  * Created by websc on 08/02/2017.1
+  * Created by websc on 08/03/2017.
   */
-class LinkJsonReader (sc: SparkContext)
+class PreviousLinksReader (sc: SparkContext)
   extends BIDataReader (sc: SparkContext){
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
-    sqlContext.read.json(srcFilePath)
+    sqlContext.read.parquet(srcFilePath)
   }
-
 }

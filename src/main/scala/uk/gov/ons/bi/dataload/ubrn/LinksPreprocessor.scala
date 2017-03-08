@@ -1,13 +1,12 @@
 package uk.gov.ons.bi.dataload.ubrn
 
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
-import uk.gov.ons.bi.dataload.reader.{BIDataReader, LinkJsonReader, ParquetReader}
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinksReader}
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
 import scala.util.{Success, Try}
@@ -22,6 +21,9 @@ class LinksPreprocessor(sc: SparkContext) {
   val defaultBaseUbrn = 100000000000L
   val defaultUbrnColName = "UBRN"
 
+  // Use getOrCreate in case SQLContext already exists (only want one)
+  val sqlContext: SQLContext = SQLContext.getOrCreate(sc)
+
   def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
     // This will scan the DF column to extract the max value, assumes values are numeric.
     // Defaults to zero.
@@ -35,7 +37,7 @@ class LinksPreprocessor(sc: SparkContext) {
     }
   }
 
-  def applyNewUbrn(df: DataFrame, baseUbrn: Option[Long] = None) = {
+  def applyNewUbrn(df: DataFrame, baseUbrn: Option[Long] = None): DataFrame = {
     // First drop any rogue UBRN column (if any) from the input DF
     val noUbrn = df.drop(defaultUbrnColName)
 
@@ -97,38 +99,136 @@ class LinksPreprocessor(sc: SparkContext) {
     df.write.mode("overwrite").parquet(prevLinksFile)
   }
 
+  def getChMatches(oldLinks: DataFrame, newLinks: DataFrame):DataFrame = {
+
+    // Get old/new links where Company No is the same
+    oldLinks.registerTempTable("old_links")
+    newLinks.registerTempTable("new_links")
+
+    val chMatchesDf = sqlContext.sql(
+      """
+        | SELECT old.UBRN AS UBRN, old.CH AS CH, new.VAT, new.PAYE
+        | FROM old_links AS old LEFT JOIN new_links AS new ON (old.CH[0] = new.CH[0])
+        | WHERE old.CH[0] IS NOT NULL AND new.CH[0] IS NOT NULL
+      """.stripMargin)
+
+    chMatchesDf
+  }
+
+  def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame):DataFrame = {
+
+    // Get old/new links that have no Company No, but where other contents are same
+    oldLinks.registerTempTable("old_links")
+    newLinks.registerTempTable("new_links")
+
+    // Exclude records where old/new contents are all empty
+    val matchesDf = sqlContext.sql(
+      """SELECT old.UBRN AS UBRN, old.CH AS CH, new.VAT, new.PAYE
+        |FROM old_links AS old
+        |LEFT JOIN new_links AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
+        |WHERE old.CH[0] IS NULL
+        | AND new.CH[0] IS NULL
+        | AND (new.VAT IS NOT NULL OR new.PAYE IS NOT NULL)
+        | AND (old.VAT IS NOT NULL OR old.PAYE IS NOT NULL)
+      """.stripMargin)
+
+    matchesDf
+  }
+
+  def excludeMatches(newLinks: DataFrame, matches:DataFrame):DataFrame = {
+
+    newLinks.registerTempTable("new_links")
+    matches.registerTempTable("matches")
+
+    sqlContext.sql(
+      """
+        | SELECT new.CH, new.VAT, new.PAYE
+        | FROM new_links AS new
+        | EXCEPT
+        | SELECT m.CH, m.VAT, m.PAYE
+        | FROM matches AS m
+      """.stripMargin)
+  }
+
+  def combineLinksToSave(oldUbrn: DataFrame, newUbrn:DataFrame):DataFrame = {
+
+    oldUbrn.registerTempTable("old_ubrn")
+    newUbrn.registerTempTable("new_ubrn")
+
+    sqlContext.sql(
+      """
+        | SELECT old.UBRN, old.CH, old.VAT, old.PAYE
+        | FROM old_ubrn AS old
+        | UNION ALL
+        | SELECT m.UBRN, m.CH, m.VAT, m.PAYE
+        | FROM new_ubrn AS m
+      """.stripMargin)
+  }
+
+
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
     // Load the new Links from JSON
     val jsonReader = new LinkJsonReader(sc)
     val newLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+    newLinks.cache()
 
     // Parquet file locations from configuration (or runtime params)
     val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
+    val parquetWorkingDir = parquetDataConfig.dir
     val parquetFile = parquetDataConfig.links
-    val targetFilePath = s"$parquetPath/$parquetFile"
+    // Previous and current Links file  have same name but diff location
     val prevDir = parquetDataConfig.prevDir
-    val prevLinksFile = s"$prevDir/$parquetFile"
+    val prevLinksFileParquetPath = s"$prevDir/$parquetFile"
+    val newLinksFileParquetPath = s"$parquetWorkingDir/$parquetFile"
 
-    // Do pre-processing
-    val preproc = preProcessLinks(newLinks)
+    // Get previous links
+    val previousLinksReader = new PreviousLinksReader(sc)
+    val prevLinks = previousLinksReader.readFromSourceFile(prevLinksFileParquetPath)
+    prevLinks.cache()
+
+    // Get CH matches where CH is present in both sets
+    val chMatchesDf: DataFrame = getChMatches(prevLinks, newLinks)
+    chMatchesDf.cache()
+
+    // Get content matches where CH is absent from both sets
+    val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinks)
+    contentMatchesDf.cache()
+
+    // Build set that use old UBRN
+    val useOldUbrnDf: DataFrame = chMatchesDf.unionAll(contentMatchesDf)
+
+    // Find the ones that need a new UBRN
+    val needNewUbrnDf: DataFrame = excludeMatches(newLinks, useOldUbrnDf)
+
+    // Set new UBRN for these (start from max value from previous links)
+    val maxUrbn = getMaxUbrn(prevLinks)
+    val withNewUbrn: DataFrame = applyNewUbrn(needNewUbrnDf, maxUrbn)
+
+    // Reconstruct full-set of Links to save
+    val linksToSave = combineLinksToSave(useOldUbrnDf, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
-    preproc.cache()
+    linksToSave.cache()
+
+    // Clear other cached data
+    contentMatchesDf.unpersist()
+    chMatchesDf.unpersist()
+    prevLinks.unpersist()
+    newLinks.unpersist()
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
-    jsonReader.writeParquet(preproc, targetFilePath)
+    jsonReader.writeParquet(linksToSave, newLinksFileParquetPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
-    writeAsPrevLinks(appConfig, preproc)
+    writeAsPrevLinks(appConfig, linksToSave)
 
     // 2. As e.g. 201703081145/LINKS_Output.parquet so it does not get over-written later
-    writeAsPrevLinks(appConfig, preproc, true)
+    writeAsPrevLinks(appConfig, linksToSave, true)
 
-    // Free the cached data
-    preproc.unpersist()
+    // Clear cached data we no longer need
+    linksToSave.unpersist()
   }
 
 }

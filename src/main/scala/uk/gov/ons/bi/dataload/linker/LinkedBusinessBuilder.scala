@@ -5,7 +5,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.reader.ParquetReader
+import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, Transformers}
 
 
@@ -72,12 +72,13 @@ object LinkedBusinessBuilder {
 
   // ***************** Link UBRN to Company/VAT/PAYE data **************************
 
-  def getLinkedCompanyData(uwks: RDD[UbrnWithKey], pqReader: ParquetReader,
+  def getLinkedCompanyData(uwks: RDD[UbrnWithKey],
                            appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val cos: RDD[(String, CompanyRec)] = pqReader.loadCompanyRecsFromParquet(appConfig)
+    val pqReader = new CompanyRecsParquetReader(sc)
+    val cos: RDD[(String, CompanyRec)] = pqReader.loadFromParquet(appConfig)
 
     // Join Links to corresponding data
 
@@ -90,12 +91,14 @@ object LinkedBusinessBuilder {
     linkedData
   }
 
-  def getLinkedVatData(uwks: RDD[UbrnWithKey], pqReader: ParquetReader,
+  def getLinkedVatData(uwks: RDD[UbrnWithKey],
                        appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val vats: RDD[(String, VatRec)] = pqReader.loadVatRecsFromParquet(appConfig)
+    val pqReader = new VatRecsParquetReader(sc)
+
+    val vats: RDD[(String, VatRec)] = pqReader.loadFromParquet(appConfig)
 
     // Join Links to corresponding data
 
@@ -108,12 +111,13 @@ object LinkedBusinessBuilder {
     linkedData
   }
 
-  def getLinkedPayeData(uwks: RDD[UbrnWithKey], pqReader: ParquetReader,
+  def getLinkedPayeData(uwks: RDD[UbrnWithKey],
                         appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val payes: RDD[(String, PayeRec)] = pqReader.loadPayeRecsFromParquet(appConfig)
+    val pqReader = new PayeRecsParquetReader(sc)
+    val payes: RDD[(String, PayeRec)] = pqReader.loadFromParquet(appConfig)
 
     // Join Links to corresponding data
 
@@ -127,31 +131,36 @@ object LinkedBusinessBuilder {
   }
 
 
-  // ***************** MAIN BI linking process below **************************
-
-  def buildLinkedBusinessIndexRecords(sc: SparkContext, appConfig: AppConfig) = {
-
-    // Load Parquet source data and links
-    val pqReader = new ParquetReader(sc)
-
-    val links: RDD[LinkRec] = pqReader.loadLinkRecsFromParquet(appConfig)
+  def getLinksAsUwks(appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithKey] = {
+    // Load Links from Parquet
+    val linkRecsReader = new ProcessedLinksParquetReader(sc)
+    val links: RDD[LinkRec] = linkRecsReader.loadFromParquet(appConfig)
 
     // explodeLink() converts each nested Link record to a sequence of (UBRN, type, key) triples.
     // flatMap(identity) then turns it from an RDD[Seq[UbrnWithKey]] into an
     // RDD[UbrnWithKey], which is what we want.
 
     val uwks: RDD[UbrnWithKey] = links.map { ln => Transformers.explodeLink(ln) }.flatMap(identity)
+    uwks
+  }
+
+  // ***************** MAIN BI linking process below **************************
+
+  def buildLinkedBusinessIndexRecords(sc: SparkContext, appConfig: AppConfig) = {
+
+    // Load Links from Parquet and convert to Ubrn With Key structure
+    val uwks: RDD[UbrnWithKey] = getLinksAsUwks(appConfig, sc)
 
     // Cache this data as we will be doing different things to it below
     uwks.cache()
 
     // Join Links to corresponding company/VAT/PAYE data
 
-    val companyData: RDD[UbrnWithData] = getLinkedCompanyData(uwks, pqReader, appConfig, sc)
+    val companyData: RDD[UbrnWithData] = getLinkedCompanyData(uwks, appConfig, sc)
 
-    val vatData: RDD[UbrnWithData] = getLinkedVatData(uwks, pqReader, appConfig, sc)
+    val vatData: RDD[UbrnWithData] = getLinkedVatData(uwks, appConfig, sc)
 
-    val payeData: RDD[UbrnWithData] = getLinkedPayeData(uwks, pqReader, appConfig, sc)
+    val payeData: RDD[UbrnWithData] = getLinkedPayeData(uwks, appConfig, sc)
 
     // Put the lists of UWDs  (UBRN, src, data) back together
     val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData

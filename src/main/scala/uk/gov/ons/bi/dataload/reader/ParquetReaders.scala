@@ -14,15 +14,14 @@ import scala.util.{Success, Try}
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(sc: SparkContext) {
+class ParquetReader(sc: SparkContext)
+  extends BIDataReader(sc: SparkContext) {
 
-  val sqlContext = new SQLContext(sc)
-
-  import sqlContext.implicits._
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
+    sqlContext.read.parquet(srcFilePath)
+  }
 
   def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
-    // Read Parquet data via SparkSQL
-
     // Get data directories
     val parquetDataConfig = appConfig.ParquetDataConfig
     val parquetPath = parquetDataConfig.dir
@@ -34,10 +33,15 @@ class ParquetReader(sc: SparkContext) {
     }
     val dataFile = s"$parquetPath/$parquetData"
 
-    sqlContext.read.parquet(dataFile)
+    readFromSourceFile(dataFile)
   }
 
-  def loadCompanyRecsFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
+}
+
+@Singleton
+class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
 
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
@@ -71,9 +75,15 @@ class ParquetReader(sc: SparkContext) {
     }
 
   }
+}
 
+@Singleton
+class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
-  def loadLinkRecsFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
+  // Need these for DF/SQL ops
+  import sqlContext.implicits._
+
+  def loadFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
     val df = getDataFrameFromParquet(appConfig, LINKS)
 
@@ -91,11 +101,16 @@ class ParquetReader(sc: SparkContext) {
       val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
       LinkRec(ubrn, ch, vat, paye)
-    }.filter(lr => lr.ubrn >= 0)  // Throw away Links with bad UBRNs
+    }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
 
   }
 
-  def loadPayeRecsFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
+}
+
+@Singleton
+class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
     // Yields RDD of (PAYE Ref, PAYE record)
 
@@ -144,8 +159,12 @@ class ParquetReader(sc: SparkContext) {
 
   }
 
+}
 
-  def loadVatRecsFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
+@Singleton
+class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
     // Yields RDD of (VAT Ref, VAT record)
 
@@ -182,7 +201,12 @@ class ParquetReader(sc: SparkContext) {
     }
   }
 
-  def getBIEntriesFromParquet(appConfig: AppConfig): DataFrame = {
+}
+
+@Singleton
+class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
@@ -193,5 +217,32 @@ class ParquetReader(sc: SparkContext) {
     val dataFile = s"$parquetPath/$parquetData"
 
     sqlContext.read.parquet(dataFile)
+  }
+}
+
+
+@Singleton
+class UnprocessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  // Need these for DF/SQL ops
+  import sqlContext.implicits._
+
+  def loadFromParquet(appConfig: AppConfig): RDD[Link] = {
+    // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
+    val df = getDataFrameFromParquet(appConfig, LINKS)
+    // NB: This is a nested data structure where CH/PAYE/VAT are lists
+    df.select(
+      $"CH",
+      $"VAT",
+      $"PAYE"
+    ).map { row =>
+      val ubrn = None
+      // CH is currently provided as an array but we only want the first entry (if any)
+      val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
+      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
+      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
+
+      Link(ubrn, LinkKeys(ch, vat, paye))
+    }
   }
 }
