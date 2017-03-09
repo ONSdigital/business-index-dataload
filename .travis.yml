@@ -1,0 +1,24 @@
+sudo: false
+language: scala
+
+before_script: travis_retry sbt -Dinclude.from.github=true ++$TRAVIS_SCALA_VERSION update
+
+script:
+  sbt -Dinclude.from.github=true ++$TRAVIS_SCALA_VERSION test
+# FIXME: not in artifactory yet
+# sbt ++$TRAVIS_SCALA_VERSION coverage test coverageReport coverageAggregate coveralls
+
+after_success: ./build/tag.sh
+
+scala:
+  - 2.10.6
+jdk:
+  - oraclejdk8
+
+branches:
+  only:
+    # We're only building these branches and pull requests.
+    - master
+    - develop
+notifications:
+  slack: valtech-ons:nLeAGETA8HsuIi5fMQCaLe2G
