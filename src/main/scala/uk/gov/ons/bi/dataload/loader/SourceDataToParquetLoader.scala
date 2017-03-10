@@ -16,20 +16,20 @@ class SourceDataToParquetLoader (val sc: SparkContext){
     def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
       // Get source/target directories
-      val sourceDataConfig = appConfig.SourceDataConfig
-      val srcPath = sourceDataConfig.dir
+      val extDataConfig = appConfig.ExtDataConfig
+      val extBaseDir = extDataConfig.dir
 
-      val parquetDataConfig = appConfig.ParquetDataConfig
-      val parquetPath = parquetDataConfig.dir
+      val appDataConfig = appConfig.AppDataConfig
+      val workingDir = appDataConfig.workingDir
 
       // Get directories and file names for specified data source
-      val (srcFile, dataDir, parquetFile) = biSource match {
-        case VAT => (sourceDataConfig.vat, sourceDataConfig.vatDir, parquetDataConfig.vat)
-        case CH => (sourceDataConfig.ch, sourceDataConfig.chDir, parquetDataConfig.ch)
-        case PAYE => (sourceDataConfig.paye, sourceDataConfig.payeDir, parquetDataConfig.paye)
+      val (extSrcFile, extDataDir, parquetFile) = biSource match {
+        case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
+        case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
+        case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
       }
 
-      val srcFilePath = s"$srcPath/$dataDir/$srcFile"
+      val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
 
       // Get corresponding reader based on BIDataSource
       val reader: BIDataReader = biSource match {
@@ -39,9 +39,9 @@ class SourceDataToParquetLoader (val sc: SparkContext){
       }
 
       // Process the data
-      println(s"Reading from: $srcFilePath")
-      val data = reader.readFromSourceFile(srcFilePath)
-      val targetFilePath = s"$parquetPath/$parquetFile"
+      println(s"Reading from: $extSrcFilePath")
+      val data = reader.readFromSourceFile(extSrcFilePath)
+      val targetFilePath = s"$workingDir/$parquetFile"
 
       println(s"Writing to: $targetFilePath")
       reader.writeParquet(data, targetFilePath)

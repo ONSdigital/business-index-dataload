@@ -10,6 +10,8 @@ class LinkJsonReader (sc: SparkContext)
   extends BIDataReader (sc: SparkContext){
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
+
+    println(s"Reading Links from JSON file $srcFilePath")
     sqlContext.read.json(srcFilePath)
   }
 

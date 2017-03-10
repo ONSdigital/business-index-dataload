@@ -42,7 +42,7 @@ class LinksPreprocessor(sc: SparkContext) {
     val noUbrn = df.drop(defaultUbrnColName)
 
     // Set the base UBRN for adding to the monotonic sequential value
-    val base = baseUbrn.getOrElse(defaultBaseUbrn)
+    val base = baseUbrn.getOrElse(defaultBaseUbrn) + 1
 
     // Repartition to one partition so sequence is a fairly continuous range.
     // This will force data to be shuffled, which is inefficient.
@@ -68,14 +68,13 @@ class LinksPreprocessor(sc: SparkContext) {
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // Get source/target directories
-    val sourceDataConfig = appConfig.SourceDataConfig
-    val srcPath = sourceDataConfig.dir
-    val dataDir = sourceDataConfig.linksDir
-    val srcFile = sourceDataConfig.links
-    val srcFilePath = s"$srcPath/$dataDir/$srcFile"
+    val linksDataConfig = appConfig.LinksDataConfig
+    val dataDir = linksDataConfig.dir
+    val jsonfile = linksDataConfig.json
+    val jsonFilePath = s"$dataDir/$jsonfile"
 
     // Load the JSON links data
-    reader.readFromSourceFile(srcFilePath)
+    reader.readFromSourceFile(jsonFilePath)
   }
 
   def writeAsPrevLinks(appConfig: AppConfig, df: DataFrame, timestamped: Boolean = false) = {
@@ -89,11 +88,10 @@ class LinksPreprocessor(sc: SparkContext) {
               else ""
 
     // Parquet file locations from configuration (or runtime params)
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetFile = parquetDataConfig.links
-    val prevDir = parquetDataConfig.prevDir
-    val prevLinksFile = s"$prevDir/$ts/$parquetFile"
+    val appDataConfig = appConfig.AppDataConfig
+    val linksFile = appDataConfig.links
+    val prevDir = appDataConfig.prevDir
+    val prevLinksFile = s"$prevDir/$ts/$linksFile"
 
     // We will also write a copy of the preprocessed Links data to the "previous" dir
     df.write.mode("overwrite").parquet(prevLinksFile)
@@ -174,13 +172,14 @@ class LinksPreprocessor(sc: SparkContext) {
     newLinks.cache()
 
     // Parquet file locations from configuration (or runtime params)
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetWorkingDir = parquetDataConfig.dir
-    val parquetFile = parquetDataConfig.links
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val linksFile = appDataConfig.links
+
     // Previous and current Links file  have same name but diff location
-    val prevDir = parquetDataConfig.prevDir
-    val prevLinksFileParquetPath = s"$prevDir/$parquetFile"
-    val newLinksFileParquetPath = s"$parquetWorkingDir/$parquetFile"
+    val prevDir = appDataConfig.prevDir
+    val prevLinksFileParquetPath = s"$prevDir/$linksFile"
+    val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     // Get previous links
     val previousLinksReader = new PreviousLinksReader(sc)

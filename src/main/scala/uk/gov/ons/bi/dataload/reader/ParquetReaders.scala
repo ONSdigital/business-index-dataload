@@ -22,16 +22,17 @@ class ParquetReader(sc: SparkContext)
   }
 
   def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
-    // Get data directories
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
+    // Get data directories:
+    // our business data Parquet files are stored under a working directory.
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
     val parquetData = src match {
-      case LINKS => parquetDataConfig.links
-      case CH => parquetDataConfig.ch
-      case VAT => parquetDataConfig.vat
-      case PAYE => parquetDataConfig.paye
+      case LINKS => appDataConfig.links
+      case CH => appDataConfig.ch
+      case VAT => appDataConfig.vat
+      case PAYE => appDataConfig.paye
     }
-    val dataFile = s"$parquetPath/$parquetData"
+    val dataFile = s"$workingDir/$parquetData"
 
     readFromSourceFile(dataFile)
   }
@@ -210,19 +211,19 @@ class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCo
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetData = parquetDataConfig.bi
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val biData = appDataConfig.bi
 
-    val dataFile = s"$parquetPath/$parquetData"
+    val dataFile = s"$workingDir/$biData"
 
     sqlContext.read.parquet(dataFile)
   }
 }
 
-
+/*
 @Singleton
-class UnprocessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class XUnprocessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   // Need these for DF/SQL ops
   import sqlContext.implicits._
@@ -245,4 +246,4 @@ class UnprocessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: 
       Link(ubrn, LinkKeys(ch, vat, paye))
     }
   }
-}
+}*/

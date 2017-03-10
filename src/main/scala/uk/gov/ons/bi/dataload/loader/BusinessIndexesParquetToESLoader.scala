@@ -16,6 +16,8 @@ object BusinessIndexesParquetToESLoader {
 
     val index = esConf.index
 
+    val indexType = esConf.indexType
+
      // read BI entries
 
     val pqReader = new BIEntriesParquetReader(sc)
@@ -29,6 +31,6 @@ object BusinessIndexesParquetToESLoader {
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
-    biDf.saveToEs(s"$index/business",extraEsConfig)
+    biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }
 }
