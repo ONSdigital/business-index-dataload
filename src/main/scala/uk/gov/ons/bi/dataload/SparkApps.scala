@@ -62,7 +62,7 @@ object LoadBiToEsApp extends DataloadApp {
 
     spark-submit --class uk.gov.ons.bi.dataload.LoadBiToEsApp
     --driver-memory 2G --executor-memory 2G
-    --driver-java-options "-Xms1g -Xmx4g -Ddataload.es.index=bi-dev -Ddataload.es.nodes=127.0.0.1"
+    --driver-java-options "-Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
     --jars ./lib/elasticsearch-spark_2.10-2.4.4.jar
     target/scala-2.10/business-index-dataload_2.10-1.0.jar
   */
@@ -95,7 +95,7 @@ object LoadBiToEsApp extends DataloadApp {
   // that are located on a private ip address. This is generally the case when es is
   // located on a cloud behind a public ip.
   // More: https://www.elastic.co/guide/en/elasticsearch/hadoop/master/cloud.html
-  //sparkConf.set("es.nodes.wan.only", esConfig.wanOnly)
+  // sparkConf.set("es.nodes.wan.only", esConfig.wanOnly)
 
   // Now we've built the ES SparkConf, let's go to work:
   val sc = SparkContext.getOrCreate(sparkConf)

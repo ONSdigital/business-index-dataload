@@ -221,29 +221,3 @@ class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCo
   }
 }
 
-/*
-@Singleton
-class XUnprocessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
-
-  // Need these for DF/SQL ops
-  import sqlContext.implicits._
-
-  def loadFromParquet(appConfig: AppConfig): RDD[Link] = {
-    // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
-    val df = getDataFrameFromParquet(appConfig, LINKS)
-    // NB: This is a nested data structure where CH/PAYE/VAT are lists
-    df.select(
-      $"CH",
-      $"VAT",
-      $"PAYE"
-    ).map { row =>
-      val ubrn = None
-      // CH is currently provided as an array but we only want the first entry (if any)
-      val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
-      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
-      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
-
-      Link(ubrn, LinkKeys(ch, vat, paye))
-    }
-  }
-}*/

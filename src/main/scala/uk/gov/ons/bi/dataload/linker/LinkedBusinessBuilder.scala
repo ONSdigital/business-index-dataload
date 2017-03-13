@@ -62,10 +62,10 @@ object LinkedBusinessBuilder {
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
-    val parquetDataConfig = appConfig.AppDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetBiFile = parquetDataConfig.bi
-    val biFile = s"$parquetPath/$parquetBiFile"
+    val appDataConfig = appConfig.AppDataConfig
+    val workDir = appDataConfig.workingDir
+    val parquetBiFile = appDataConfig.bi
+    val biFile = s"$workDir/$parquetBiFile"
 
     biDf.write.mode("overwrite").parquet(biFile)
   }

@@ -190,27 +190,28 @@ class LinksPreprocessor(sc: SparkContext) {
     val chMatchesDf: DataFrame = getChMatches(prevLinks, newLinks)
     chMatchesDf.cache()
 
-    // Get content matches where CH is absent from both sets
+    // Get records where CH is absent from both sets but other contents are same
     val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinks)
     contentMatchesDf.cache()
 
-    // Build set that use old UBRN
+    // Build set that use old UBRN i.e. CH matches + content matches
     val useOldUbrnDf: DataFrame = chMatchesDf.unionAll(contentMatchesDf)
 
     // Find the ones that need a new UBRN
+    // i.e. new links that do NOT occur in the "matches" we identified
     val needNewUbrnDf: DataFrame = excludeMatches(newLinks, useOldUbrnDf)
 
     // Set new UBRN for these (start from max value from previous links)
     val maxUrbn = getMaxUbrn(prevLinks)
     val withNewUbrn: DataFrame = applyNewUbrn(needNewUbrnDf, maxUrbn)
 
-    // Reconstruct full-set of Links to save
+    // Reconstruct full-set of Links to save them all to Parquet
     val linksToSave = combineLinksToSave(useOldUbrnDf, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
     linksToSave.cache()
 
-    // Clear other cached data
+    // Clear other cached data we no longer need
     contentMatchesDf.unpersist()
     chMatchesDf.unpersist()
     prevLinks.unpersist()

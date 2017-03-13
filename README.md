@@ -74,13 +74,23 @@
 * It can be difficult to build an assembly package without introducing conflicts between the various Spark libraries and their dependencies.
 * The easiest option is to just build the basic package here, then providing the extra JARS as `--jars` dependencies at runtime.
 
+### Configuration ###
+
+* This application uses a typical Scala configuration file:
+
+> [`src/main/resources/application.conf`](./src/main/resources/application.conf)
+
+* This contains the settings for ElasticSearch, file locations etc.
+* All the configuration properties can also be specified at runtime, as described in the configuration file.
+
+
 ## Deploying the application ##
 
 * The initial implementation is deployed manually.
 * The application JAR and the 3rd party library JARs are all placed in a directory in HDFS that can be accessed by Oozie.
 * Data files are also stored in HDFS.
 * The data file names and locations are specified in `application.conf`, but can be provided at runtime via "-D" parameters.
-* The application is executed as a 3-step Oozie workflow.
+* The application is executed as a 4-step Oozie workflow.
 * The individual steps and their Oozie task parameters are documented separately below.
 
 
@@ -91,19 +101,11 @@
 * These have default values in the `src/main/resources/application.conf` file.
 * They can be modified via environment variables - see the configuration file for details.
 * We can also provide values at runtime here using "-D" Java options in the Oozie task specification.
-* For example, to set the source data directory:
+* For example, to re-set the source data directory:
 
 > * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
 
-* The default directory structure is:
-
-> *  `bi-data`
-
->> * `CH`: Companies House CSV file(s) - CH download is multiple files.
->> * `LINKS`: Links JSON file
->> * `PAYE`: PAYE CSV file
->> * `VAT`: VAT CSV file
->> * `WORKINGDATA`:  All generated Parquet files.
+* See the configuration file for further details.
 
 
 ## Detailed processing ##
