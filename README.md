@@ -132,13 +132,7 @@
 * All files are held in HDFS.
 * The locations are specified via various configuration properties.
 * These have default values in the `src/main/resources/application.conf` file.
-* They can be modified via environment variables - see the configuration file for details.
-* We can also provide values at runtime here using "-D" Java options in the Oozie task specification.
-* For example, to re-set the source data directory:
-
-> * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
-
-* See [file locations document](./docs/bi-dataload-file-locations.md) for further details.
+* They can be modified via environment variables as described above.
 
 
 ## Further information ##
