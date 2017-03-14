@@ -11,7 +11,7 @@
 * The ML process generates a file of possible links (currently in JSON format). 
 * The data ingestion process consumes the links and source data files and generates corresponding entries for an ElasticSearch index of businesses.
 * The ElasticSearch index is used by a separate application to support queries for business data.
-* See [step 0 processing](./docs/bi-dataload-step-10.md) for more information on pre-processing and UBRN allocation for Links data.
+* See [step 0 processing](./docs/bi-dataload-step-0.md) for more information on pre-processing and UBRN allocation for Links data.
 * See [step 1 processing](./docs/bi-dataload-step-1.md) for more information on business data sources and initial data-load.
 
 ## Platform ##
