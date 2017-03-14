@@ -47,7 +47,7 @@
 * This application consists of a data-pipeline that needs to process different data-sets at different stages of the overall data flow.
 * In order to maintain this process more easily, it is broken into multiple steps.
 * Each step may produce interim data files that will be used in subsequent steps.
-* These workign files are over-written in each run through the pipeline.
+* These working files are over-written in each run through the pipeline.
 * The mandated directory structure also requires us to have separate directories for `dev`, `test` and `beta` (production) files.
 
 ```
