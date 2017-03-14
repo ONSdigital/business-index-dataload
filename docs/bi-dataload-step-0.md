@@ -1,10 +1,12 @@
 # BI Dataload step 0: pre-process Links #
 
 
-![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-0.jpg)
+![MacDown Screenshot](./bi-dataload-step-0-data-flow.jpg)
+
 
 * [README](../README.md)
 
+> * [File locations](./bi-dataload-file-locations.md).
 > * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
@@ -37,7 +39,7 @@
 
 ### Generating the UBRN ###
 
-* We have implemented a work-around using Apache Spark's "monotonically increasing ID" generator.
+* We have implemented a work-around using Apache Spark's "**monotonically increasing ID**" generator.
 * This works by generating a unique value which is partly determined by the specific server node it is running on (it is similar to a standard UUID in this respect).
 * This means that the system knows that each node has its own sub-set of sequence numbers, so it only needs to ensure the new value is unique on the relevant node.
 * The drawback is that this creates very high sequence values from the outset.
@@ -60,16 +62,50 @@
 * The Links Parquet file will be processed further by a later step in the overall BI data ingestion pipeline.
 
 
-## Month 2+ processing (NOT YET IMPLEMENTED) ##
+## Month 2+ processing ##
 
-* The plan is that when we load subsequent sets of Links from the data science process, we will try to match any Links that have already been loaded previously.
+* When we load subsequent sets of Links from the data science process, we will try to match any Links that have already been loaded previously.
 * This will involve looking at the Links wth UBRNs that have been loaded previously.
 * There will be business rules to determine whether a link should re-use an existing UBRN, or be allocated a fresh UBRN.
-* We will need to work out how to ensure that the new UBRN does not clash with existing UBRNs.
-* Probably the easiest way to do this will be to get the maximum rpevious UBRN prior to running this process, then add this as an offset to the new UBRN.
-* It is not currently clear how or where the old Links data will be stored, but presumably it will be held somewhere in HDFS.
-* We will need to check **all previous BI Links** for any previous occurrence sof the same Link.
-* **Further work is required here to identify the detailed requirements and design an appropriate solution**.
+* The new UBRN will be generated from a "monotonically increasing ID" (see above), but this starts from zero every time you run it.
+* In order to ensure new UBRNs do not duplicate existing ones, we also fetch the maximum previous UBRN prior to running this process, then add this as an offset to the new UBRN to give us what should be a unique new UBRN.
+
+> `new UBRN = max UBRN from previous run + new sequence ID + 1`
+
+* Each run's Links will **replace the existing Links in the ElasticSearch index** i.e. we **do not retain old Links data**  from one run to the next.
+
+
+### UBRN and Links comparisons ###
+
+* The current data ingestion process applies simplified business rules for checking whether a new Link matches a Link from the previous run.
+
+```
+	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
+	AND (old CH = new.CH)
+	THEN
+	  use old UBRN for new Link record
+	ELSIF (old CH IS NULL AND new CH IS NULL)
+	AND (old contents = new contents)
+	THEN
+	  use old UBRN for new Link record
+	ELSE
+	  allocate new UBRN
+	END IF
+	
+```
+
+* This approach allows us to identify large sets of matching Links relatively quickly.
+* The remaining Links may need to be checked further if more refined business matching rules are required.
+* However, this implementation should cover the vast majority of Link matches from one run to the next.
+
+### Previous Links files ###
+
+* See [File locations](./bi-dataload-file-locations.md).
+* Every time we run the data ingestion process, we generate a new file of Links with UBRNs (in Parquet format).
+* This file is saved into the application working directory, as it will be used in subsequent steps in the data ingestion process.
+* It is also saved to the "PREVIOUS" folder, ready to be picked up as the "previous links" for the next run.
+* This over-writes the "previous links" file from the last run.
+* The new Links file is also saved in a time-stamped folder under the "PREVIOUS" folder, so we always have a back-up of the Links with UBRNs for a given run.
 
 ## Running step 0 ##
 
@@ -81,16 +117,16 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
-* This example specifies 6 Spark executors to ensure sufficient resources when loading the JSON file, as JSON-processing is quite demanding.
+* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
+* This example specifies 6 Spark executors to ensure sufficient resources when loading the JSON file, as JSON-processing and Link-matching are both quite demanding.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 
 Page 1 Field | Contents
 ------------- | -------------
 Spark Master  | yarn-cluster
 Mode  | cluster
-App Name | ONS BI Dataload 1.1 Step 0 Pre-process Links
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
+App Name | ONS BI Dataload 1.2 Step 0 Pre-process Links
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents

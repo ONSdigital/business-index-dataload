@@ -1,5 +1,8 @@
 # ONS Business Indexes - data ingestion ##
 
+
+![](./docs/bi-ingestion-data-flow.jpg)
+
 ## Purpose ##
 
 * This application performs the data ingestion stage of the ONS Business Index data-flow.
@@ -105,10 +108,12 @@
 
 > * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
 
-* See the configuration file for further details.
+* See [file locations document](./docs/bi-dataload-file-locations.md) for further details.
 
 
 ## Detailed processing ##
+
+* [File locations](./docs/bi-dataload-file-locations.md)
 
 * [Step 0: Pre-process Links data](./docs/bi-dataload-step-0.md)
 

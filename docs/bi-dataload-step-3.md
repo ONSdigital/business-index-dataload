@@ -1,8 +1,10 @@
 # BI Dataload step 3: upload Business Index entries to ElasticSearch #
 
+![](./bi-dataload-step-3-data-flow.jpg)
 
 * [README](../README.md)
 
+> * [File locations](./bi-dataload-file-locations.md).
 > * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
@@ -18,7 +20,7 @@
 ### Data file locations ###
 
 * The Parquet files are all stored in a specified working data directory
-* See [step 1](./bi-dataload-ste-1.md) for default file locations.
+* See [file locations](./bi-dataload-file-locations.md) for details.
 
 ### ElasticSearch processing ###
 
@@ -31,9 +33,11 @@
 * The ElasticSearch node IP address and index name are specified via configuration parameters.
 * These can be provided to the Oozie task at runtime:
 
-> `-Ddataload.es.index=bi-dev -Ddataload.es.nodes=127.0.0.1`
+> `-Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1`
  
 * These values are used by the ElasticSearch Spark API when writing to the ES index.
+* If the target index does not exist, it can be created automatically here, but the auto-created version will not provide all the required search/index functionality.
+* For this reason, the **production version of the index must be created separately before the data is loaded into it**.
 
 ### Oozie task specification ###
 
@@ -43,7 +47,7 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
+* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
 * Performance may depend on ElasticSearch cluster resources which are outside the scope of this application.
 * This example specifies 8 Spark executors.
 * It may be possible to tweak the various Spark settings to use less memory etc, but this configuration seems to work OK with current data-sets.
@@ -53,11 +57,11 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 3 Upload to ElasticSearch
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.LoadBiToEsApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Xms1g -Xmx4g -Ddataload.es.index=bi-dev -Ddataload.es.nodes=127.0.0.1"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
 
 -----

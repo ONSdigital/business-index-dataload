@@ -1,10 +1,17 @@
 # BI Dataload step 2: build Business Index entries #
 
+## Overall data flow ##
+
+![](./bi-dataload-step-2-data-flow.jpg)
+
+
+## Detailed processing ##
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-2.jpg)
 
 * [README](../README.md)
 
+> * [File locations](./bi-dataload-file-locations.md).
 > * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
@@ -13,7 +20,7 @@
 ## What and why? ##
 
 * This step reads the Parquet files of source data i.e. Companies House, PAYE and VAT.
-* It also reads the Parquet file of Links.
+* It also reads the Parquet file of Links with UBRNs.
 * It joins the Links to the corresponding CH/PAYE/VAT data and builds the corresponding Business Index entry.
 * The Business Index entries are then written to a Parquet file.
 * This allows us to separate the initial raw data-load in [step 1](./bi-dataload-step-1.md) from the more complicated processing needed to join the different data-sets and extract the required information.
@@ -26,7 +33,7 @@
 
 * All files are held in HDFS.
 * The locations are specified via various configuration properties.
-* See [step 1](./bi-dataload-step-1.md) for default file locations.
+* See [file locations](./bi-dataload-step-1.md) for further information.
 * The Parquet files are all stored in the specified Parquet working data directory.
 
 ### Data formats ###
@@ -43,7 +50,7 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
+* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
 * This example specifies 8 Spark executors to ensure sufficient resources when performing the joins on large data-sets.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 
@@ -52,7 +59,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 2 Build BI Entries From Links And Business Data
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.LinkDataApp
 
 Page 2 Field | Contents

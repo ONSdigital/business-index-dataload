@@ -1,10 +1,11 @@
 # BI Dataload step 1: convert business data to Parquet files #
 
 
-![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-1.jpg)
+![MacDown Screenshot](./bi-dataload-step-1-data-flow.jpg)
 
 * [README](../README.md)
 
+> * [File locations](./bi-dataload-file-locations.md).
 > * [Step 0](./bi-dataload-step-0.md).
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
@@ -23,7 +24,7 @@
 ### Links data pre-processed separately ###
 
 * Links between CH and PAYE/VAT data are provided as a JSON file which is generated from a separate machine learning application.
-* However, Linbks require extra pre-processing which is performed in [step 0](./bi-dataload-step-0.md).
+* However, Links require extra pre-processing which is performed in [step 0](./bi-dataload-step-0.md).
 * We do not process Links data in step 1.
 
 
@@ -34,22 +35,8 @@
 * All files are held in HDFS.
 * The locations are specified via various configuration properties.
 * These have default values in the `src/main/resources/application.conf` file.
-* They can be modified via environment variables - see the configuration file for details.
-* We can also provide values at runtime here using "-D" Java options in the Oozie task specification.
-* For example, to set the source data directory:
-
-> * `--driver-java-options "-Ddataload.src-data.dir=./bi-data"`
-
-* The default directory structure is:
-
-> *  `bi-data`
-
->> * `CH`: Companies House CSV file(s) - CH download is multiple files.
->> * `LINKS`: Links JSON file
->> * `PAYE`: PAYE CSV file
->> * `VAT`: VAT CSV file
->> * `WORKINGDATA`:  All generated Parquet files.
-
+* The configuration properties can be modified at runtime via Java driver properties.
+* See the [file locations document](./bi-dataload-file-locations.md) for details.
 
 ### Data formats ###
 
@@ -91,7 +78,7 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/user/appUser`.
+* Assumes JAR files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 
 Page 1 Field | Contents
@@ -99,10 +86,10 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 1 Load Source Data To Parquet
-Jars/py files | hdfs://dev4/user/appUser/libs/business-index-dataload_2.10-1.1.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.SourceDataToParquetApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/user/appUser/libs/spark-csv_2.10-1.5.0.jar,hdfs://dev4/user/appUser/libs/univocity-parsers-1.5.1.jar,hdfs://dev4/user/appUser/libs/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
+Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/lib/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
 
