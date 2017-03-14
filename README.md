@@ -111,14 +111,12 @@
 * See [file locations document](./docs/bi-dataload-file-locations.md) for further details.
 
 
-## Detailed processing ##
+## Further information ##
 
-* [File locations](./docs/bi-dataload-file-locations.md)
+* [README](../README.md)
 
-* [Step 0: Pre-process Links data](./docs/bi-dataload-step-0.md)
-
-* [Step 1: Load business data to parquet files](./docs/bi-dataload-step-1.md)
-
-* [Step 2: Build business index entries](./docs/bi-dataload-step-2.md)
-
-* [Step 3: Upload business index entries to ElasticSearch](./docs/bi-dataload-step-3.md)
+> * [File locations](./bi-dataload-file-locations.md).
+> * [Step 0](./bi-dataload-step-0.md).
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
