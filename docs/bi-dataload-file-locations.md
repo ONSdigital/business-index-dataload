@@ -16,10 +16,10 @@
 ```
     /external
        |
-       +-- HMRC
-       |     +--- PAYE
-       |     +--- VAT
-       +-- CompaniesHouse
+       +-- hmrc
+       |     +--- paye
+       |     +--- vat
+       +-- companiesHouse
 ```
 
 ### Links input data ###
@@ -37,7 +37,7 @@
     |
     +-- businessIndex
            |
-           +-- Links:  contains Links JSON file 
+           +-- links:  contains Links JSON file 
            |
            +-- [... see below ]
 ```
@@ -55,7 +55,7 @@
     |
     +-- businessIndex
            |
-           +-- Links:  contains Links JSON file (see above)
+           +-- links:  contains Links JSON file (see above)
            |
            +-- [dev or test or beta]
                 |
