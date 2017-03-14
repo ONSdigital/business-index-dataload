@@ -9,13 +9,6 @@
 
 ![MacDown Screenshot](./BI-data-ingestion-Spark-flow-step-2.jpg)
 
-* [README](../README.md)
-
-> * [File locations](./bi-dataload-file-locations.md).
-> * [Step 0](./bi-dataload-step-0.md).
-> * [Step 1](./bi-dataload-step-1.md).
-> * [Step 2](./bi-dataload-step-2.md).
-> * [Step 3](./bi-dataload-step-3.md).
 
 ## What and why? ##
 
@@ -66,4 +59,12 @@ Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --driver-java-options "-Xms1g -Xmx6g"
 
------
+## Further information ##
+
+* [README](../README.md)
+
+> * [File locations](./bi-dataload-file-locations.md).
+> * [Step 0](./bi-dataload-step-0.md).
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
