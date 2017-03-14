@@ -98,7 +98,7 @@
 
 > * via command-line Java driver options (e.g. in Oozie):
 
->```
+```
 	spark-submit --class com.example.Sparky 
 	             --master local[*] 
 	             --driver-java-options "-Dbi-dataload.es.index=my_index_name" 
