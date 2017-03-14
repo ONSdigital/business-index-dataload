@@ -22,7 +22,7 @@
 
 ### Links input data ###
 
-* The Business Indexes data science component will generate a file of linked businesses in JSON format.
+* The Business Index data science component will generate a file of linked businesses in JSON format.
 
 > `{"CH":["COMPANYNO"],"VAT":["VATREFERENCE"],"PAYE":["PAYEREFERENCE"]}`
   
