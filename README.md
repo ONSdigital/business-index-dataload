@@ -1,6 +1,5 @@
 # ONS Business Indexes - data ingestion ##
 
-
 ![](./docs/bi-ingestion-data-flow.jpg)
 
 ## Purpose ##
@@ -77,7 +76,7 @@
 * It can be difficult to build an assembly package without introducing conflicts between the various Spark libraries and their dependencies.
 * The easiest option is to just build the basic package here, then providing the extra JARS as `--jars` dependencies at runtime.
 
-### Configuration ###
+## Configuration ##
 
 * This application uses a typical Scala configuration file:
 
@@ -85,6 +84,37 @@
 
 * This contains the settings for ElasticSearch, file locations etc.
 * All the configuration properties can also be specified at runtime, as described in the configuration file.
+
+### Changing configuration settings at runtime ###
+
+* The config file provides a default value for each parameter.
+* It also allows the property to be overridden via a specified env variable if provided.
+* The environment variable is named like this:
+
+> * e.g. config property:   `bi-dataload.es.index`
+> * corresponding variable: `BI_DATALOAD_ES_INDEX`
+
+* So you can override config values at runtime:
+
+> * via command-line Java driver options (e.g. in Oozie):
+
+>```
+	spark-submit --class com.example.Sparky 
+	             --master local[*] 
+	             --driver-java-options "-Dbi-dataload.es.index=my_index_name" 
+	 target/scala-2.11/spark-dummy_2.11-1.0.jar
+```
+
+> * via a corresponding environment variable such as `BI_DATALOAD_ES_INDEX`.
+
+* See the [config file](./src/main/resources/application.conf) for the individual parameters and corresponding environment variable names.
+ 
+
+### Priority of config values ###
+
+1.  If value is provided via **Java driver option**, then this value will be used.
+2.  Else if value is provided via **env variable**, then this value will be used.
+3.  Else if no env or driver value exists, then **value from config file** will be used.
 
 
 ## Deploying the application ##

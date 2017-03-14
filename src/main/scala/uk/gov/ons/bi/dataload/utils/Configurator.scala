@@ -19,15 +19,8 @@ class AppConfig {
 
   private lazy val root = config.getConfig("bi-dataload")
 
-  def configPropertyNameAsEnv(name: String): String = {
-    // Assumes property called bi-dataload.es.index would correspond to
-    // an environment variable such as BI_DATALOAD_ES_INDEX, for example.
-    name.toUpperCase.replaceAll("""\.""", "_").replaceAll("""-""", "_")
-  }
-
-  def envOrElseConfigStr(name: String, localConfig: Config = config): String = {
-    val varName = configPropertyNameAsEnv(name)
-    Properties.envOrElse(varName, localConfig.getString(name))
+  def getConfigStr(name: String, localConfig: Config = config): String = {
+    localConfig.getString(name)
   }
 
   object ExtDataConfig {
@@ -36,19 +29,19 @@ class AppConfig {
 
     private val extDataConfig = root.getConfig("ext-data")
 
-    lazy val dir = envOrElseConfigStr("dir", extDataConfig)
+    lazy val dir = getConfigStr("dir", extDataConfig)
 
-    lazy val paye = envOrElseConfigStr("paye", extDataConfig)
+    lazy val paye = getConfigStr("paye", extDataConfig)
 
-    lazy val vat = envOrElseConfigStr("vat", extDataConfig)
+    lazy val vat = getConfigStr("vat", extDataConfig)
 
-    lazy val ch = envOrElseConfigStr("ch", extDataConfig)
+    lazy val ch = getConfigStr("ch", extDataConfig)
 
-    lazy val chDir = envOrElseConfigStr("ch-dir", extDataConfig)
+    lazy val chDir = getConfigStr("ch-dir", extDataConfig)
 
-    lazy val payeDir = envOrElseConfigStr("paye-dir", extDataConfig)
+    lazy val payeDir = getConfigStr("paye-dir", extDataConfig)
 
-    lazy val vatDir = envOrElseConfigStr("vat-dir", extDataConfig)
+    lazy val vatDir = getConfigStr("vat-dir", extDataConfig)
 
   }
 
@@ -56,9 +49,9 @@ class AppConfig {
 
     private val linksDataConfig = root.getConfig("links-data")
 
-    lazy val json = envOrElseConfigStr("json", linksDataConfig)
+    lazy val json = getConfigStr("json", linksDataConfig)
 
-    lazy val dir = envOrElseConfigStr("dir", linksDataConfig)
+    lazy val dir = getConfigStr("dir", linksDataConfig)
   }
 
   object AppDataConfig {
@@ -69,33 +62,33 @@ class AppConfig {
 
     // Apparently we are supposed to be able to write to dev/test/beta
     // directories under the main app data directory.
-    lazy val env = envOrElseConfigStr("env", appDataConfig)
+    lazy val env = getConfigStr("env", appDataConfig)
 
     // directories
 
-    lazy val dir = envOrElseConfigStr("dir", appDataConfig)
+    lazy val dir = getConfigStr("dir", appDataConfig)
 
-    lazy val work = envOrElseConfigStr("work", appDataConfig)
+    lazy val work = getConfigStr("work", appDataConfig)
 
-    lazy val prev = envOrElseConfigStr("prev", appDataConfig)
+    lazy val prev = getConfigStr("prev", appDataConfig)
 
     // files
 
-    lazy val paye = envOrElseConfigStr("paye", appDataConfig)
+    lazy val paye = getConfigStr("paye", appDataConfig)
 
-    lazy val vat = envOrElseConfigStr("vat", appDataConfig)
+    lazy val vat = getConfigStr("vat", appDataConfig)
 
-    lazy val ch = envOrElseConfigStr("ch", appDataConfig)
+    lazy val ch = getConfigStr("ch", appDataConfig)
 
-    lazy val links = envOrElseConfigStr("links", appDataConfig)
+    lazy val links = getConfigStr("links", appDataConfig)
 
-    lazy val bi = envOrElseConfigStr("bi", appDataConfig)
+    lazy val bi = getConfigStr("bi", appDataConfig)
 
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.
     lazy val (workingDir, prevDir) =
-      if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
-      else (s"$dir/$work", s"$dir/$prev")
+    if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
+    else (s"$dir/$work", s"$dir/$prev")
   }
 
   object ESConfig {
@@ -104,21 +97,21 @@ class AppConfig {
 
     private val esConfig = root.getConfig("es")
 
-    lazy val nodes = envOrElseConfigStr("nodes", esConfig)
+    lazy val nodes = getConfigStr("nodes", esConfig)
 
-    lazy val port = envOrElseConfigStr("port", esConfig).toInt
+    lazy val port = getConfigStr("port", esConfig).toInt
 
-    lazy val esUser = envOrElseConfigStr("es-user", esConfig)
+    lazy val esUser = getConfigStr("es-user", esConfig)
 
-    lazy val esPass = envOrElseConfigStr("es-pass", esConfig)
+    lazy val esPass = getConfigStr("es-pass", esConfig)
 
-    lazy val index = envOrElseConfigStr("index", esConfig)
+    lazy val index = getConfigStr("index", esConfig)
 
-    lazy val indexType = envOrElseConfigStr("index-type", esConfig)
+    lazy val indexType = getConfigStr("index-type", esConfig)
 
-    lazy val autocreate = envOrElseConfigStr("autocreate", esConfig)
+    lazy val autocreate = getConfigStr("autocreate", esConfig)
 
-    lazy val wanOnly = envOrElseConfigStr("wan-only", esConfig)
+    lazy val wanOnly = getConfigStr("wan-only", esConfig)
 
     override def toString: String = {
       s"""[nodes = $nodes,
@@ -138,9 +131,9 @@ class AppConfig {
 
     private val sparkConfig = root.getConfig("spark")
 
-    lazy val appName = envOrElseConfigStr("app-name", sparkConfig)
+    lazy val appName = getConfigStr("app-name", sparkConfig)
 
-    lazy val serializer = envOrElseConfigStr("serializer", sparkConfig)
+    lazy val serializer = getConfigStr("serializer", sparkConfig)
 
   }
 
