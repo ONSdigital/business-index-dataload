@@ -1,7 +1,5 @@
 # BI Dataload File locations #
 
-## Follow the data
-
 ![](./bi-ingestion-data-flow.jpg)
 
 ## Input files ##
