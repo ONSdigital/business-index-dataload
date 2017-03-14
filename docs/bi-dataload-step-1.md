@@ -3,14 +3,6 @@
 
 ![MacDown Screenshot](./bi-dataload-step-1-data-flow.jpg)
 
-* [README](../README.md)
-
-> * [File locations](./bi-dataload-file-locations.md).
-> * [Step 0](./bi-dataload-step-0.md).
-> * [Step 1](./bi-dataload-step-1.md).
-> * [Step 2](./bi-dataload-step-2.md).
-> * [Step 3](./bi-dataload-step-3.md).
-
 ## Why? ##
 
 * Initially, the application will consume data in different text-based formats.
@@ -93,3 +85,12 @@ Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/lib/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
 
+## Further information ##
+
+* [README](../README.md)
+
+> * [File locations](./bi-dataload-file-locations.md).
+> * [Step 0](./bi-dataload-step-0.md).
+> * [Step 1](./bi-dataload-step-1.md).
+> * [Step 2](./bi-dataload-step-2.md).
+> * [Step 3](./bi-dataload-step-3.md).
