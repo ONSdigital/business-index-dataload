@@ -2,7 +2,7 @@ package uk.gov.ons.bi.dataload.loader
 
 import org.apache.spark.SparkContext
 import org.elasticsearch.spark.sql._
-import uk.gov.ons.bi.dataload.reader.ParquetReader
+import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils._
 
 /**
@@ -16,11 +16,13 @@ object BusinessIndexesParquetToESLoader {
 
     val index = esConf.index
 
+    val indexType = esConf.indexType
+
      // read BI entries
 
-    val pqReader = new ParquetReader(sc)
+    val pqReader = new BIEntriesParquetReader(sc)
 
-    val biDf = pqReader.getBIEntriesFromParquet(appConfig)
+    val biDf = pqReader.loadFromParquet(appConfig)
 
     println(s"BI index file contained ${biDf.count} records.")
 
@@ -29,6 +31,6 @@ object BusinessIndexesParquetToESLoader {
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
-    biDf.saveToEs(s"$index/business",extraEsConfig)
+    biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }
 }

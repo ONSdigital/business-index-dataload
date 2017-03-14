@@ -14,30 +14,35 @@ import scala.util.{Success, Try}
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(sc: SparkContext) {
+class ParquetReader(sc: SparkContext)
+  extends BIDataReader(sc: SparkContext) {
 
-  val sqlContext = new SQLContext(sc)
-
-  import sqlContext.implicits._
-
-  def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
-    // Read Parquet data via SparkSQL
-
-    // Get data directories
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetData = src match {
-      case LINKS => parquetDataConfig.links
-      case CH => parquetDataConfig.ch
-      case VAT => parquetDataConfig.vat
-      case PAYE => parquetDataConfig.paye
-    }
-    val dataFile = s"$parquetPath/$parquetData"
-
-    sqlContext.read.parquet(dataFile)
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
+    sqlContext.read.parquet(srcFilePath)
   }
 
-  def loadCompanyRecsFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
+  def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
+    // Get data directories:
+    // our business data Parquet files are stored under a working directory.
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val parquetData = src match {
+      case LINKS => appDataConfig.links
+      case CH => appDataConfig.ch
+      case VAT => appDataConfig.vat
+      case PAYE => appDataConfig.paye
+    }
+    val dataFile = s"$workingDir/$parquetData"
+
+    readFromSourceFile(dataFile)
+  }
+
+}
+
+@Singleton
+class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
 
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
@@ -71,9 +76,15 @@ class ParquetReader(sc: SparkContext) {
     }
 
   }
+}
 
+@Singleton
+class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
-  def loadLinkRecsFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
+  // Need these for DF/SQL ops
+  import sqlContext.implicits._
+
+  def loadFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
     val df = getDataFrameFromParquet(appConfig, LINKS)
 
@@ -91,11 +102,16 @@ class ParquetReader(sc: SparkContext) {
       val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
       LinkRec(ubrn, ch, vat, paye)
-    }.filter(lr => lr.ubrn >= 0)  // Throw away Links with bad UBRNs
+    }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
 
   }
 
-  def loadPayeRecsFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
+}
+
+@Singleton
+class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
     // Yields RDD of (PAYE Ref, PAYE record)
 
@@ -144,8 +160,12 @@ class ParquetReader(sc: SparkContext) {
 
   }
 
+}
 
-  def loadVatRecsFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
+@Singleton
+class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
     // Yields RDD of (VAT Ref, VAT record)
 
@@ -182,16 +202,22 @@ class ParquetReader(sc: SparkContext) {
     }
   }
 
-  def getBIEntriesFromParquet(appConfig: AppConfig): DataFrame = {
+}
+
+@Singleton
+class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+
+  def loadFromParquet(appConfig: AppConfig): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
-    val parquetDataConfig = appConfig.ParquetDataConfig
-    val parquetPath = parquetDataConfig.dir
-    val parquetData = parquetDataConfig.bi
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val biData = appDataConfig.bi
 
-    val dataFile = s"$parquetPath/$parquetData"
+    val dataFile = s"$workingDir/$biData"
 
     sqlContext.read.parquet(dataFile)
   }
 }
+

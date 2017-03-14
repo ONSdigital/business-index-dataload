@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 
 abstract class BIDataReader(sc: SparkContext) {
 
-  val sqlContext = new SQLContext(sc)
+  val sqlContext =  SQLContext.getOrCreate(sc)
 
   def readFromSourceFile(srcFilePath: String): DataFrame
 
