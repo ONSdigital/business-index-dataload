@@ -72,6 +72,12 @@
 
 * Assumes JAR files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
+* We set the "env" parameter below so the Spark process knows where to read/write application data:
+
+>	`-Dbi-dataload.app-data.env=dev`
+
+* The default value in the config file is "dev", but the parameter is included here to  remind you that you may need to change it.
+
 
 Page 1 Field | Contents
 ------------- | -------------
@@ -83,7 +89,7 @@ Main class | uk.gov.ons.bi.dataload.SourceDataToParquetApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/lib/commons-csv-1.1.jar --driver-java-options "-Xms1g -Xmx5g"
+Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/lib/commons-csv-1.1.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
 
 ## Further information ##
 
