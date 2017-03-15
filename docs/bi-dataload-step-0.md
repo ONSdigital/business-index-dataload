@@ -111,6 +111,11 @@
 * Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
 * This example specifies 6 Spark executors to ensure sufficient resources when loading the JSON file, as JSON-processing and Link-matching are both quite demanding.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
+* We set the "env" parameter below so the Spark process knows where to read/write application data:
+
+>	`-Dbi-dataload.app-data.env=dev`
+
+* The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
 
 Page 1 Field | Contents
 ------------- | -------------
@@ -122,7 +127,7 @@ Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --num-executors 6 --driver-memory 3G --executor-memory 3G --driver-java-options "-Xms1g -Xmx5g"
+Properties / Options list | --num-executors 6 --driver-memory 3G --executor-memory 3G --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
 
 ## Further information ##
 
