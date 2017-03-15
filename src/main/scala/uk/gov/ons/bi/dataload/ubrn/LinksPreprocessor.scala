@@ -57,15 +57,6 @@ class LinksPreprocessor(sc: SparkContext) {
     df1partWithUbrn.repartition(numPartitions)
   }
 
-  def preProcessLinks(df: DataFrame, baseUbrn: Option[Long] = None): DataFrame = {
-    // Eventually this will involve comparing old/new links and setting UBRN.
-    // For now, we just set the UBRN.
-    // Base UBRN will default to 0 for now as we do not check previous link files.
-    val withUbrn = applyNewUbrn(df, baseUbrn)
-
-    withUbrn
-  }
-
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // Get source/target directories
     val linksDataConfig = appConfig.LinksDataConfig
@@ -194,10 +185,15 @@ class LinksPreprocessor(sc: SparkContext) {
     val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinks)
     contentMatchesDf.cache()
 
-    // Build set that use old UBRN i.e. CH matches + content matches
+    // Additional matching rules will need to be applied in here?
+    // ...
+    // ...
+
+    // Build set of all new links that can use old UBRN
+    // i.e. CH matches + content matches (+ any other matches?)
     val useOldUbrnDf: DataFrame = chMatchesDf.unionAll(contentMatchesDf)
 
-    // Find the ones that need a new UBRN
+    // Find the ones that will need a new UBRN
     // i.e. new links that do NOT occur in the "matches" we identified
     val needNewUbrnDf: DataFrame = excludeMatches(newLinks, useOldUbrnDf)
 
@@ -205,7 +201,7 @@ class LinksPreprocessor(sc: SparkContext) {
     val maxUrbn = getMaxUbrn(prevLinks)
     val withNewUbrn: DataFrame = applyNewUbrn(needNewUbrnDf, maxUrbn)
 
-    // Reconstruct full-set of Links to save them all to Parquet
+    // Reconstruct full set of Links so we can save them all to Parquet
     val linksToSave = combineLinksToSave(useOldUbrnDf, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
