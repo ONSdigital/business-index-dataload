@@ -181,19 +181,29 @@ class LinksPreprocessor(sc: SparkContext) {
     val chMatchesDf: DataFrame = getChMatches(prevLinks, newLinks)
     chMatchesDf.cache()
 
+    // Remove first set of matches from new links so we can reduce sdaerching?
+    val newLinksCut1 = excludeMatches(newLinks, chMatchesDf)
+    newLinksCut1.cache()
+
     // Get records where CH is absent from both sets but other contents are same
-    val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinks)
+    val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinksCut1)
     contentMatchesDf.cache()
 
     // Additional matching rules will need to be applied in here?
+    // - take another cut of new links to eliminate ones we just matched
     // ...
+    // val newLinksCut2 = excludeMatches(newLinksCut1, contentMatchesDf)
+    // newLinksCut2.cache()
+    // newinksCut1.unpersist()
+    // ...
+    // - apply new rule to latest cut of new links...
     // ...
 
     // Build set of all new links that can use old UBRN
     // i.e. CH matches + content matches (+ any other matches?)
     val useOldUbrnDf: DataFrame = chMatchesDf.unionAll(contentMatchesDf)
 
-    // Find the ones that will need a new UBRN
+    // Find the new links that have NOT been matched and will need a new UBRN
     // i.e. new links that do NOT occur in the "matches" we identified
     val needNewUbrnDf: DataFrame = excludeMatches(newLinks, useOldUbrnDf)
 
