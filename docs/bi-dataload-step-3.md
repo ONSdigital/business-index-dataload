@@ -44,6 +44,12 @@
 * Performance may depend on ElasticSearch cluster resources which are outside the scope of this application.
 * This example specifies 8 Spark executors.
 * It may be possible to tweak the various Spark settings to use less memory etc, but this configuration seems to work OK with current data-sets.
+* We set the "env" parameter below so the Spark process knows where to read/write application data:
+
+>	`-Dbi-dataload.app-data.env=dev`
+
+* The default value in the config file is "dev", but the parameter is included here to  remind you that you may need to change it.
+
 
 Page 1 Field | Contents
 ------------- | -------------
@@ -55,7 +61,7 @@ Main class | uk.gov.ons.bi.dataload.LoadBiToEsApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
 
 ## Further information ##
 
