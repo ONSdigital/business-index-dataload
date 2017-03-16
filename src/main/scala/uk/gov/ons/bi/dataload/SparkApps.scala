@@ -1,13 +1,11 @@
 package uk.gov.ons.bi.dataload
 
 
-import org.apache.spark.sql.DataFrame
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.reader.LinkJsonReader
-import uk.gov.ons.bi.dataload.utils.AppConfig
 import uk.gov.ons.bi.dataload.ubrn._
+import uk.gov.ons.bi.dataload.utils.AppConfig
 
 /**
   * Created by websc on 02/02/2017.
