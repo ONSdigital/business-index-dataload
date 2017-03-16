@@ -18,44 +18,6 @@ import scala.util.{Success, Try}
 @Singleton
 class LinksPreprocessor(sc: SparkContext) {
 
-  val defaultBaseUbrn = 100000000000L
-  val defaultUbrnColName = "UBRN"
-
-  // Use getOrCreate in case SQLContext already exists (only want one)
-  val sqlContext: SQLContext = SQLContext.getOrCreate(sc)
-
-  def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
-    // This will scan the DF column to extract the max value, assumes values are numeric.
-    // Defaults to zero.
-    Try {
-      val row = df.agg(max(df(ubrnColName))).collect.head
-      row.getLong(0)
-    }
-    match {
-      case Success(n: Long) => Some(n)
-      case _ => Some(defaultBaseUbrn)
-    }
-  }
-
-  def applyNewUbrn(df: DataFrame, baseUbrn: Option[Long] = None): DataFrame = {
-    // First drop any rogue UBRN column (if any) from the input DF
-    val noUbrn = df.drop(defaultUbrnColName)
-
-    // Set the base UBRN for adding to the monotonic sequential value
-    val base = baseUbrn.getOrElse(defaultBaseUbrn) + 1
-
-    // Repartition to one partition so sequence is a fairly continuous range.
-    // This will force data to be shuffled, which is inefficient.
-    val numPartitions = df.rdd.getNumPartitions
-
-    val df1partition = df.repartition(1)
-
-    // Now add the new generated UBRN column and sequence value
-    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, monotonicallyIncreasingId + base)
-
-    // Repartition back to original num partitions (more data shuffling)
-    df1partWithUbrn.repartition(numPartitions)
-  }
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // Get source/target directories
@@ -71,12 +33,12 @@ class LinksPreprocessor(sc: SparkContext) {
   def writeAsPrevLinks(appConfig: AppConfig, df: DataFrame, timestamped: Boolean = false) = {
     // Use timestamp as YYYYMMDD
     val ts = if (timestamped) {
-                val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
+      val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
 
-                val now = DateTime.now()
-                now.toString(fmt)
-              }
-              else ""
+      val now = DateTime.now()
+      now.toString(fmt)
+    }
+    else ""
 
     // Parquet file locations from configuration (or runtime params)
     val appDataConfig = appConfig.AppDataConfig
@@ -87,73 +49,6 @@ class LinksPreprocessor(sc: SparkContext) {
     // We will also write a copy of the preprocessed Links data to the "previous" dir
     df.write.mode("overwrite").parquet(prevLinksFile)
   }
-
-  def getChMatches(oldLinks: DataFrame, newLinks: DataFrame):DataFrame = {
-
-    // Get old/new links where Company No is the same
-    oldLinks.registerTempTable("old_links")
-    newLinks.registerTempTable("new_links")
-
-    val chMatchesDf = sqlContext.sql(
-      """
-        | SELECT old.UBRN AS UBRN, old.CH AS CH, new.VAT, new.PAYE
-        | FROM old_links AS old LEFT JOIN new_links AS new ON (old.CH[0] = new.CH[0])
-        | WHERE old.CH[0] IS NOT NULL AND new.CH[0] IS NOT NULL
-      """.stripMargin)
-
-    chMatchesDf
-  }
-
-  def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame):DataFrame = {
-
-    // Get old/new links that have no Company No, but where other contents are same
-    oldLinks.registerTempTable("old_links")
-    newLinks.registerTempTable("new_links")
-
-    // Exclude records where old/new contents are all empty
-    val matchesDf = sqlContext.sql(
-      """SELECT old.UBRN AS UBRN, old.CH AS CH, new.VAT, new.PAYE
-        |FROM old_links AS old
-        |LEFT JOIN new_links AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
-        |WHERE old.CH[0] IS NULL
-        | AND new.CH[0] IS NULL
-        | AND (new.VAT IS NOT NULL OR new.PAYE IS NOT NULL)
-        | AND (old.VAT IS NOT NULL OR old.PAYE IS NOT NULL)
-      """.stripMargin)
-
-    matchesDf
-  }
-
-  def excludeMatches(newLinks: DataFrame, matches:DataFrame):DataFrame = {
-
-    newLinks.registerTempTable("new_links")
-    matches.registerTempTable("matches")
-
-    sqlContext.sql(
-      """
-        | SELECT new.CH, new.VAT, new.PAYE
-        | FROM new_links AS new
-        | EXCEPT
-        | SELECT m.CH, m.VAT, m.PAYE
-        | FROM matches AS m
-      """.stripMargin)
-  }
-
-  def combineLinksToSave(oldUbrn: DataFrame, newUbrn:DataFrame):DataFrame = {
-
-    oldUbrn.registerTempTable("old_ubrn")
-    newUbrn.registerTempTable("new_ubrn")
-
-    sqlContext.sql(
-      """
-        | SELECT old.UBRN, old.CH, old.VAT, old.PAYE
-        | FROM old_ubrn AS old
-        | UNION ALL
-        | SELECT m.UBRN, m.CH, m.VAT, m.PAYE
-        | FROM new_ubrn AS m
-      """.stripMargin)
-  }
-
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
@@ -177,49 +72,44 @@ class LinksPreprocessor(sc: SparkContext) {
     val prevLinks = previousLinksReader.readFromSourceFile(prevLinksFileParquetPath)
     prevLinks.cache()
 
-    // Get CH matches where CH is present in both sets
-    val chMatchesDf: DataFrame = getChMatches(prevLinks, newLinks)
-    chMatchesDf.cache()
+    // Initialise LinkMatcher
+    val matcher = new LinkMatcher(sc)
 
-    // Remove first set of matches from new links so we can reduce sdaerching?
-    val newLinksCut1 = excludeMatches(newLinks, chMatchesDf)
-    newLinksCut1.cache()
+    // Get easy matches (CH=CH, or no CH but other contents same)
+    val (simpleChMatches, unmatched1) = matcher.simpleCompaniesHouseMatches(newLinks, prevLinks)
 
-    // Get records where CH is absent from both sets but other contents are same
-    val contentMatchesDf: DataFrame = getContentMatchesNoCh(prevLinks, newLinksCut1)
-    contentMatchesDf.cache()
+    // ----------------
+    // CALL EXTRA MATCHING RULES HERE ...
+    // ----------------
+    // Only need to try to match records that we have not already matched i.e. unmatched1
+    val (otherMatches, unmatched2) = matcher.matchedOnOtherRules(unmatched1, prevLinks)
 
-    // Additional matching rules will need to be applied in here?
-    // - take another cut of new links to eliminate ones we just matched
-    // ...
-    // val newLinksCut2 = excludeMatches(newLinksCut1, contentMatchesDf)
-    // newLinksCut2.cache()
-    // newinksCut1.unpersist()
-    // ...
-    // - apply new rule to latest cut of new links...
-    // ...
+    // Finally we should have :
+    // one sub-set of new links that we have matched and now have a UBRNs
+    val withOldUbrn: DataFrame = matcher.combineLinksToSave(simpleChMatches, otherMatches)
 
-    // Build set of all new links that can use old UBRN
-    // i.e. CH matches + content matches (+ any other matches?)
-    val useOldUbrnDf: DataFrame = chMatchesDf.unionAll(contentMatchesDf)
+    // and one sub-set of new links that we could not match and need new UBRN:
+    val needUbrn: DataFrame = unmatched2
 
-    // Find the new links that have NOT been matched and will need a new UBRN
-    // i.e. new links that do NOT occur in the "matches" we identified
-    val needNewUbrnDf: DataFrame = excludeMatches(newLinks, useOldUbrnDf)
-
+    // ------------------------------
+    // Now we can set new UBRNs for unmatched records
+    // ------------------------------
     // Set new UBRN for these (start from max value from previous links)
-    val maxUrbn = getMaxUbrn(prevLinks)
-    val withNewUbrn: DataFrame = applyNewUbrn(needNewUbrnDf, maxUrbn)
 
-    // Reconstruct full set of Links so we can save them all to Parquet
-    val linksToSave = combineLinksToSave(useOldUbrnDf, withNewUbrn)
+    val ubrnManager = new UbrnManager(sc)
+
+    val maxUrbn = ubrnManager.getMaxUbrn(prevLinks)
+
+    val withNewUbrn: DataFrame = ubrnManager.applyNewUbrn(needUbrn, maxUrbn)
+
+
+    // Finally, reconstruct full set of Links so we can save them all to Parquet
+    val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
     linksToSave.cache()
 
     // Clear other cached data we no longer need
-    contentMatchesDf.unpersist()
-    chMatchesDf.unpersist()
     prevLinks.unpersist()
     newLinks.unpersist()
 

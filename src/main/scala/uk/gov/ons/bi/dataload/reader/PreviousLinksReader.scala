@@ -3,6 +3,8 @@ package uk.gov.ons.bi.dataload.reader
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
+import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
+import uk.gov.ons.bi.dataload.model.BiSparkDataFrames._
 
 import scala.util.{Success, Try}
 
@@ -12,15 +14,6 @@ import scala.util.{Success, Try}
 class PreviousLinksReader(sc: SparkContext)
   extends BIDataReader(sc: SparkContext) {
 
-  val schema = StructType(Seq(
-    StructField("UBRN", LongType, true),
-    StructField("CH", ArrayType(StringType), true),
-    StructField("VAT", ArrayType(StringType), true),
-    StructField("PAYE", ArrayType(StringType), true)
-  ))
-
-  def emptyDf = sqlContext.createDataFrame(sc.emptyRDD[Row], schema)
-
   def readFromSourceFile(srcFilePath: String): DataFrame = {
     // If Prev Links not found, returns an empty DataFrame with same schema
     Try {
@@ -28,7 +21,7 @@ class PreviousLinksReader(sc: SparkContext)
     }
     match {
       case Success(df: DataFrame) => df
-      case _ => emptyDf
+      case _ => BiSparkDataFrames.emptyLinkWithUbrnDf(sc, sqlContext)
     }
   }
 }
