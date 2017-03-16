@@ -50,7 +50,7 @@ class LinksPreprocessor(sc: SparkContext) {
     val matcher = new LinkMatcher(sc)
 
     // Get easy matches first (CH=CH, or no CH but other contents same)
-    val (simpleChMatches, unmatched1) = matcher.simpleCompaniesHouseMatches(newLinks, prevLinks)
+    val (simpleChMatches, unmatched1) = matcher.simpleMatches(newLinks, prevLinks)
 
     // ----------------
     // CALL EXTRA MATCHING RULES HERE ...

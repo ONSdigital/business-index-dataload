@@ -81,21 +81,23 @@ class LinkMatcher(sc: SparkContext) {
       """.stripMargin)
   }
 
-  def simpleCompaniesHouseMatches(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
+  def simpleMatches(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
 
     // Get CH matches where CH is present in both sets
     val chMatchesDf: DataFrame = getChMatches(oldLinks, newLinks)
 
-    // Remove first set of matches from new links so we can reduce searching?
+    // Remove the CH=CH matches from new links so we can reduce searching
     val newLinksCut1 = excludeMatches(newLinks, chMatchesDf)
 
     // Get records where CH is absent from both sets but other contents are same
     val contentMatchesDf: DataFrame = getContentMatchesNoCh(oldLinks, newLinksCut1)
 
-    // Build set of records that we've matched so far (with UBRNs)
+    // Exclude the newly matched records from the set we still have to match
+    val unmatched = excludeMatches(newLinksCut1, contentMatchesDf)
+
+    // Build single set of records that we've matched so far (with UBRNs)
     val matched = combineLinksToSave(chMatchesDf, contentMatchesDf)
-    // and the ones we haven't matched
-    val unmatched = excludeMatches(newLinks, matched)
+
     // Return (matched new links with UBRNs, unmatched new links)
     (matched, unmatched)
   }
