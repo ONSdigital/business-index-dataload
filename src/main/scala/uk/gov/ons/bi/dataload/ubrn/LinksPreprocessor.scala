@@ -49,32 +49,17 @@ class LinksPreprocessor(sc: SparkContext) {
     // Initialise LinkMatcher
     val matcher = new LinkMatcher(sc)
 
-    // Get easy matches first (CH=CH, or no CH but other contents same)
-    val (simpleChMatches, unmatched1) = matcher.simpleMatches(newLinks, prevLinks)
-
-    // ----------------
-    // CALL EXTRA MATCHING RULES HERE ...
-    // ----------------
-    // Only try to match records that we have not already matched
-    val (otherMatches, unmatched2) = matcher.matchedOnOtherRules(unmatched1, prevLinks)
-
-    // Finally we should have :
-    // - one sub-set of new links that we have matched, so they now have a UBRN:
-    val withOldUbrn: DataFrame = matcher.combineLinksToSave(simpleChMatches, otherMatches)
-    // - and one sub-set of new links that we could not match, so they need new UBRN:
-    val needUbrn: DataFrame = unmatched2
+    // Apply all matching rules and get (matched, unmatched) records back
+    val (withOldUbrn, needUbrn) = matcher.applyAllMatchingRules(newLinks, prevLinks)
 
     // ------------------------------
     // Now we can set new UBRNs for unmatched records
     // ------------------------------
     // Set new UBRN for these (start from max value from previous links)
 
-    val ubrnManager = new UbrnManager(sc)
+    val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
-    val maxUrbn = ubrnManager.getMaxUbrn(prevLinks)
-
-    val withNewUbrn: DataFrame = ubrnManager.applyNewUbrn(needUbrn, maxUrbn)
-
+    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(needUbrn, maxUrbn)
 
     // Finally, reconstruct full set of Links so we can save them all to Parquet
     val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)
@@ -82,7 +67,7 @@ class LinksPreprocessor(sc: SparkContext) {
     // Cache the results because we want to write them to multiple files
     linksToSave.cache()
 
-    // Clear other cached data we no longer need
+    // Clear cached data we no longer need
     prevLinks.unpersist()
     newLinks.unpersist()
 

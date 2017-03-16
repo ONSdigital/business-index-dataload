@@ -102,7 +102,7 @@ class LinkMatcher(sc: SparkContext) {
     (matched, unmatched)
   }
 
-  def matchedOnOtherRules(newLinks: DataFrame, oldLinks: DataFrame) = {
+  def matchedOnOtherRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
     // EXTRA RULES NOT YET DEFINED
 
     // return an empty "matched" set and incoming new links (unmatched)for now
@@ -112,4 +112,24 @@ class LinkMatcher(sc: SparkContext) {
     // Return (matched new links with UBRNs, unmatched new links)
     (matched, unmatched)
   }
+
+  def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
+    // Get easy matches first (CH=CH, or no CH but other contents same)
+    val (simpleChMatches, unmatched1) = simpleMatches(newLinks, oldLinks)
+    // ----------------
+    // CALL EXTRA MATCHING RULES HERE ...
+    // ----------------
+    // Only try to match records that we have not already matched
+    val (otherMatches, unmatched2) = matchedOnOtherRules(unmatched1, oldLinks)
+
+    // ...
+    // Finally we should have :
+    // - one sub-set of new links that we have matched, so they now have a UBRN:
+    val allMatched: DataFrame = combineLinksToSave(simpleChMatches, otherMatches)
+    // - and one sub-set of new links that we could not match, so they need new UBRN:
+    val needUbrn: DataFrame = unmatched2
+
+    (allMatched, needUbrn)
+  }
+
 }

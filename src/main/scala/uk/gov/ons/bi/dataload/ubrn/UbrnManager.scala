@@ -10,11 +10,7 @@ import com.google.inject.Singleton
 /**
   * Created by websc on 16/03/2017.
   */
-@Singleton
-class UbrnManager(sc: SparkContext) {
-
-  // Use getOrCreate in case SQLContext already exists (only want one)
-  val sqlContext: SQLContext = SQLContext.getOrCreate(sc)
+object UbrnManager {
 
   val defaultBaseUbrn = 100000000000L
   val defaultUbrnColName = "UBRN"
