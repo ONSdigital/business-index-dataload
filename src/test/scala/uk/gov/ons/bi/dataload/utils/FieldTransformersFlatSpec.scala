@@ -175,14 +175,4 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return correct Postcode Areas for Postcodes" in {
-
-    val postcodes = Set(Some("G12 1AB"), Some("SW12 0AA"),Some("X"), Some("123 456"), None)
-    val expected = Set(Some("G"), Some("SW"),Some("X"), None)
-
-    val results = postcodes.map(Transformers.getPostcodeArea(_))
-
-    results should be(expected)
-  }
-
 }
