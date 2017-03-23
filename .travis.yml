@@ -9,6 +9,7 @@ script:
 after_success:
   - sbt coverageReport
   - sbt coverageAggregate
+  - sbt codacyCoverage
   - sbt coveralls
   - ./build/tag.sh
 
