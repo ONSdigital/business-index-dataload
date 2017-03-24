@@ -1,5 +1,7 @@
 # ONS Business Indexes - data ingestion ##
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f81d61b38d644085af0ad7573addad80)](https://www.codacy.com/app/ONSDigital/business-index-dataload?utm_source=github.com&utm_medium=referral&utm_content=ONSdigital/business-index-dataload&utm_campaign=badger)
+
 ![](./docs/bi-ingestion-data-flow.jpg)
 
 ## Purpose ##
