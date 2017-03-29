@@ -1,5 +1,7 @@
 # ONS Business Indexes - data ingestion ##
 
+[![Build Status](https://travis-ci.org/ONSdigital/business-index-dataload.svg?branch=master)](https://travis-ci.org/ONSdigital/business-index-dataload) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f81d61b38d644085af0ad7573addad80)](https://www.codacy.com/app/ONSDigital/business-index-dataload?utm_source=github.com&utm_medium=referral&utm_content=ONSdigital/business-index-dataload&utm_campaign=badger) [![Coverage Status](https://coveralls.io/repos/github/ONSdigital/business-index-dataload/badge.svg?branch=develop)](https://coveralls.io/github/ONSdigital/business-index-dataload?branch=develop) 
+
 ![](./docs/bi-ingestion-data-flow.jpg)
 
 ## Purpose ##
