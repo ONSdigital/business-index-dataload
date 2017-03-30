@@ -33,32 +33,11 @@ object LinkedBusinessBuilder {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
-    val biSchema = StructType(Seq(
-      StructField("id", LongType, true), // not clear where this comes from.  use UBRN for now
-      StructField("BusinessName", StringType, true),
-      StructField("UPRN", LongType, true), // spec says "UPRN", but we use UBRN
-      StructField("PostCode", StringType, true),
-      StructField("IndustryCode", LongType, true),
-      StructField("LegalStatus", StringType, true),
-      StructField("TradingStatus", StringType, true),
-      StructField("Turnover", StringType, true),
-      StructField("EmploymentBands", StringType, true),
-      StructField("CompanyNo", StringType, true),
-      StructField("VatRefs", ArrayType(LongType), true), // sequence of Long VAT refs
-      StructField("PayeRefs", ArrayType(StringType), true) // seq of String PAYE refs
-    ))
+    val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
 
-    // Use UBRN as ID and UPRN in index until we have better information
-    def biRowMapper(bi: BusinessIndex): Row = {
-      Row(bi.ubrn, bi.businessName, bi.ubrn, bi.postCode, bi.industryCode, bi.legalStatus,
-        bi.tradingStatus, bi.turnoverBand, bi.employmentBand, bi.companyNo, bi.vatRefs, bi.payeRefs)
-    }
+    val sqc = SQLContext.getOrCreate(sc)
 
-    val biRows: RDD[Row] = biRdd.map(biRowMapper)
-
-    val sqc = new SQLContext(sc)
-
-    val biDf: DataFrame = sqc.createDataFrame(biRows, biSchema)
+    val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
