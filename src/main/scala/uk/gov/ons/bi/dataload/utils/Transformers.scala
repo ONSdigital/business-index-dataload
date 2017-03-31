@@ -24,17 +24,30 @@ object Transformers {
 
   // Convert the grouped UBRN + Lists into Business records
 
-  def buildBusinessRecord(uwl: UbrnWithList) = {
+  def extractUwlVats(uwl: UbrnWithList): Option[Seq[VatRec]] = {
+
+    val vats: Option[Seq[VatRec]] = Option(uwl.data.filter { r => r.src == VAT }
+      .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+
+    vats.filter(_.nonEmpty)
+  }
+
+  def extractUwlPayes(uwl: UbrnWithList): Option[Seq[PayeRec]] = {
+    val payes: Option[Seq[PayeRec]] = Option(uwl.data.filter { r => r.src == PAYE }
+      .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
+
+    payes.filter(_.nonEmpty)
+  }
+
+  def buildBusinessRecord(uwl: UbrnWithList): Business = {
     val ubrn = uwl.ubrn
     // Should only be ONE company
     val company: Option[CompanyRec] = uwl.data.filter { r => r.src == CH }
       .map { case UbrnWithData(u, CH, data: CompanyRec) => data }.headOption
 
-    val vats: Option[Seq[VatRec]] = Some(uwl.data.filter { r => r.src == VAT }
-      .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+    val vats: Option[Seq[VatRec]] = extractUwlVats(uwl)
 
-    val payes: Option[Seq[PayeRec]] = Some(uwl.data.filter { r => r.src == PAYE }
-      .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
+    val payes: Option[Seq[PayeRec]] = extractUwlPayes(uwl)
 
     Business(ubrn, company, vats, payes)
   }
