@@ -48,7 +48,8 @@
 
 >	`-Dbi-dataload.app-data.env=dev`
 
-* The default value in the config file is "dev", but the parameter is included here to  remind you that you may need to change it.
+* The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
+* The task parameters below also assume we are working in "dev" here.
 
 
 Page 1 Field | Contents
@@ -56,12 +57,12 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 3 Upload to ElasticSearch
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.LoadBiToEsApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/dev/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
 
 ## Further information ##
 

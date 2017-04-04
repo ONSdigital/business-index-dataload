@@ -77,6 +77,7 @@
 >	`-Dbi-dataload.app-data.env=dev`
 
 * The default value in the config file is "dev", but the parameter is included here to  remind you that you may need to change it.
+* The task parameters below also assume we are working in "dev" here.
 
 
 Page 1 Field | Contents
@@ -84,12 +85,12 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 1 Load Source Data To Parquet
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.SourceDataToParquetApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/lib/commons-csv-1.1.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
+Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/dev/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/dev/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/dev/lib/commons-csv-1.1.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
 
 ## Further information ##
 
