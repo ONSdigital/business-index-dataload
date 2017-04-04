@@ -146,3 +146,4 @@
 > * [Step 1](./docs/bi-dataload-step-1.md).
 > * [Step 2](./docs/bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
+> * [Testing](./bi-dataload-testing.md).
