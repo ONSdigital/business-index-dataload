@@ -4,7 +4,7 @@
 
 * [Scala Test](http://www.scalatest.org/): this is the standard Scala testing library.
 * [Spark Testing Base](https://github.com/holdenk/spark-testing-base): this is a 3rd party Spark package that provides useful support for testing Spark with Scala Test.
-* [SBT SPark Package](https://github.com/databricks/sbt-spark-package): this is an SBT plugin that makes it easier to include and use Spark Packages with SBT.
+* [SBT Spark Package Plugin](https://github.com/databricks/sbt-spark-package): this is an SBT plugin that makes it easier to include and use Spark Packages with SBT.
 
 ## Testing approach ##
 
@@ -22,7 +22,7 @@
 
 * Some operations depend on Spark-specific code.
 * These include transformations from one RDD or DataFrame to another.
-* We have provided some tests for these operations, and these tests make use of the Spark testing Base library as well as Scala Test.
+* We have provided some tests for these operations, and these tests make use of the Spark Testing Base library as well as Scala Test.
 * These tests require a SparkContext to be instantiated, which is provided (in Spark local mode) via the Spark Testing Base functionality.
 
 ## Running tests ##
