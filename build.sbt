@@ -25,6 +25,15 @@ libraryDependencies ++= Seq(
   "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
 )
 
+// Spark testing: uses SBT plugin for Spark packages as well (see project.plugins.sbt)
+
+spDependencies += "holdenk/spark-testing-base:1.5.2_0.3.3"
+
+parallelExecution in Test := false
+
+javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+
+
 resolvers ++= Seq(
   // allows us to include spark packages (not sure how well this works on Cloudera)
   "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/",

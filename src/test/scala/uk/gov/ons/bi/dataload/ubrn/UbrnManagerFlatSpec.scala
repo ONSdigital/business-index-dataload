@@ -1,15 +1,15 @@
 package uk.gov.ons.bi.dataload.ubrn
 
+import com.holdenkarau.spark.testing.{DataFrameSuiteBase, SharedSparkContext}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.scalatest.{FlatSpec, Matchers, ShouldMatchers}
-import uk.gov.ons.bi.dataload.SparkSqlSpec
 
 /**
   * Created by websc on 31/03/2017.
   */
-class UbrnManagerFlatSpec extends FlatSpec with SparkSqlSpec with Matchers {
+class UbrnManagerFlatSpec extends FlatSpec with SharedSparkContext with Matchers {
 
   behavior of "UbrnManagerFLatSpec"
 
@@ -17,8 +17,9 @@ class UbrnManagerFlatSpec extends FlatSpec with SparkSqlSpec with Matchers {
     val defaultBaseUbrn = 100000000000L
     val defaultUbrnColName = "UBRN"
     // Need SQLContext implicits for RDD->DF conversion
-    val _sqlc = sqlc
-    import _sqlc.implicits._
+    val sqlCtx = new SQLContext(sc)
+    import sqlCtx.implicits._
+
 
     // Build a dataframe of UBRNs (don't need other data)
     val ubrns = sc.parallelize(Seq(5L, 4L, 2L, 7L, 9L, 1L))
@@ -34,6 +35,9 @@ class UbrnManagerFlatSpec extends FlatSpec with SparkSqlSpec with Matchers {
   "UbrnManager" should "getMaxUbrn correctly from EMPTY list of UBRNs" in {
     val defaultBaseUbrn = 100000000000L
     val defaultUbrnColName = "UBRN"
+    // Need SQLContext implicits for RDD->DF conversion
+    val sqlCtx = new SQLContext(sc)
+    //import sqlCtx.implicits._
 
     // UBRN DataFrame schema
     val ubrnSchema = StructType(Seq(
@@ -41,7 +45,7 @@ class UbrnManagerFlatSpec extends FlatSpec with SparkSqlSpec with Matchers {
     ))
     // Now make an empty UBRN DF
     val emptyUbrnDf:DataFrame  =
-      sqlc.createDataFrame(sc.emptyRDD[Row], ubrnSchema)
+      sqlCtx.createDataFrame(sc.emptyRDD[Row], ubrnSchema)
 
 
     val expected = Some(defaultBaseUbrn)
@@ -54,8 +58,8 @@ class UbrnManagerFlatSpec extends FlatSpec with SparkSqlSpec with Matchers {
     val defaultBaseUbrn = 100000000000L
     val defaultUbrnColName = "UBRN"
     // Need SQLContext implicits for RDD->DF conversion
-    val _sqlc = sqlc
-    import _sqlc.implicits._
+    val sqlCtx = new SQLContext(sc)
+    import sqlCtx.implicits._
 
     // Build a dataframe of UBRNs (don't need other data)
     val ubrns = (1 to 9).map(_.toLong)
