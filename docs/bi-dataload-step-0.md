@@ -122,7 +122,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload 1.2 Step 0 Pre-process Links
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents
