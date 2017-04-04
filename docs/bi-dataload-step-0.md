@@ -116,6 +116,7 @@
 >	`-Dbi-dataload.app-data.env=dev`
 
 * The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
+* The task parameters below also assume we are working in "dev" here.
 
 Page 1 Field | Contents
 ------------- | -------------
