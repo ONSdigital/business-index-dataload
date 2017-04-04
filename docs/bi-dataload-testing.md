@@ -9,7 +9,7 @@
 ## Testing approach ##
 
 * We have **not** implemented full test coverage for Spark code in this application.
-* Much of the functionality of this application is based on standard Spark operations, so there is not much purtpose in testing standard Spark code.
+* Much of the functionality of this application is based on standard Spark operations, so there is not much point in testing standard Spark code.
 * Spark applications typically consist of **transformations** that manipulate data and **actions** that typically perform reduce operations and will cause data to be materialised at runtime.
 
 ### Testing non-Spark code ###
