@@ -43,6 +43,17 @@ class AppConfig {
 
     lazy val vatDir = getConfigStr("vat-dir", extDataConfig)
 
+    override def toString: String = {
+      s"""[dir = $dir,
+         | paye = $paye,
+         | vat= $vat,
+         | ch = $ch,
+         | ch-dir = $chDir,
+         | paye-dir = $payeDir,
+         | vat-dir = $vatDir
+         | ]
+        """.stripMargin
+    }
   }
 
   object LinksDataConfig {
@@ -52,6 +63,13 @@ class AppConfig {
     lazy val json = getConfigStr("json", linksDataConfig)
 
     lazy val dir = getConfigStr("dir", linksDataConfig)
+
+    override def toString: String = {
+      s"""[json = $json,
+         | dir = $dir
+         | ]
+        """.stripMargin
+    }
   }
 
   object AppDataConfig {
@@ -89,6 +107,21 @@ class AppConfig {
     lazy val (workingDir, prevDir) =
     if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
     else (s"$dir/$work", s"$dir/$prev")
+
+    override def toString: String = {
+      s"""[env = $env,
+         | dir = $dir,
+         | work = $work,
+         | prev = $prev,
+         | paye = $paye,
+         | vat= $vat,
+         | ch = $ch,
+         | links = $links,
+         | bi = $bi
+         | ]
+        """.stripMargin
+    }
+
   }
 
   object ESConfig {
@@ -135,6 +168,12 @@ class AppConfig {
 
     lazy val serializer = getConfigStr("serializer", sparkConfig)
 
+    override def toString: String = {
+      s"""[app-name = $appName,
+         | serializer = $serializer
+         | ]
+        """.stripMargin
+    }
   }
 
 }
