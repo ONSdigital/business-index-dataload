@@ -345,10 +345,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     // We assume the individual fields are tested elsewhere
 
-    // Set up source data for a Business with 1 company, 2 VAT, 2 PAYE
+    // Set up source data for a Business with 1 company, 2 VAT, 2 PAYE,
+    // Company SIC = "123 SIC" (should return IndustryCode = 123)
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -383,7 +384,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
 
-    val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(0),
+    val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(123L),
       vat1.legalStatus.map(_.toString),
       Some("?"),
       Some("H"),

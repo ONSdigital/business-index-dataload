@@ -59,6 +59,25 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "extract numeric SIC code correctly from string" in {
+
+    val expected = Some(123L)
+    val sic = Some("123 FUBAR")
+    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "extract numeric SIC code as None from bad SIC string" in {
+
+    val expected = None
+    val sic = Some("X123 FUBAR")
+    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+
+    result should be(expected)
+  }
+
+
   "A Transformer" should "return all VAT references" in {
 
     val vat1 = fullVatRec

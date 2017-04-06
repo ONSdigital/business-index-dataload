@@ -12,15 +12,6 @@ import scala.util.{Success, Try}
   */
 object Transformers {
 
-  def extractNumericSicCode(sic: String): Long = {
-    // Extracts numeric SIC code, assuming it is first element in string
-    val NumStartRegex = "(\\d+).*".r
-
-    sic match {
-      case NumStartRegex(x) => x.toLong
-      case _ => 0L
-    }
-  }
 
   // Convert the grouped UBRN + Lists into Business records
 
@@ -91,8 +82,19 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getIndustryCode(br: Business): Option[Long] = {
+  def extractNumericSicCode(sic: Option[String]): Option[Long] = {
+    // Extracts numeric SIC code, assuming it is first element in string
+    val NumStartRegex = "(\\d+).*".r
+    Try { // weird syntax for RE check: pattern(result) = stringToCheck
+      val NumStartRegex(extracted) = sic.getOrElse("")
+      extracted
+    } match {
+      case Success(data) => Some(data.toLong)
+      case _ => None
+    }
+  }
 
+  def getIndustryCode(br: Business): Option[Long] = {
     // Extract potential values from CH/VAT records
     // Take first VATrecord (if any)
     val co: Option[String] = br.company.flatMap {
@@ -107,7 +109,7 @@ object Transformers {
     // Take first non-empty name value from list
     val indCode = candidates.foldLeft[Option[String]](None)(_ orElse _)
 
-    indCode.map(extractNumericSicCode)
+    extractNumericSicCode(indCode)
   }
 
   def getTradingStatus(br: Business): Option[String] = {
