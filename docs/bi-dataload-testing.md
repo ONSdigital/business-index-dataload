@@ -2,9 +2,9 @@
 
 ## Testing libraries ##
 
-* [Scala Test](http://www.scalatest.org/): this is the standard Scala testing library.
-* [Spark Testing Base](https://github.com/holdenk/spark-testing-base): this is a 3rd party Spark package that provides useful support for testing Spark with Scala Test.
-* [SBT Spark Package Plugin](https://github.com/databricks/sbt-spark-package): this is an SBT plugin that makes it easier to include and use Spark packages with SBT.
+* [Scala Test](http://www.scalatest.org/): standard Scala testing library.
+* [Spark Testing Base](https://github.com/holdenk/spark-testing-base): a 3rd party Spark package that provides useful support for testing Spark with Scala Test.
+* [SBT Spark Package Plugin](https://github.com/databricks/sbt-spark-package): an SBT plugin that makes it easier to include and use Spark packages with SBT.
 
 ## Testing approach ##
 
