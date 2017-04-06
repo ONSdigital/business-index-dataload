@@ -5,13 +5,13 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model._
 
+import scala.util.matching.Regex
 import scala.util.{Success, Try}
 
 /**
   * Created by websc on 24/02/2017.
   */
 object Transformers {
-
 
   // Convert the grouped UBRN + Lists into Business records
 
@@ -84,12 +84,12 @@ object Transformers {
 
   def extractNumericSicCode(sic: Option[String]): Option[Long] = {
     // Extracts numeric SIC code, assuming it is first element in string
-    val NumStartRegex = "(\\d+).*".r
+    val numStartRegex: Regex = "(\\d+).*".r
     Try { // weird syntax for RE check: pattern(result) = stringToCheck
-      val NumStartRegex(extracted) = sic.getOrElse("")
+      val numStartRegex(extracted) = sic.getOrElse("")
       extracted
     } match {
-      case Success(data) => Some(data.toLong)
+      case Success(numStr) => Some(numStr.toLong)
       case _ => None
     }
   }
@@ -106,14 +106,18 @@ object Transformers {
 
     // list in order of preference
     val candidates = Seq(co, vat)
-    // Take first non-empty name value from list
-    val indCode = candidates.foldLeft[Option[String]](None)(_ orElse _)
 
-    extractNumericSicCode(indCode)
+    // apply numeric extractor so we can skip invalid Company SIC if necessary
+    val numericCandidates: Seq[Option[Long]] = candidates.map(extractNumericSicCode(_))
+
+    // Take first non-empty value from list
+    val indCode: Option[Long] = numericCandidates.foldLeft[Option[Long]](None)(_ orElse _)
+
+    indCode
   }
 
   def getTradingStatus(br: Business): Option[String] = {
-    // Extract potential values from CH
+    // Extract potential values from CH (if any)
     br.company.flatMap {
       _.companyStatus
     }
