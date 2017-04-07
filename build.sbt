@@ -25,25 +25,12 @@ libraryDependencies ++= Seq(
   "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
 )
 
-// ============
-// Spark testing: uses SBT plugin for Spark packages as well (see project.plugins.sbt)
-// These settings seem to be quite sensitive to change - may break "sbt package" execution, so be careful!
-
-// Specify Spark version for the Spark testing plugin (recognises this variable)
-sparkVersion := Versions.spark
-
-spDependencies += "holdenk/spark-testing-base:1.5.2_0.3.3"
-
-spIgnoreProvided := false
-
-parallelExecution in Test := false
-
-javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:+CMSClassUnloadingEnabled")
 
 // ============
 // Additional repo resolvers
 resolvers ++= Seq(
-  "conjars" at "http://conjars.org/repo"
+  "conjars" at "http://conjars.org/repo",
+  "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven/"
 )
 
 
