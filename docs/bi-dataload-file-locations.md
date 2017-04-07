@@ -64,7 +64,10 @@
                        +-- 201703131145: backup of Links with UBRNs on given date/time.
 ```
 
+## Libraries (JAR files) ##
 
+* The libraries are held in the `lib` directory under the `dev`, `test` or `beta` folder.
+* This includes the application JAR file, and any additional libraries that are needed.
 
 ## Further information ##
 
@@ -75,3 +78,4 @@
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
+> * [Testing](./bi-dataload-testing.md).

@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model._
 
+import scala.util.matching.Regex
 import scala.util.{Success, Try}
 
 /**
@@ -12,29 +13,32 @@ import scala.util.{Success, Try}
   */
 object Transformers {
 
-  def extractNumericSicCode(sic: String): Long = {
-    // Extracts numeric SIC code, assuming it is first element in string
-    val NumStartRegex = "(\\d+).*".r
-
-    sic match {
-      case NumStartRegex(x) => x.toLong
-      case _ => 0L
-    }
-  }
-
   // Convert the grouped UBRN + Lists into Business records
 
-  def buildBusinessRecord(uwl: UbrnWithList) = {
+  def extractUwlVats(uwl: UbrnWithList): Option[Seq[VatRec]] = {
+
+    val vats: Option[Seq[VatRec]] = Option(uwl.data.filter { r => r.src == VAT }
+      .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+
+    vats.filter(_.nonEmpty)
+  }
+
+  def extractUwlPayes(uwl: UbrnWithList): Option[Seq[PayeRec]] = {
+    val payes: Option[Seq[PayeRec]] = Option(uwl.data.filter { r => r.src == PAYE }
+      .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
+
+    payes.filter(_.nonEmpty)
+  }
+
+  def buildBusinessRecord(uwl: UbrnWithList): Business = {
     val ubrn = uwl.ubrn
     // Should only be ONE company
     val company: Option[CompanyRec] = uwl.data.filter { r => r.src == CH }
       .map { case UbrnWithData(u, CH, data: CompanyRec) => data }.headOption
 
-    val vats: Option[Seq[VatRec]] = Some(uwl.data.filter { r => r.src == VAT }
-      .map { case UbrnWithData(u, VAT, data: VatRec) => data })
+    val vats: Option[Seq[VatRec]] = extractUwlVats(uwl)
 
-    val payes: Option[Seq[PayeRec]] = Some(uwl.data.filter { r => r.src == PAYE }
-      .map { case UbrnWithData(u, PAYE, data: PayeRec) => data })
+    val payes: Option[Seq[PayeRec]] = extractUwlPayes(uwl)
 
     Business(ubrn, company, vats, payes)
   }
@@ -78,8 +82,19 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getIndustryCode(br: Business): Option[Long] = {
+  def extractNumericSicCode(sic: Option[String]): Option[Long] = {
+    // Extracts numeric SIC code, assuming it is first element in string
+    val numStartRegex: Regex = "(\\d+).*".r
+    Try { // weird syntax for RE check: pattern(result) = stringToCheck
+      val numStartRegex(extracted) = sic.getOrElse("")
+      extracted
+    } match {
+      case Success(numStr) => Some(numStr.toLong)
+      case _ => None
+    }
+  }
 
+  def getIndustryCode(br: Business): Option[Long] = {
     // Extract potential values from CH/VAT records
     // Take first VATrecord (if any)
     val co: Option[String] = br.company.flatMap {
@@ -91,14 +106,18 @@ object Transformers {
 
     // list in order of preference
     val candidates = Seq(co, vat)
-    // Take first non-empty name value from list
-    val indCode = candidates.foldLeft[Option[String]](None)(_ orElse _)
 
-    indCode.map(extractNumericSicCode)
+    // apply numeric extractor so we can skip invalid Company SIC if necessary
+    val numericCandidates: Seq[Option[Long]] = candidates.map(extractNumericSicCode(_))
+
+    // Take first non-empty value from list
+    val indCode: Option[Long] = numericCandidates.foldLeft[Option[Long]](None)(_ orElse _)
+
+    indCode
   }
 
   def getTradingStatus(br: Business): Option[String] = {
-    // Extract potential values from CH
+    // Extract potential values from CH (if any)
     br.company.flatMap {
       _.companyStatus
     }
@@ -120,18 +139,25 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getVatTurnover(br: Business): Option[Long] = {
-    // not clear what rule is for deriving this. just take 1st one for now.
+ /* def getVatTurnover(br: Business): Option[Long] = {
+    // not clear what rule is for deriving this. Just take 1st one for now?
     br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.turnover
     }
-  }
+  }*/
 
   def getVatTotalTurnover(br: Business): Option[Long] = {
     // not clear what rule is for deriving this. Add up all VAT turnovers?
-    br.vat match {
-      case Some(vats: Seq[VatRec]) => Option(vats.map(_.turnover.getOrElse(0L)).sum)
-      case _ => None
+    // Maybe there are no VATs or no turnover values.
+    // We want to return an Option on the sum of turnovers if they are present.
+    // If there are no VAT recs, or no rutnovers, return None.
+    val turnovers: Seq[Long] = br.vat.map{ vatList =>
+      vatList.map(_.turnover)
+    }.getOrElse(Nil).flatten
+
+    turnovers match {
+      case Nil => None
+      case _ => Some(turnovers.sum)
     }
   }
 

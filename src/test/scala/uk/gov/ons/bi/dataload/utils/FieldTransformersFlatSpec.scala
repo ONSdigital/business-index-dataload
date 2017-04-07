@@ -39,10 +39,36 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return total VAT turnover" in {
+  "A Transformer" should "return correct total VAT turnover if VAT turnover present" in {
 
-    val expected = Option(fullVatRec.turnover.getOrElse(0L) + fullVatRec.turnover.getOrElse(0L))
-    val vatRecs = Some(Seq(fullVatRec, fullVatRec))
+    val vat100 = fullVatRec.copy(turnover = Some(100L))
+    val vat300 = fullVatRec.copy(turnover = Some(300L))
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = Some(400L)
+    val br = Business(100, None, vatRecs, None)
+    val result = Transformers.getVatTotalTurnover(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return no total VAT turnover if no VAT turnover present" in {
+
+    val vat100 = fullVatRec.copy(turnover = None)
+    val vat300 = fullVatRec.copy(turnover = None)
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = None
+    val br = Business(100, None, vatRecs, None)
+    val result = Transformers.getVatTotalTurnover(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct total VAT turnover if some VAT recs have no VAT turnover" in {
+
+    val vat100 = fullVatRec.copy(turnover = Some(100L))
+    val vat300 = fullVatRec.copy(turnover = None)
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = Some(100L)
     val br = Business(100, None, vatRecs, None)
     val result = Transformers.getVatTotalTurnover(br)
 
@@ -58,6 +84,46 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
     result should be(expected)
   }
+
+  "A Transformer" should "return VAT Industry Code from Business with bad Company SIC, good VAT SIC" in {
+
+    val expected = fullVatRec.sic92
+    val co = fullCompanyRec.copy(sicCode1 = Some("X123 FUBAR"))
+    val br = Business(100, Some(co), Some(Seq(fullVatRec)), None)
+    val result = Transformers.getIndustryCode(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return None from Business with bad Company SIC, no VAT SIC" in {
+
+    val expected = None
+    val co = fullCompanyRec.copy(sicCode1 = Some("X123 FUBAR"))
+    val vat = fullVatRec.copy(sic92 = None)
+    val br = Business(100, Some(co), Some(Seq(vat)), None)
+    val result = Transformers.getIndustryCode(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "extract numeric SIC code correctly from string" in {
+
+    val expected = Some(123L)
+    val sic = Some("123 FUBAR")
+    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "extract numeric SIC code as None from bad SIC string" in {
+
+    val expected = None
+    val sic = Some("X123 FUBAR")
+    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+
+    result should be(expected)
+  }
+
 
   "A Transformer" should "return all VAT references" in {
 

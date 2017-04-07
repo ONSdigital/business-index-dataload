@@ -1,6 +1,6 @@
 name := """business-index-dataload"""
 
-version := "1.2"
+version := "1.3"
 
 // Building with Scala 2.10 because Cloudera Spark 1.6.0 is still on Scala 2.10
 scalaVersion := "2.10.6"
@@ -25,10 +25,12 @@ libraryDependencies ++= Seq(
   "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
 )
 
+
+// ============
+// Additional repo resolvers
 resolvers ++= Seq(
-  // allows us to include spark packages (not sure how well this works on Cloudera)
-  "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/",
-  "conjars" at "http://conjars.org/repo"
+  "conjars" at "http://conjars.org/repo",
+  "Spark Package Main Repo" at "https://dl.bintray.com/spark-packages/maven/"
 )
 
 

@@ -116,13 +116,14 @@
 >	`-Dbi-dataload.app-data.env=dev`
 
 * The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
+* The task parameters below also assume we are working in "dev" here.
 
 Page 1 Field | Contents
 ------------- | -------------
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload 1.2 Step 0 Pre-process Links
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/lib/business-index-dataload_2.10-1.2.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
 Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents
@@ -138,3 +139,4 @@ Properties / Options list | --num-executors 6 --driver-memory 3G --executor-memo
 > * [Step 1](./bi-dataload-step-1.md).
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
+> * [Testing](./bi-dataload-testing.md).

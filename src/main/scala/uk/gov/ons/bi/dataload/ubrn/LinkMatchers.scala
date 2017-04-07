@@ -105,11 +105,15 @@ class LinkMatcher(sc: SparkContext) {
   def matchedOnOtherRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
     // EXTRA RULES NOT YET DEFINED
 
-    // return an empty "matched" set and incoming new links (unmatched)for now
+    // ----------------
+    // IMPLEMENT EXTRA MATCHING RULES HERE ...
+    // ----------------
+
+    // return an empty "matched" set and incoming new links (unmatched) for now
     val matched = BiSparkDataFrames.emptyLinkWithUbrnDf(sc, sqlContext)
     val unmatched = newLinks
 
-    // Return (matched new links with UBRNs, unmatched new links)
+    // Return (matched = new links with UBRNs, unmatched = new links we have not yet matched)
     (matched, unmatched)
   }
 
