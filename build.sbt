@@ -25,6 +25,15 @@ libraryDependencies ++= Seq(
   "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
 )
 
+//=============
+// Spark Testing: avoid version conflicts with standard Scala Test loaded above.
+// Need to change if you change your Spark version (this one is for 1.6.0).
+
+libraryDependencies += "com.holdenkarau" %% "spark-testing-base" % "1.6.0_0.3.2" % "test" excludeAll(
+  ExclusionRule(organization = "org.scalacheck"),
+  ExclusionRule(organization = "org.scalactic"),
+  ExclusionRule(organization = "org.scalatest")
+)
 
 // ============
 // Additional repo resolvers

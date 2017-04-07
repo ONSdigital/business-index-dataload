@@ -147,10 +147,9 @@ object Transformers {
   }*/
 
   def getVatTotalTurnover(br: Business): Option[Long] = {
-    // not clear what rule is for deriving this. Add up all VAT turnovers?
-    // Maybe there are no VATs or no turnover values.
+    // Could be there are no VAT records or no turnover values.
     // We want to return an Option on the sum of turnovers if they are present.
-    // If there are no VAT recs, or no rutnovers, return None.
+    // If there are no VAT recs, or no turnovers, return None.
     val turnovers: Seq[Long] = br.vat.map{ vatList =>
       vatList.map(_.turnover)
     }.getOrElse(Nil).flatten
