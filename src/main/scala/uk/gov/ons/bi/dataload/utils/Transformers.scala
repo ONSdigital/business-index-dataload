@@ -139,18 +139,25 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def getVatTurnover(br: Business): Option[Long] = {
-    // not clear what rule is for deriving this. just take 1st one for now.
+ /* def getVatTurnover(br: Business): Option[Long] = {
+    // not clear what rule is for deriving this. Just take 1st one for now?
     br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.turnover
     }
-  }
+  }*/
 
   def getVatTotalTurnover(br: Business): Option[Long] = {
     // not clear what rule is for deriving this. Add up all VAT turnovers?
-    br.vat match {
-      case Some(vats: Seq[VatRec]) => Option(vats.map(_.turnover.getOrElse(0L)).sum)
-      case _ => None
+    // Maybe there are no VATs or no turnover values.
+    // We want to return an Option on the sum of turnovers if they are present.
+    // If there are no VAT recs, or no rutnovers, return None.
+    val turnovers: Seq[Long] = br.vat.map{ vatList =>
+      vatList.map(_.turnover)
+    }.getOrElse(Nil).flatten
+
+    turnovers match {
+      case Nil => None
+      case _ => Some(turnovers.sum)
     }
   }
 

@@ -39,10 +39,36 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return total VAT turnover" in {
+  "A Transformer" should "return correct total VAT turnover if VAT turnover present" in {
 
-    val expected = Option(fullVatRec.turnover.getOrElse(0L) + fullVatRec.turnover.getOrElse(0L))
-    val vatRecs = Some(Seq(fullVatRec, fullVatRec))
+    val vat100 = fullVatRec.copy(turnover = Some(100L))
+    val vat300 = fullVatRec.copy(turnover = Some(300L))
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = Some(400L)
+    val br = Business(100, None, vatRecs, None)
+    val result = Transformers.getVatTotalTurnover(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return no total VAT turnover if no VAT turnover present" in {
+
+    val vat100 = fullVatRec.copy(turnover = None)
+    val vat300 = fullVatRec.copy(turnover = None)
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = None
+    val br = Business(100, None, vatRecs, None)
+    val result = Transformers.getVatTotalTurnover(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct total VAT turnover if some VAT recs have no VAT turnover" in {
+
+    val vat100 = fullVatRec.copy(turnover = Some(100L))
+    val vat300 = fullVatRec.copy(turnover = None)
+    val vatRecs = Some(Seq(vat100, vat300))
+    val expected = Some(100L)
     val br = Business(100, None, vatRecs, None)
     val result = Transformers.getVatTotalTurnover(br)
 
