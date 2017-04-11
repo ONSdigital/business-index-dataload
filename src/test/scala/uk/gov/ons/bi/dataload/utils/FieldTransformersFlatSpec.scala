@@ -159,11 +159,40 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "return correct Legal Status (from PAYE record) if Company present" in {
+
+    val expected = fullPayeRec.legalStatus.map(_.toString)
+    val payeRecs = Some(Seq(fullPayeRec))
+    val br = Business(100, Some(fullCompanyRec), None, payeRecs)
+    val result = Transformers.getLegalStatus(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Legal Status (from VAT record) if Company present" in {
+
+    val expected = fullVatRec.legalStatus.map(_.toString)
+    val vatRecs = Some(Seq(fullVatRec))
+    val br = Business(100, Some(fullCompanyRec), vatRecs, None)
+    val result = Transformers.getLegalStatus(br)
+
+    result should be(expected)
+  }
+
   "A Transformer" should "return correct Legal Status (from PAYE record)" in {
 
     val expected = fullPayeRec.legalStatus.map(_.toString)
     val payeRecs = Some(Seq(fullPayeRec))
     val br = Business(100, None, None, payeRecs)
+    val result = Transformers.getLegalStatus(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Legal Status (from Company record)" in {
+
+    val expected = Some("1")
+    val br = Business(100, Some(fullCompanyRec), None, None)
     val result = Transformers.getLegalStatus(br)
 
     result should be(expected)

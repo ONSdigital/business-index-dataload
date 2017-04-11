@@ -123,6 +123,7 @@ object Transformers {
     }
   }
 
+
   def getLegalStatus(br: Business): Option[String] = {
     // Extract potential values from VAT/PAYE records
     // Take first VAT/PAYE record (if any)
@@ -132,19 +133,14 @@ object Transformers {
     val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
       _.legalStatus.map(_.toString)
     }
+    // If we only have a Company, we just give it a generic status of "1"
+    val ch: Option[String] = br.company.map {co: CompanyRec => "1"}
 
     // list in order of preference
-    val candidates = Seq(vat, paye)
-    // Take first non-empty name value from list
+    val candidates = Seq(vat, paye, ch)
+    // Take first non-empty value from list
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
-
- /* def getVatTurnover(br: Business): Option[Long] = {
-    // not clear what rule is for deriving this. Just take 1st one for now?
-    br.vat.flatMap { vs => vs.headOption }.flatMap {
-      _.turnover
-    }
-  }*/
 
   def getVatTotalTurnover(br: Business): Option[Long] = {
     // not clear what rule is for deriving this. Add up all VAT turnovers?

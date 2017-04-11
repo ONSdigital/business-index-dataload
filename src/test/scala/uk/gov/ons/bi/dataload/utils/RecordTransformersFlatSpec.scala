@@ -341,7 +341,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     results shouldBe expected
   }
 
-  "A Transformer" should "convertToBusinessIndex " in {
+  "A Transformer" should "convertToBusinessIndex correctly for full set of business data" in {
 
     // We assume the individual fields are tested elsewhere
 
@@ -383,7 +383,6 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expectedVatRefs = Some(List(vat1.vatRef.get, vat2.vatRef.get))
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
-
     val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(123L),
       vat1.legalStatus.map(_.toString),
       Some("?"),
@@ -395,5 +394,29 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     )
     results shouldBe expected
   }
+
+  "A Transformer" should "convertToBusinessIndex with correct legal status if only Company is present" in {
+
+    // We assume the individual fields are tested elsewhere
+    // Set up source data for a Business with 1 company only
+    val ubrn = 100L
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
+      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+    )
+    val uwdCh = UbrnWithData(ubrn, CH, company)
+
+    val uwds = List(uwdCh)
+    val uwl = UbrnWithList(ubrn, uwds)
+
+    // Construct a full Business record
+    val business: Business = Transformers.buildBusinessRecord(uwl)
+
+    // Run conversion
+    val results  = Transformers.convertToBusinessIndex(business).legalStatus
+    val expected = Some("1") // legalStatus
+
+    results shouldBe expected
+  }
+
 
 }
