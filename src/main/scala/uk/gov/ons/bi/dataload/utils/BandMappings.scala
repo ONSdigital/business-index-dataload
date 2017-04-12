@@ -38,18 +38,6 @@ object BandMappings {
     case _ => "I"
   }
 
-  def legalStatusBand(s: Option[String]): Option[Int] = s map {
-    case "Company" => 1
-    case "Sole Proprietor" => 2
-    case "Partnership" => 3
-    case "Public Corporation" => 4
-    case "Non-Profit Organisation" => 5
-    case "Local Authority" => 6
-    case "Central Government" => 7
-    case "Charity" => 8
-    case _ => 0
-  }
-
   def tradingStatusBand(s: Option[String]): Option[String] = s map {
     case "Active" => "A"
     case "Closed" => "C"

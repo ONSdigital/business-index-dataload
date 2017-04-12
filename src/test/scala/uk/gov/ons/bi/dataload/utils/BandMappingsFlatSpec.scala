@@ -42,23 +42,6 @@ class BandMappingsFlatSpec extends FlatSpec with Matchers {
 
   }
 
-  "legalStatusBand" should "translate all values correctly" in {
-
-    val inputs: Seq[Option[String]] = Vector("Company", "Sole Proprietor", "Partnership","Public Corporation",
-      "Non-Profit Organisation", "Local Authority", "Central Government",
-       "Charity", "INVALID").map(Option(_))
-    val outputs = List(1,2,3,4,5,6,7,8,0).map(Option(_))
-
-    val inputsWithNone = inputs ++ None
-    val outputsWithNone = outputs ++ None
-
-    val testParams = inputsWithNone.zip(outputsWithNone)
-
-    for {
-      (input, expected) <- testParams
-    } yield expected should be (BandMappings.legalStatusBand(input))
-  }
-
   "tradingStatusBand" should "translate all values correctly" in {
 
     val inputs: Seq[Option[String]] = Vector("Active", "Closed", "Dormant", "Insolvent", "INVALID").map(Option(_))
