@@ -124,13 +124,13 @@ class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCon
       """
         |SELECT
         |CAST(payeref AS STRING) AS payeref,
-        | nameline1,
+        | name1,
         | postcode,
-        | legalstatus,
+        | status,
         | CAST(dec_jobs AS DOUBLE) AS dec_jobs,
         | CAST(mar_jobs AS DOUBLE) AS mar_jobs,
         | CAST(june_jobs AS DOUBLE) AS june_jobs,
-        | CAST(sept_jobs AS DOUBLE) AS sept_jobs,
+        | CAST(sep_jobs AS DOUBLE) AS sept_jobs,
         | CAST(jobs_lastupd AS STRING) AS jobs_lastupd
         |FROM temp_paye
         |WHERE payeref IS NOT NULL""".stripMargin)
@@ -176,10 +176,10 @@ class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCont
     val extracted = sqlContext.sql(
       """
         |SELECT CAST(vatref AS LONG) AS vatref,
-        |nameline1,
+        |name1,
         |postcode,
         |sic92,
-        |legalstatus,
+        |status,
         |CAST(turnover AS LONG) AS turnover
         |FROM temp_vat
         |WHERE vatref IS NOT NULL""".stripMargin)
