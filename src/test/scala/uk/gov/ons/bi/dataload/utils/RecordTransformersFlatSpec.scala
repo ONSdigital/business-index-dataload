@@ -384,7 +384,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
     val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(123L),
-      vat1.legalStatus.map(_.toString),
+      Some("1"),  // default legal status for Company
       Some("?"),
       Some("H"),
       Some("C"),
@@ -417,6 +417,5 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     results shouldBe expected
   }
-
 
 }

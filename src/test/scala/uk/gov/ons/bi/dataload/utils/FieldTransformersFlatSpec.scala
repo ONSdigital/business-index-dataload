@@ -159,9 +159,9 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return correct Legal Status (from PAYE record) if Company present" in {
-
-    val expected = fullPayeRec.legalStatus.map(_.toString)
+  "A Transformer" should "return correct Legal Status if Company present with PAYE record" in {
+    // New rule (JIRA ONSRBIB-526) is: if Company then legal status = 1, ignore others.
+    val expected = Some("1")
     val payeRecs = Some(Seq(fullPayeRec))
     val br = Business(100, Some(fullCompanyRec), None, payeRecs)
     val result = Transformers.getLegalStatus(br)
@@ -169,9 +169,9 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return correct Legal Status (from VAT record) if Company present" in {
-
-    val expected = fullVatRec.legalStatus.map(_.toString)
+  "A Transformer" should "return correct Legal Status if Company present with VAT record" in {
+    // New rule (JIRA ONSRBIB-526) is: if Company then legal status = 1, ignore others.
+    val expected = Some("1")
     val vatRecs = Some(Seq(fullVatRec))
     val br = Business(100, Some(fullCompanyRec), vatRecs, None)
     val result = Transformers.getLegalStatus(br)
