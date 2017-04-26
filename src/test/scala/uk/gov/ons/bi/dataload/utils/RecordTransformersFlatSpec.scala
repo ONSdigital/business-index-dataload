@@ -349,7 +349,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Company SIC = "123 SIC" (should return IndustryCode = 123)
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Active"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -385,7 +385,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(123L),
       Some("1"),  // default legal status for Company
-      Some("?"),
+      Some("A"),  // trading status
       Some("H"),
       Some("C"),
       company.companyNo,
