@@ -1,5 +1,7 @@
 package uk.gov.ons.bi.dataload.utils
 
+import scala.Option
+
 /**
   * Created by websc on 22/02/2017.
   */
@@ -38,12 +40,16 @@ object BandMappings {
     case _ => "I"
   }
 
-  def tradingStatusBand(s: Option[String]): Option[String] = s map {
-    case "Active" => "A"
-    case "Closed" => "C"
-    case "Dormant" => "D"
-    case "Insolvent" => "I"
-    case _ => "?"
+  def tradingStatusBand(s: Option[String]): Option[String] = {
+    // ONSRBIB-570: invalid code should now translate as None
+    s map {
+      case "Active" => "A"
+      case "Closed" => "C"
+      case "Dormant" => "D"
+      case "Insolvent" => "I"
+      case _ => "?"
+    } match {
+      case Some("?") => None
+      case x => x}
   }
-
 }

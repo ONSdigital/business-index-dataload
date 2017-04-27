@@ -44,9 +44,11 @@ class BandMappingsFlatSpec extends FlatSpec with Matchers {
 
   "tradingStatusBand" should "translate all values correctly" in {
 
+    // ONSRBIB-570: invalid code should now translate as None
     val inputs: Seq[Option[String]] = Vector("Active", "Closed", "Dormant", "Insolvent", "INVALID").map(Option(_))
-    val outputs = Vector("A", "C", "D", "I", "?").map(Option(_))
+    val outputs = Vector("A", "C", "D", "I").map(Option(_)) ++ None
 
+    // Allow for a None input value as well
     val inputsWithNone = inputs ++ None
     val outputsWithNone = outputs ++ None
 

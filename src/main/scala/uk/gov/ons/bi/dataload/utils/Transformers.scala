@@ -137,7 +137,7 @@ object Transformers {
     val ch: Option[String] = br.company.map {co: CompanyRec => "1"}
 
     // list in order of preference
-    val candidates = Seq(vat, paye, ch)
+    val candidates = Seq(ch, vat, paye)
     // Take first non-empty value from list
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
