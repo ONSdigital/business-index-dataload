@@ -35,91 +35,49 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     LinkMatchResults(unmatchedOldLinks, unmatchedNewLinks, matched)
   }
 
-  def getChMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-    // Apply rule to get current matches
-    // Get old/new links where Company No is the same
-    oldLinks.registerTempTable("ch_old")
-    newLinks.registerTempTable("ch_new")
-
-    val matched = sqlContext.sql(
-      """
-        | SELECT old.UBRN AS UBRN, new.GID AS GID, new.CH AS CH, new.VAT, new.PAYE
-        | FROM ch_old AS old LEFT JOIN ch_new AS new ON (old.CH[0] = new.CH[0])
-        | WHERE old.CH[0] IS NOT NULL AND new.CH[0] IS NOT NULL
-      """.stripMargin)
-
-    // Remove matched records from the sets we need to process next time
+  def applySqlRule(matchQuery: String, oldLinks:DataFrame, newLinks:DataFrame) = {
+    // Set these each time
+    oldLinks.registerTempTable("old_links")
+    newLinks.registerTempTable("new_links")
+    // Execute SQL rule and get matched records
+    val matched =  sqlContext.sql(matchQuery)
+    // Join Matched
+    // Remove matched data from sets of data to be processed
     excludeMatches(oldLinks, newLinks, matched)
   }
 
 
+  def getChMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults  = {
+    val matchQuery = """
+       SELECT p.UBRN AS UBRN,c.GID, c.CH, c.VAT, c.PAYE
+    FROM old_links AS p JOIN new_links AS c ON (p.CH = c.CH)
+    WHERE p.CH IS NOT NULL
+    AND c.CH IS NOT NULL
+    AND p.CH[0] IS NOT NULL
+    AND c.CH[0] IS NOT NULL
+          """.stripMargin
+
+    applySqlRule(matchQuery, oldLinks, newLinks)
+   }
+
+
   def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-    // Every time we match a record, we want to eliminate it from the sets of
-    // old/new links that we use for the next set of checks.
-
-    // Get old/new links where there is no Company No but other contents are same
-    oldLinks.registerTempTable("con_old")
-    newLinks.registerTempTable("con_new")
-
-    val matched = sqlContext.sql(
-      """SELECT old.UBRN AS UBRN, new.GID as GID, old.CH AS CH, new.VAT, new.PAYE
-        |FROM con_old AS old
-        |LEFT JOIN con_new AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
+    // Different rule for each matching process
+    val matchQuery = """
+        SELECT old.UBRN AS UBRN, new.GID as GID, new.CH, new.VAT, new.PAYE
+        |FROM old_links AS old
+        |LEFT JOIN new_links AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
         |WHERE old.CH[0] IS NULL
         | AND new.CH[0] IS NULL
         | AND (new.VAT IS NOT NULL OR new.PAYE IS NOT NULL)
         | AND (old.VAT IS NOT NULL OR old.PAYE IS NOT NULL)
-      """.stripMargin)
+      """.stripMargin
 
-    // Remove matched records from the sets we need to process next time
-    excludeMatches(oldLinks, newLinks, matched)
+    applySqlRule(matchQuery, oldLinks, newLinks)
   }
 
 
-  /*
-    def getVatMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-
-      oldLinks.registerTempTable("unmatched_old")
-      newLinks.registerTempTable("unmatched_new")
-
-      /*
-      * VAT matching logic:
-      *
-      * Take unmatched records.
-      * Explode VAT arrays to create old/new Links with a single VAT reference in each.
-      * Match on the individual VAT references.
-      * It is possible that one new Link GID might match >1 old Link UBRN, or vice versa.
-      * We therefore rank the old and new VATs (in order of VAT reference) within each UBRN or GID.
-      * Then we take UBRN and GID for the first match only.
-      */
-
-      // Window functions allow us to rank data within GID or UBRN
-      val partitionByUbrnOrderByVat = org.apache.spark.sql.expressions.Window.partitionBy("UBRN").orderBy("exploded_vat")
-      val partitionByGidOrderByVat = org.apache.spark.sql.expressions.Window.partitionBy("GID").orderBy("exploded_vat")
-
-      val oldLinksRanked = oldLinks.select("UBRN","CH","VAT","PAYE")
-        .withColumn("exploded_vat", explode(oldLinks("VAT"))).as("exploded_vat")
-        .withColumn("rank_in_ubrn", dense_rank().over(partitionByUbrnOrderByVat))
-
-      val newLinksRanked = newLinks.select("GID","CH","VAT","PAYE")
-        .withColumn("exploded_vat", explode(newLinks("VAT"))).as("exploded_vat")
-        .withColumn("rank_in_gid", dense_rank().over(partitionByGidOrderByVat))
-
-      val matchIds = newLinksRanked.filter("rank_in_gid = 1")
-        .join(oldLinksRanked.filter("rank_in_ubrn = 1"),newLinksRanked("exploded_vat") === oldLinksRanked("exploded_vat"))
-        .select("UBRN","GID")
-
-      val matched = matchIds.join(newLinks, "GID")
-
-      // Remove matched records from the sets we need to process next time
-      excludeMatches(oldLinks, newLinks, matched)
-    }
-  */
   def getVatMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-
-    oldLinks.registerTempTable("unmatched_old")
-    newLinks.registerTempTable("unmatched_new")
-
     /*
     * VAT matching logic:
     *
@@ -131,33 +89,28 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     * Then we take UBRN and GID for the first match only.
     */
 
-    val q =
+    val matchQuery =
       """
-                SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
-                FROM (
-                SELECT exp_old.UBRN, exp_new.GID,
-                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_vat) as rank_in_ubrn,
-                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_vat) as rank_in_gid
-                FROM
-                (SELECT GID, CH, explode(VAT) AS exploded_vat FROM unmatched_new) AS exp_new
-                LEFT JOIN
-                (SELECT UBRN, CH, explode(VAT) AS exploded_vat FROM unmatched_old) AS exp_old
-                 ON (exp_old.exploded_vat = exp_new.exploded_vat)
-                 ) t1 LEFT JOIN unmatched_new AS un ON (un.GID = t1.GID)
-                 WHERE  t1.rank_in_ubrn = 1
-                 AND t1.rank_in_gid = 1
+              SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
+ |                FROM (
+ |                SELECT exp_old.UBRN, exp_new.GID,
+ |                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_vat) as rank_in_ubrn,
+ |                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_vat) as rank_in_gid
+ |                FROM
+ |                (SELECT GID, CH, explode(VAT) AS exploded_vat FROM new_links) AS exp_new
+ |                LEFT JOIN
+ |                (SELECT UBRN, CH, explode(VAT) AS exploded_vat FROM old_links) AS exp_old
+ |                 ON (exp_old.exploded_vat = exp_new.exploded_vat)
+ |                 ) t1 LEFT JOIN new_links AS un ON (un.GID = t1.GID)
+ |                 WHERE  t1.rank_in_ubrn = 1
+ |                 AND t1.rank_in_gid = 1
                """.stripMargin
-    val matched = sqlContext.sql(q)
 
-    // Remove matched records from the sets we need to process next time
-    excludeMatches(oldLinks, newLinks, matched)
+    applySqlRule(matchQuery, oldLinks, newLinks)
   }
 
 
   def getPayeMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-
-    oldLinks.registerTempTable("unmatched_old")
-    newLinks.registerTempTable("unmatched_new")
 
     /*
     * PAYE matching logic:
@@ -170,26 +123,24 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     * Then we take UBRN and GID for the first match only.
     */
 
-    val q =
+    val matchQuery =
       """
-                SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
-                FROM (
-                SELECT exp_old.UBRN, exp_new.GID,
-                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_paye) as rank_in_ubrn,
-                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_paye) as rank_in_gid
-                FROM
-                (SELECT GID, CH, explode(PAYE) as exploded_paye FROM unmatched_new) AS exp_new
-                LEFT JOIN
-                (SELECT UBRN, CH, explode(PAYE) as exploded_paye FROM unmatched_old) AS exp_old
-                 ON (exp_old.exploded_paye = exp_new.exploded_paye)
-                 ) t1 LEFT JOIN unmatched_new AS un ON (un.GID = t1.GID)
-                 WHERE  t1.rank_in_ubrn = 1
-                 AND t1.rank_in_gid = 1
+        SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
+ |                FROM (
+ |                SELECT exp_old.UBRN, exp_new.GID,
+ |                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_paye) as rank_in_ubrn,
+ |                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_paye) as rank_in_gid
+ |                FROM
+ |                (SELECT GID, CH, explode(PAYE) as exploded_paye FROM new_links) AS exp_new
+ |                LEFT JOIN
+ |                (SELECT UBRN, CH, explode(PAYE) as exploded_paye FROM old_links) AS exp_old
+ |                 ON (exp_old.exploded_paye = exp_new.exploded_paye)
+ |                 ) t1 LEFT JOIN new_links AS un ON (un.GID = t1.GID)
+ |                 WHERE  t1.rank_in_ubrn = 1
+ |                 AND t1.rank_in_gid = 1
                """.stripMargin
-    val matched = sqlContext.sql(q)
 
-    // Remove matched records from the sets we need to process next time
-    excludeMatches(oldLinks, newLinks, matched)
+    applySqlRule(matchQuery, oldLinks, newLinks)
   }
 
   def combineLinksToSave(linksWithUbrn1: DataFrame, linksWithUbrn2: DataFrame): DataFrame = {
@@ -203,43 +154,70 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     // Get CH matches where CH is present in both sets
     val chResults = getChMatches(oldLinks, newLinks)
-    val chMatchesDf: DataFrame = chResults.matched
 
-    chMatchesDf.cache()
+    // Cache results as they will be re-used below
+    chResults.unmatchedOldLinks.cache()
+    chResults.unmatchedNewLinks.cache()
+    chResults.matched.cache()
 
     // Get records where CH is absent from both sets but other contents are same
-    val contentMatchResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
-    val contentMatchesDf: DataFrame = contentMatchResults.matched
+    val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
 
-    contentMatchesDf.cache()
+    // Reset cached data
+
+    contentResults.unmatchedOldLinks.cache()
+    contentResults.unmatchedNewLinks.cache()
+    contentResults.matched.cache()
+
+    chResults.unmatchedOldLinks.unpersist()
+    chResults.unmatchedNewLinks.unpersist()
 
     // Get records where VAT ref matches
-    val vatMatchResults = getVatMatches(contentMatchResults.unmatchedOldLinks, contentMatchResults.unmatchedNewLinks)
-    val vatMatchesDf: DataFrame = vatMatchResults.matched
+    val vatResults = getVatMatches(contentResults.unmatchedOldLinks, contentResults.unmatchedNewLinks)
 
-    vatMatchesDf.cache()
+    // Reset cached data
+
+    vatResults.unmatchedOldLinks.cache()
+    vatResults.unmatchedNewLinks.cache()
+    vatResults.matched.cache()
+
+    contentResults.unmatchedOldLinks.unpersist()
+    contentResults.unmatchedNewLinks.unpersist()
 
     // Get records where PAYE ref matches
-    val payeMatchResults = getPayeMatches(vatMatchResults.unmatchedOldLinks, vatMatchResults.unmatchedNewLinks)
-    val payeMatchesDf: DataFrame = payeMatchResults.matched
+    val payeResults = getPayeMatches(vatResults.unmatchedOldLinks, vatResults.unmatchedNewLinks)
 
-    payeMatchesDf.cache()
+    // Reset cached data
+
+    payeResults.unmatchedOldLinks.cache()
+    payeResults.unmatchedNewLinks.cache()
+    payeResults.matched.cache()
+
+    vatResults.unmatchedOldLinks.unpersist()
+    vatResults.unmatchedNewLinks.unpersist()
 
     // Finally we should have:
     // - one sub-set of new links that we have matched, so they now have a UBRN:
-    val allMatched: DataFrame = chMatchesDf
-      .unionAll(contentMatchesDf)
-      .unionAll(vatMatchesDf)
-      .unionAll(payeMatchesDf)
+    val allMatched: DataFrame = chResults.matched
+      .unionAll(contentResults.matched)
+      .unionAll(vatResults.matched)
+      .unionAll(payeResults.matched)
+
+    allMatched.cache()
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:
-    val needUbrn: DataFrame = payeMatchResults.unmatchedNewLinks
+    val needUbrn: DataFrame = payeResults.unmatchedNewLinks
+    needUbrn.cache()
 
-    vatMatchesDf.unpersist()
-    payeMatchesDf.unpersist()
-    chMatchesDf.unpersist()
-    contentMatchesDf.unpersist()
+    // Clear remaining cached data
+    vatResults.matched.unpersist()
+    payeResults.matched.unpersist()
+    chResults.matched.unpersist()
+    contentResults.matched.unpersist()
+    payeResults.unmatchedNewLinks.unpersist()
+    payeResults.unmatchedOldLinks.unpersist()
 
+    // Return the stuff we want
     (allMatched, needUbrn)
   }
 
