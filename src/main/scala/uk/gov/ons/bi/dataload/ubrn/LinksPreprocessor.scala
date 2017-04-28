@@ -18,9 +18,6 @@ import org.apache.spark.sql.hive.HiveContext
 @Singleton
 class LinksPreprocessor(ctxMgr: ContextMgr) {
 
-  //val sc = ctxMgr.sc
-  //val sqlContext = ctxMgr.sqlContext
-
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
@@ -76,6 +73,17 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
     val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(needUbrn, maxUrbn)
+
+
+    println(">>>>>>>> USE OLD UBRN:")
+    withOldUbrn.foreach(println)
+
+
+    println(">>>>>>>> NEED NEW UBRN:")
+    needUbrn.foreach(println)
+
+    println(">>>>>>>> WITH NEW UBRN:")
+    withNewUbrn.foreach(println)
 
     // Finally, reconstruct full set of Links so we can save them all to Parquet
     val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)

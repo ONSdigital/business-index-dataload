@@ -41,7 +41,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     newLinks.registerTempTable("new_links")
     // Execute SQL rule and get matched records
     val matched =  sqlContext.sql(matchQuery)
-    // Join Matched
     // Remove matched data from sets of data to be processed
     excludeMatches(oldLinks, newLinks, matched)
   }
@@ -160,6 +159,12 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     chResults.unmatchedNewLinks.cache()
     chResults.matched.cache()
 
+    println(">>>> CH MATCHED:")
+    chResults.matched.foreach(println)
+
+    println(">>>> CH UNMATCHED:")
+    chResults.unmatchedNewLinks.foreach(println)
+
     // Get records where CH is absent from both sets but other contents are same
     val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
 
@@ -169,10 +174,13 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     contentResults.unmatchedNewLinks.cache()
     contentResults.matched.cache()
 
+    println(">>>> CONTENTS MATCHED:")
+    contentResults.matched.foreach(println)
+
     chResults.unmatchedOldLinks.unpersist()
     chResults.unmatchedNewLinks.unpersist()
 
-    // Get records where VAT ref matches
+ /*   // Get records where VAT ref matches
     val vatResults = getVatMatches(contentResults.unmatchedOldLinks, contentResults.unmatchedNewLinks)
 
     // Reset cached data
@@ -180,6 +188,9 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     vatResults.unmatchedOldLinks.cache()
     vatResults.unmatchedNewLinks.cache()
     vatResults.matched.cache()
+
+    println(">>>> VAT MATCHED:")
+    vatResults.matched.foreach(println)
 
     contentResults.unmatchedOldLinks.unpersist()
     contentResults.unmatchedNewLinks.unpersist()
@@ -193,32 +204,37 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     payeResults.unmatchedNewLinks.cache()
     payeResults.matched.cache()
 
+
+    println(">>>> PAYE MATCHED:")
+    payeResults.matched.foreach(println)
+
     vatResults.unmatchedOldLinks.unpersist()
     vatResults.unmatchedNewLinks.unpersist()
-
+*/
     // Finally we should have:
     // - one sub-set of new links that we have matched, so they now have a UBRN:
-    val allMatched: DataFrame = chResults.matched
-      .unionAll(contentResults.matched)
-      .unionAll(vatResults.matched)
-      .unionAll(payeResults.matched)
+    val withOldUbrn: DataFrame = chResults.matched
+                                  .unionAll(contentResults.matched)
+                                  //.unionAll(vatResults.matched)
+                                  //.unionAll(payeResults.matched)
 
-    allMatched.cache()
+    withOldUbrn.cache()
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:
-    val needUbrn: DataFrame = payeResults.unmatchedNewLinks
+    val needUbrn: DataFrame = contentResults.unmatchedNewLinks
     needUbrn.cache()
 
     // Clear remaining cached data
-    vatResults.matched.unpersist()
-    payeResults.matched.unpersist()
+    //vatResults.matched.unpersist()
+    //payeResults.matched.unpersist()
     chResults.matched.unpersist()
     contentResults.matched.unpersist()
-    payeResults.unmatchedNewLinks.unpersist()
-    payeResults.unmatchedOldLinks.unpersist()
+    //payeResults.unmatchedNewLinks.unpersist()
+    //payeResults.unmatchedOldLinks.unpersist()
 
     // Return the stuff we want
-    (allMatched, needUbrn)
+
+    (withOldUbrn, needUbrn)
   }
 
 }
