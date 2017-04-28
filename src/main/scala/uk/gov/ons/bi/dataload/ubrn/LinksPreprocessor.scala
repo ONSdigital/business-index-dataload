@@ -1,17 +1,28 @@
 package uk.gov.ons.bi.dataload.ubrn
 
+import java.util.UUID
+
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SQLContext, UserDefinedFunction}
 import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.hive.HiveContext
 
 /**
   * Created by websc on 03/03/2017.
   */
 
+
 @Singleton
-class LinksPreprocessor(sc: SparkContext) {
+class LinksPreprocessor(ctxMgr: ContextMgr) {
+
+  //val sc = ctxMgr.sc
+  //val sqlContext = ctxMgr.sqlContext
+
+  // Create UDF to generate a UUID
+  val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // get source/target directories
@@ -26,9 +37,14 @@ class LinksPreprocessor(sc: SparkContext) {
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
-    // Load the new Links from JSON
-    val jsonReader = new LinkJsonReader(sc)
-    val newLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+    // Load the new Links from JSON and add a temporary Group ID to each record
+    val jsonReader = new LinkJsonReader(ctxMgr)
+    val jsonLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+
+    // WARNING:
+    // UUID is generated when data is materialised e.g. in a SELECT statement,
+    // so we need to cache this data once we've added GID to fix it in place.
+    val newLinks = jsonLinks.withColumn("GID", generateUuid())
     newLinks.cache()
 
     // Parquet file locations from configuration (or runtime params)
@@ -42,12 +58,12 @@ class LinksPreprocessor(sc: SparkContext) {
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     // Get previous links
-    val previousLinkStore = new PreviousLinkStore(sc)
+    val previousLinkStore = new PreviousLinkStore(ctxMgr)
     val prevLinks = previousLinkStore.readFromSourceFile(prevLinksFileParquetPath)
     prevLinks.cache()
 
     // Initialise LinkMatcher
-    val matcher = new LinkMatcher(sc)
+    val matcher = new LinkMatcher(ctxMgr)
 
     // Apply all matching rules and get (matched, unmatched) records back
     val (withOldUbrn, needUbrn) = matcher.applyAllMatchingRules(newLinks, prevLinks)
@@ -67,9 +83,6 @@ class LinksPreprocessor(sc: SparkContext) {
     // Cache the results because we want to write them to multiple files
     linksToSave.cache()
 
-    // Clear cached data we no longer need
-    prevLinks.unpersist()
-    newLinks.unpersist()
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
     jsonReader.writeParquet(linksToSave, newLinksFileParquetPath)
@@ -83,6 +96,8 @@ class LinksPreprocessor(sc: SparkContext) {
 
     // Clear cached data we no longer need
     linksToSave.unpersist()
+    newLinks.unpersist()
+    prevLinks.unpersist()
   }
 
 }

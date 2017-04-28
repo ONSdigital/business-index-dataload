@@ -12,10 +12,10 @@ object BiTypes {
 }
 
 // old Link format from data science
-case class LinkRec(ubrn: BiTypes.Ubrn, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
+case class LinkRec(ubrn: BiTypes.Ubrn, ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]], gid: Option[String] = None)
 
-// link keys for CH/PAYE/VAT
-case class LinkKeys(ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]])
+// link keys for CH/PAYE/VAT (GID is a temporary UUID that will be generated for new links during processing)
+case class LinkKeys(ch: Option[String], vat: Option[Seq[String]], paye: Option[Seq[String]], gid: Option[String] = None)
 
 // revised Link format allows for no UBRN from data science and encapsulates link key data
 case class Link(ubrn: Option[BiTypes.Ubrn] = None, link: LinkKeys)

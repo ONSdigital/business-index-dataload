@@ -3,14 +3,17 @@ package uk.gov.ons.bi.dataload.reader
 import com.google.inject.Singleton
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
+import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 /**
   * Created by websc on 21/02/2017.
   */
 
 
-abstract class CsvReader(sc: SparkContext)
-  extends BIDataReader(sc: SparkContext) {
+abstract class CsvReader(ctxMgr: ContextMgr)
+  extends BIDataReader{
+
+  val sqlContext = ctxMgr.sqlContext
 
   def fixSchema(df: DataFrame): DataFrame = {
 
@@ -45,8 +48,8 @@ abstract class CsvReader(sc: SparkContext)
 }
 
 @Singleton
-class CompaniesHouseCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
+class CompaniesHouseCsvReader(ctxMgr: ContextMgr)
+  extends CsvReader(ctxMgr: ContextMgr) {
 
   val rawTable = "raw_companies"
 
@@ -65,8 +68,8 @@ class CompaniesHouseCsvReader(sc: SparkContext)
 }
 
 @Singleton
-class PayeCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
+class PayeCsvReader(ctxMgr: ContextMgr)
+  extends CsvReader(ctxMgr: ContextMgr) {
 
   val rawTable = "raw_paye"
 
@@ -86,8 +89,8 @@ class PayeCsvReader(sc: SparkContext)
 }
 
 @Singleton
-class VatCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
+class VatCsvReader(ctxMgr: ContextMgr)
+  extends CsvReader(ctxMgr: ContextMgr) {
 
   val rawTable = "raw_vat"
 
