@@ -117,10 +117,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     * It is possible that one new Link GID might match >1 old Link UBRN, or vice versa.
     * We therefore rank the old and new VATs (in order of VAT reference) within each UBRN or GID.
     * Then we take UBRN and GID for the first match only.
-    *
-    * WARNING:
-    * This SQL seems to produce false matches if the OLD set is empty, so we skip the query
-    * altogether in applySqlRule() if the old set is empty.
     */
 
     val matchQuery =
@@ -155,10 +151,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     * It is possible that one new Link GID might match >1 old Link UBRN, or vice versa.
     * We therefore rank the old and new PAYEs (in order of PAYE reference) within each UBRN or GID.
     * Then we take UBRN and GID for the first match only.
-    *
-    * WARNING:
-    * This SQL seems to produce false matches if the OLD set is empty, so we skip the query
-    * altogether in applySqlRule() if the old set is empty.
    */
 
     val matchQuery =
@@ -189,6 +181,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
   def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
     // Each rule eliminates matching records from the set of links we still have to match,
     // so each step should have a smaller search space.
+    // Cache intermediate sets temporarily so we don't have to keep re-materialising them.
 
     // Get CH matches where CH is present in both sets
     val chResults = getChMatches(oldLinks, newLinks)
