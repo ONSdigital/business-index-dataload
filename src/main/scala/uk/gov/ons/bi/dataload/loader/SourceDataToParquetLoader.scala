@@ -4,14 +4,14 @@ import com.google.inject.Singleton
 import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 14/02/2017.
   */
 
 @Singleton
-class SourceDataToParquetLoader (val sc: SparkContext){
+class SourceDataToParquetLoader (ctxMgr: ContextMgr){
 
     def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
@@ -33,9 +33,9 @@ class SourceDataToParquetLoader (val sc: SparkContext){
 
       // Get corresponding reader based on BIDataSource
       val reader: BIDataReader = biSource match {
-        case VAT => new VatCsvReader(sc)
-        case CH => new CompaniesHouseCsvReader(sc)
-        case PAYE => new PayeCsvReader(sc)
+        case VAT => new VatCsvReader(ctxMgr)
+        case CH => new CompaniesHouseCsvReader(ctxMgr)
+        case PAYE => new PayeCsvReader(ctxMgr)
       }
 
       // Process the data
