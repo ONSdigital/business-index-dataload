@@ -9,7 +9,7 @@ scalaVersion := "2.10.6"
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 lazy val Versions = new {
-  val spark = "1.6.0"
+  val spark = "1.6.1"
   val sparkCsv = "1.5.0"
   val joda = "2.9.4"
   val jodaConvert = "1.8.1"
