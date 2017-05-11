@@ -17,8 +17,21 @@ object BiSparkDataFrames {
     StructField("PAYE", ArrayType(StringType), true)
   ))
 
+
   def emptyLinkWithUbrnDf(sc: SparkContext, sqlContext: SQLContext):DataFrame  =
     sqlContext.createDataFrame(sc.emptyRDD[Row], linkWithUbrnSchema)
+
+  // DataFrame schema for legal unit ("link") with UBRN and Group ID
+  val matchedLinkWithUbrnGidSchema = StructType(Seq(
+    StructField("UBRN", LongType, true),
+    StructField("GID", StringType, true),
+    StructField("CH", ArrayType(StringType), true),
+    StructField("VAT", ArrayType(StringType), true),
+    StructField("PAYE", ArrayType(StringType), true)
+  ))
+
+  def emptyMatchedLinkWithUbrnGidDf(sc: SparkContext, sqlContext: SQLContext):DataFrame  =
+    sqlContext.createDataFrame(sc.emptyRDD[Row], matchedLinkWithUbrnGidSchema)
 
   // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
   // This effectively defines the format of the final BI record in ElasticSearch.

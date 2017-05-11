@@ -10,7 +10,7 @@ import uk.gov.ons.bi.dataload.utils._
   */
 object BusinessIndexesParquetToESLoader {
 
-  def loadBIEntriesToES(sc: SparkContext, appConfig: AppConfig) = {
+  def loadBIEntriesToES(ctxMgr: ContextMgr, appConfig: AppConfig) = {
 
     val esConf = appConfig.ESConfig
 
@@ -20,7 +20,7 @@ object BusinessIndexesParquetToESLoader {
 
      // read BI entries
 
-    val pqReader = new BIEntriesParquetReader(sc)
+    val pqReader = new BIEntriesParquetReader(ctxMgr)
 
     val biDf = pqReader.loadFromParquet(appConfig)
 

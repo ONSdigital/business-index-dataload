@@ -68,7 +68,7 @@
 
 ### UBRN and Links comparisons ###
 
-* The current data ingestion process applies simplified business rules for checking whether a new Link matches a Link from the previous run.
+* The data ingestion process applies the following business rules for checking whether a new Link matches a Link from the previous run.
 
 ```
 	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
@@ -79,15 +79,20 @@
 	AND (old contents = new contents)
 	THEN
 	  use old UBRN for new Link record
+	ELSIF (old VAT ref = new VAT ref) 
+	THEN
+	  use old UBRN for new Link record
+	ELSIF (old PAYE ref = new PAYE ref) 
+	THEN
+	  use old UBRN for new Link record
 	ELSE
 	  allocate new UBRN
 	END IF
 	
 ```
 
-* This approach allows us to identify large sets of matching Links relatively quickly.
-* The remaining Links may need to be checked further if more refined business matching rules are required.
-* However, this implementation should cover the vast majority of Link matches from one run to the next.
+* Where a Link has multiple VAT refs, a "match" will be based on the alphanumeric order of the VAT ref i.e. we take the UBRN for the old record with the first VAT ref that matches.
+* Where a Link has multiple PAYE refs, a "match" will be based on the alphanumeric order of the PAYE ref i.e. we take the UBRN for the old record with the first PAYE ref that matches.
 
 ### Previous Links files ###
 

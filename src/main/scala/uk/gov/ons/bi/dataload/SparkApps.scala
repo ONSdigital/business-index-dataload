@@ -1,11 +1,13 @@
 package uk.gov.ons.bi.dataload
 
 
+import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
+import uk.gov.ons.bi.dataload.LinkDataApp.sparkConf
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.ubrn._
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 02/02/2017.
@@ -27,28 +29,25 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
 
 trait DataloadApp extends App {
 
-  val sc: SparkContext
-
   val appConfig: AppConfig = new AppConfig
 
 }
 
 object SourceDataToParquetApp extends DataloadApp {
 
-  val sc: SparkContext = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet"))
-
-  val sourceDataLoader = new SourceDataToParquetLoader(sc)
-
+  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet")
+  val ctxMgr = new ContextMgr(sparkConf)
+  val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
   sourceDataLoader.loadSourceBusinessDataToParquet(appConfig)
 
 }
 
 object LinkDataApp extends DataloadApp {
-
-  val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index"))
+  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index")
+  val ctxMgr = new ContextMgr(sparkConf)
   // Use an object because defining builder as a class causes weird Spark errors here.
   // Pass SC explicitly to builder method.
-  LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(sc, appConfig)
+  LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
 
 }
 
@@ -96,17 +95,17 @@ object LoadBiToEsApp extends DataloadApp {
   // sparkConf.set("es.nodes.wan.only", esConfig.wanOnly)
 
   // Now we've built the ES SparkConf, let's go to work:
-  val sc = SparkContext.getOrCreate(sparkConf)
-
-  BusinessIndexesParquetToESLoader.loadBIEntriesToES(sc, appConfig)
+  // Set up the context manager (singleton holding our Spark and SQL/Hive contexts)
+  val ctxMgr = new ContextMgr(sparkConf)
+  BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 
 }
 
 object PreprocessLinksApp extends DataloadApp {
   // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
-  val sc = SparkContext.getOrCreate(new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data"))
-  val lpp = new LinksPreprocessor(sc)
+  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data")
+  val ctxMgr = new ContextMgr(sparkConf)
+  val lpp = new LinksPreprocessor(ctxMgr)
   lpp.loadAndPreprocessLinks(appConfig)
-
 }
 
