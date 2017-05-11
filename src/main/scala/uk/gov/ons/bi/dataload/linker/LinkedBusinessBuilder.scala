@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
+import uk.gov.ons.bi.dataload.utils.{AppConfig, Transformers}
 
 
 /**
@@ -29,13 +29,13 @@ object LinkedBusinessBuilder {
     uwls.map(Transformers.buildBusinessRecord)
   }
 
-  def writeBiRddToParquet(ctxMgr: ContextMgr, appConfig: AppConfig, biRdd: RDD[BusinessIndex]) = {
+  def writeBiRddToParquet(sc: SparkContext, appConfig: AppConfig, biRdd: RDD[BusinessIndex]) = {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
     val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
 
-    val sqc = ctxMgr.sqlContext
+    val sqc = SQLContext.getOrCreate(sc)
 
     val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
 
@@ -52,11 +52,11 @@ object LinkedBusinessBuilder {
   // ***************** Link UBRN to Company/VAT/PAYE data **************************
 
   def getLinkedCompanyData(uwks: RDD[UbrnWithKey],
-                           appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+                           appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val pqReader = new CompanyRecsParquetReader(ctxMgr)
+    val pqReader = new CompanyRecsParquetReader(sc)
     val cos: RDD[(String, CompanyRec)] = pqReader.loadFromParquet(appConfig)
 
     // Join Links to corresponding data
@@ -71,11 +71,11 @@ object LinkedBusinessBuilder {
   }
 
   def getLinkedVatData(uwks: RDD[UbrnWithKey],
-                       appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+                       appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val pqReader = new VatRecsParquetReader(ctxMgr)
+    val pqReader = new VatRecsParquetReader(sc)
 
     val vats: RDD[(String, VatRec)] = pqReader.loadFromParquet(appConfig)
 
@@ -91,11 +91,11 @@ object LinkedBusinessBuilder {
   }
 
   def getLinkedPayeData(uwks: RDD[UbrnWithKey],
-                        appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+                        appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
-    val pqReader = new PayeRecsParquetReader(ctxMgr: ContextMgr)
+    val pqReader = new PayeRecsParquetReader(sc)
     val payes: RDD[(String, PayeRec)] = pqReader.loadFromParquet(appConfig)
 
     // Join Links to corresponding data
@@ -110,9 +110,9 @@ object LinkedBusinessBuilder {
   }
 
 
-  def getLinksAsUwks(appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithKey] = {
+  def getLinksAsUwks(appConfig: AppConfig, sc: SparkContext): RDD[UbrnWithKey] = {
     // Load Links from Parquet
-    val linkRecsReader = new ProcessedLinksParquetReader(ctxMgr)
+    val linkRecsReader = new ProcessedLinksParquetReader(sc)
     val links: RDD[LinkRec] = linkRecsReader.loadFromParquet(appConfig)
 
     // explodeLink() converts each nested Link record to a sequence of (UBRN, type, key) triples.
@@ -125,21 +125,21 @@ object LinkedBusinessBuilder {
 
   // ***************** MAIN BI linking process below **************************
 
-  def buildLinkedBusinessIndexRecords(ctxMgr: ContextMgr, appConfig: AppConfig) = {
+  def buildLinkedBusinessIndexRecords(sc: SparkContext, appConfig: AppConfig) = {
 
     // Load Links from Parquet and convert to Ubrn With Key structure
-    val uwks: RDD[UbrnWithKey] = getLinksAsUwks(appConfig, ctxMgr)
+    val uwks: RDD[UbrnWithKey] = getLinksAsUwks(appConfig, sc)
 
     // Cache this data as we will be doing different things to it below
     uwks.cache()
 
     // Join Links to corresponding company/VAT/PAYE data
 
-    val companyData: RDD[UbrnWithData] = getLinkedCompanyData(uwks, appConfig, ctxMgr)
+    val companyData: RDD[UbrnWithData] = getLinkedCompanyData(uwks, appConfig, sc)
 
-    val vatData: RDD[UbrnWithData] = getLinkedVatData(uwks, appConfig, ctxMgr)
+    val vatData: RDD[UbrnWithData] = getLinkedVatData(uwks, appConfig, sc)
 
-    val payeData: RDD[UbrnWithData] = getLinkedPayeData(uwks, appConfig, ctxMgr)
+    val payeData: RDD[UbrnWithData] = getLinkedPayeData(uwks, appConfig, sc)
 
     // Put the lists of UWDs  (UBRN, src, data) back together
     val combined: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
@@ -152,7 +152,7 @@ object LinkedBusinessBuilder {
     val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
     // write BI data to parquet file
-    writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
+    writeBiRddToParquet(sc, appConfig, businessIndexes)
 
     // clear cached UWKs
     uwks.unpersist()
