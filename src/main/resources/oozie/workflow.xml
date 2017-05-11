@@ -1,0 +1,63 @@
+<workflow-app name="business-index-spark-dataload-all-1_3" xmlns="uri:oozie:workflow:0.5">
+    <start to="spark-1fa4"/>
+    <kill name="Kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <action name="spark-1fa4">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <master>yarn-cluster</master>
+            <mode>cluster</mode>
+            <name>ONS BI Dataload 1.3 Step 0 Preprocess Links</name>
+            <class>uk.gov.ons.bi.dataload.PreprocessLinksApp</class>
+            <jar>${nameNode}/ons.gov/businessIndex/${env}/lib/business-index-dataload_2.10-1.3.jar</jar>
+            <spark-opts>--num-executors 6 --driver-memory 3G --executor-memory 3G --driver-java-options &quot;-Dbi-dataload.app-data.env=${env} -Xms1g -Xmx5g&quot;</spark-opts>
+        </spark>
+        <ok to="spark-0994"/>
+        <error to="Kill"/>
+    </action>
+    <action name="spark-0994">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <master>yarn-cluster</master>
+            <mode>cluster</mode>
+            <name>ONS BI Dataload 1.3 Step 1 Load Business Data To Parquet</name>
+            <class>uk.gov.ons.bi.dataload.SourceDataToParquetApp</class>
+            <jar>${nameNode}/ons.gov/businessIndex/${env}/lib/business-index-dataload_2.10-1.3.jar</jar>
+            <spark-opts>--num-executors 8 --driver-memory 2G --executor-memory 3G --jars ${nameNode}/ons.gov/businessIndex/${env}/lib/spark-csv_2.10-1.5.0.jar,${nameNode}/ons.gov/businessIndex/${env}/lib/univocity-parsers-1.5.1.jar,${nameNode}/ons.gov/businessIndex/${env}/lib/commons-csv-1.1.jar --driver-java-options &quot;-Dbi-dataload.app-data.env=${env} -Xms1g -Xmx5g&quot;</spark-opts>
+        </spark>
+        <ok to="spark-28fd"/>
+        <error to="Kill"/>
+    </action>
+    <action name="spark-28fd">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <master>yarn-cluster</master>
+            <mode>cluster</mode>
+            <name>ONS BI Dataload 1.3 Step 2 Build BI Entries From Links And Business Data</name>
+            <class>uk.gov.ons.bi.dataload.LinkDataApp</class>
+            <jar>${nameNode}/ons.gov/businessIndex/${env}/lib/business-index-dataload_2.10-1.3.jar</jar>
+            <spark-opts>--driver-memory 4G --num-executors 8 --executor-memory 3G --driver-java-options &quot;-Dbi-dataload.app-data.env=${env} -Xms1g -Xmx6g&quot;</spark-opts>
+        </spark>
+        <ok to="spark-2c90"/>
+        <error to="Kill"/>
+    </action>
+    <action name="spark-2c90">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <master>yarn-cluster</master>
+            <mode>cluster</mode>
+            <name>ONS BI Dataload 1.3 Step 3 Upload to ElasticSearch</name>
+            <class>uk.gov.ons.bi.dataload.LoadBiToEsApp </class>
+            <jar>${nameNode}/ons.gov/businessIndex/${env}/lib/business-index-dataload_2.10-1.3.jar</jar>
+            <spark-opts>--driver-memory 4G --num-executors 8 --executor-memory 3G --jars ${nameNode}/ons.gov/businessIndex/${env}/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options &quot;-Dbi-dataload.app-data.env=${env} -Xms1g -Xmx4g -Dbi-dataload.es.index=${index} -Dbi-dataload.es.nodes=${elastic}&quot;</spark-opts>
+        </spark>
+        <ok to="End"/>
+        <error to="Kill"/>
+    </action>
+    <end name="End"/>
+</workflow-app>
