@@ -1,7 +1,5 @@
 package uk.gov.ons.bi.dataload.ubrn
 
-import java.util.UUID.randomUUID
-
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions.{max, monotonicallyIncreasingId}
@@ -16,7 +14,6 @@ object UbrnManager {
 
   val defaultBaseUbrn = 100000000000L
   val defaultUbrnColName = "UBRN"
-
 
   def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
     // This will scan the DF column to extract the max value, assumes values are numeric.

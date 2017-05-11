@@ -6,7 +6,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.joda.time.DateTime
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.AppConfig
 
 import scala.util.{Success, Try}
 
@@ -14,12 +14,10 @@ import scala.util.{Success, Try}
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(ctxMgr: ContextMgr)
-  extends BIDataReader {
+class ParquetReader(sc: SparkContext)
+  extends BIDataReader(sc: SparkContext) {
 
-  val sqlContext =  ctxMgr.sqlContext
-
-  override def readFromSourceFile(srcFilePath: String): DataFrame = {
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.parquet(srcFilePath)
   }
 
@@ -42,7 +40,7 @@ class ParquetReader(ctxMgr: ContextMgr)
 }
 
 @Singleton
-class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
@@ -81,7 +79,7 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
 }
 
 @Singleton
-class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   // Need these for DF/SQL ops
   import sqlContext.implicits._
@@ -111,7 +109,7 @@ class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxM
 }
 
 @Singleton
-class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
@@ -165,7 +163,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 }
 
 @Singleton
-class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
@@ -207,7 +205,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
 }
 
 @Singleton
-class BIEntriesParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
