@@ -16,6 +16,8 @@ sealed trait BusinessDataSource extends BIDataSource
   case object PAYE extends BusinessDataSource
 
 
-sealed trait LinksData extends BIDataSource
+sealed trait OnsDataSource extends BIDataSource
 
-  case object LINKS extends LinksData
+  case object LINKS extends OnsDataSource
+
+  case object TCN_SIC_LOOKUP extends OnsDataSource

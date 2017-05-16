@@ -31,6 +31,7 @@ class ParquetReader(sc: SparkContext)
       case CH => appDataConfig.ch
       case VAT => appDataConfig.vat
       case PAYE => appDataConfig.paye
+      case TCN_SIC_LOOKUP => appDataConfig.tcn
     }
     val dataFile = s"$workingDir/$parquetData"
 

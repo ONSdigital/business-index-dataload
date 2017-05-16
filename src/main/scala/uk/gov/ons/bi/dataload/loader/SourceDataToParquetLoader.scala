@@ -69,6 +69,9 @@ class SourceDataToParquetLoader(val sc: SparkContext) {
     // Process the data
     println(s"Reading from: $extSrcFilePath")
     val data = reader.readFromSourceFile(extSrcFilePath)
+
+    data.printSchema()
+
     val targetFilePath = s"$workingDir/$parquetFile"
 
     println(s"Writing to: $targetFilePath")
