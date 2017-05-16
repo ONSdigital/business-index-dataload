@@ -15,7 +15,7 @@ class LinksPreprocessor(sc: SparkContext) {
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // get source/target directories
-    val linksDataConfig = appConfig.LinksDataConfig
+    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
     val jsonfile = linksDataConfig.json
     val jsonFilePath = s"$dataDir/$jsonfile"

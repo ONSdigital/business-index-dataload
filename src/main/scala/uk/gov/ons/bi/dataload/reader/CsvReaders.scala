@@ -8,8 +8,7 @@ import org.apache.spark.sql.DataFrame
   * Created by websc on 21/02/2017.
   */
 
-
-abstract class CsvReader(sc: SparkContext)
+class CsvReader(sc: SparkContext, tempTableName: String)
   extends BIDataReader(sc: SparkContext) {
 
   def fixSchema(df: DataFrame): DataFrame = {
@@ -23,7 +22,18 @@ abstract class CsvReader(sc: SparkContext)
     newDf
   }
 
-  def extractRequiredFields(df: DataFrame): DataFrame
+  def extractRequiredFields(df: DataFrame) = {
+
+    df.registerTempTable(tempTableName)
+
+    val extract = sqlContext.sql(
+      s"""
+        |SELECT *
+        |FROM $tempTableName
+        |""".stripMargin)
+
+    extract
+  }
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
 
@@ -40,68 +50,6 @@ abstract class CsvReader(sc: SparkContext)
     val extracted = extractRequiredFields(fixedDf)
 
     extracted
-  }
-
-}
-
-@Singleton
-class CompaniesHouseCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_companies"
-
-  def extractRequiredFields(df: DataFrame) = {
-
-    df.registerTempTable("raw_companies")
-
-    val extract = sqlContext.sql(
-      """
-        |SELECT *
-        |FROM raw_companies
-        |""".stripMargin)
-
-    extract
-  }
-}
-
-@Singleton
-class PayeCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_paye"
-
-  def extractRequiredFields(df: DataFrame) = {
-    // allows us to include/exclude specific fields here
-
-    df.registerTempTable(rawTable)
-
-    val extract = sqlContext.sql(
-      s"""
-         |SELECT *
-         |FROM ${rawTable}
-         |""".stripMargin)
-
-    extract
-  }
-}
-
-@Singleton
-class VatCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_vat"
-
-  def extractRequiredFields(df: DataFrame): DataFrame = {
-
-    df.registerTempTable(rawTable)
-
-    val extract: DataFrame = sqlContext.sql(
-      s"""
-         |SELECT *
-         |FROM ${rawTable}
-         |""".stripMargin)
-
-    extract
   }
 
 }

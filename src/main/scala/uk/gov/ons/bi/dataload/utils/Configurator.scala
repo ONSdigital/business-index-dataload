@@ -27,21 +27,21 @@ class AppConfig {
 
     // allows us to pass sub-configs around separately
 
-    private val extDataConfig = root.getConfig("ext-data")
+    private val localConfig = root.getConfig("ext-data")
 
-    lazy val dir = getConfigStr("dir", extDataConfig)
+    lazy val dir = getConfigStr("dir", localConfig)
 
-    lazy val paye = getConfigStr("paye", extDataConfig)
+    lazy val paye = getConfigStr("paye", localConfig)
 
-    lazy val vat = getConfigStr("vat", extDataConfig)
+    lazy val vat = getConfigStr("vat", localConfig)
 
-    lazy val ch = getConfigStr("ch", extDataConfig)
+    lazy val ch = getConfigStr("ch", localConfig)
 
-    lazy val chDir = getConfigStr("ch-dir", extDataConfig)
+    lazy val chDir = getConfigStr("ch-dir", localConfig)
 
-    lazy val payeDir = getConfigStr("paye-dir", extDataConfig)
+    lazy val payeDir = getConfigStr("paye-dir", localConfig)
 
-    lazy val vatDir = getConfigStr("vat-dir", extDataConfig)
+    lazy val vatDir = getConfigStr("vat-dir", localConfig)
 
     override def toString: String = {
       s"""[dir = $dir,
@@ -56,19 +56,47 @@ class AppConfig {
     }
   }
 
-  object LinksDataConfig {
+  object OnsDataConfig {
 
-    private val linksDataConfig = root.getConfig("links-data")
+    private val onsDataConfig = root.getConfig("ons-data")
 
-    lazy val json = getConfigStr("json", linksDataConfig)
+    val baseDir = getConfigStr("dir", onsDataConfig)
 
-    lazy val dir = getConfigStr("dir", linksDataConfig)
+    val linksDataConfig  = new {
 
-    override def toString: String = {
-      s"""[json = $json,
-         | dir = $dir
-         | ]
+      private val linksConfig = onsDataConfig.getConfig("links")
+
+      // Links dir is below ONS data dir
+      private val localDir = getConfigStr("dir", linksConfig)
+      // We provide the full path
+      val dir = s"$baseDir/$localDir"
+
+      val json = getConfigStr("json", linksConfig)
+
+      override def toString: String = {
+        s"""[json = $json,
+           | dir = $dir
+           | ]
+      """.stripMargin
+      }
+    }
+
+    val lookupsConfig = new {
+      private val lookupsConfig = onsDataConfig.getConfig("lookups")
+
+      // Lookups dir is below ONS data dir
+      private val localDir = getConfigStr("dir", lookupsConfig)
+      // We provide the full path
+      val dir = s"$baseDir/$localDir"
+
+      val tcnToSic = getConfigStr("tcn-to-sic", lookupsConfig)
+
+      override def toString: String = {
+        s"""[tcn-to-sic = $tcnToSic,
+           | dir = $dir
+           | ]
         """.stripMargin
+      }
     }
   }
 
@@ -76,31 +104,34 @@ class AppConfig {
 
     // allows us to pass sub-configs around separately
 
-    private val appDataConfig = root.getConfig("app-data")
+    private val localConfig = root.getConfig("app-data")
 
     // Apparently we are supposed to be able to write to dev/test/beta
     // directories under the main app data directory.
-    lazy val env = getConfigStr("env", appDataConfig)
+    lazy val env = getConfigStr("env", localConfig)
 
     // directories
 
-    lazy val dir = getConfigStr("dir", appDataConfig)
+    lazy val dir = getConfigStr("dir", localConfig)
 
-    lazy val work = getConfigStr("work", appDataConfig)
+    lazy val work = getConfigStr("work", localConfig)
 
-    lazy val prev = getConfigStr("prev", appDataConfig)
+    lazy val prev = getConfigStr("prev", localConfig)
 
     // files
 
-    lazy val paye = getConfigStr("paye", appDataConfig)
+    lazy val paye = getConfigStr("paye", localConfig)
 
-    lazy val vat = getConfigStr("vat", appDataConfig)
+    lazy val vat = getConfigStr("vat", localConfig)
 
-    lazy val ch = getConfigStr("ch", appDataConfig)
+    lazy val ch = getConfigStr("ch", localConfig)
 
-    lazy val links = getConfigStr("links", appDataConfig)
+    lazy val links = getConfigStr("links", localConfig)
 
-    lazy val bi = getConfigStr("bi", appDataConfig)
+    lazy val bi = getConfigStr("bi", localConfig)
+
+    lazy val tcn = getConfigStr("tcn", localConfig)
+
 
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.
@@ -117,7 +148,8 @@ class AppConfig {
          | vat= $vat,
          | ch = $ch,
          | links = $links,
-         | bi = $bi
+         | bi = $bi,
+         | tcn = $tcn
          | ]
         """.stripMargin
     }
@@ -128,23 +160,23 @@ class AppConfig {
 
     // allows us to pass sub-configs around separately
 
-    private val esConfig = root.getConfig("es")
+    private val localConfig = root.getConfig("es")
 
-    lazy val nodes = getConfigStr("nodes", esConfig)
+    lazy val nodes = getConfigStr("nodes", localConfig)
 
-    lazy val port = getConfigStr("port", esConfig).toInt
+    lazy val port = getConfigStr("port", localConfig).toInt
 
-    lazy val esUser = getConfigStr("es-user", esConfig)
+    lazy val esUser = getConfigStr("es-user", localConfig)
 
-    lazy val esPass = getConfigStr("es-pass", esConfig)
+    lazy val esPass = getConfigStr("es-pass", localConfig)
 
-    lazy val index = getConfigStr("index", esConfig)
+    lazy val index = getConfigStr("index", localConfig)
 
-    lazy val indexType = getConfigStr("index-type", esConfig)
+    lazy val indexType = getConfigStr("index-type", localConfig)
 
-    lazy val autocreate = getConfigStr("autocreate", esConfig)
+    lazy val autocreate = getConfigStr("autocreate", localConfig)
 
-    lazy val wanOnly = getConfigStr("wan-only", esConfig)
+    lazy val wanOnly = getConfigStr("wan-only", localConfig)
 
     override def toString: String = {
       s"""[nodes = $nodes,
@@ -162,11 +194,11 @@ class AppConfig {
 
   object SparkConfigInfo {
 
-    private val sparkConfig = root.getConfig("spark")
+    private val localConfig = root.getConfig("spark")
 
-    lazy val appName = getConfigStr("app-name", sparkConfig)
+    lazy val appName = getConfigStr("app-name", localConfig)
 
-    lazy val serializer = getConfigStr("serializer", sparkConfig)
+    lazy val serializer = getConfigStr("serializer", localConfig)
 
     override def toString: String = {
       s"""[app-name = $appName,

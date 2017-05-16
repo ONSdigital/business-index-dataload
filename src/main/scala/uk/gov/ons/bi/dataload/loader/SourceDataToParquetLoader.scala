@@ -11,49 +11,79 @@ import uk.gov.ons.bi.dataload.utils.AppConfig
   */
 
 @Singleton
-class SourceDataToParquetLoader (val sc: SparkContext){
+class SourceDataToParquetLoader(val sc: SparkContext) {
 
-    def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
+  def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
-      // Get source/target directories
-      val extDataConfig = appConfig.ExtDataConfig
-      val extBaseDir = extDataConfig.dir
+    // Get source/target directories
 
-      val appDataConfig = appConfig.AppDataConfig
-      val workingDir = appDataConfig.workingDir
+    // External data (HMRC)
+    val extDataConfig = appConfig.ExtDataConfig
+    val extBaseDir = extDataConfig.dir
 
-      // Get directories and file names for specified data source
-      val (extSrcFile, extDataDir, parquetFile) = biSource match {
-        case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
-        case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
-        case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
-      }
+    // Application working directory
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
 
-      val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
-
-      // Get corresponding reader based on BIDataSource
-      val reader: BIDataReader = biSource match {
-        case VAT => new VatCsvReader(sc)
-        case CH => new CompaniesHouseCsvReader(sc)
-        case PAYE => new PayeCsvReader(sc)
-      }
-
-      // Process the data
-      println(s"Reading from: $extSrcFilePath")
-      val data = reader.readFromSourceFile(extSrcFilePath)
-      val targetFilePath = s"$workingDir/$parquetFile"
-
-      println(s"Writing to: $targetFilePath")
-      reader.writeParquet(data, targetFilePath)
+    // Get directories and file names etc for specified data source
+    val (extSrcFile, extDataDir, parquetFile, tempTable) = biSource match {
+      case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat, "temp_vat")
+      case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch, "temp_ch")
+      case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
     }
 
-    def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
+    val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
 
-      loadBusinessDataToParquet(CH, appConfig)
+    // Get corresponding reader based on BIDataSource
+    val reader: BIDataReader = new CsvReader(sc, tempTable)
 
-      loadBusinessDataToParquet(VAT, appConfig)
+    // Process the data
+    println(s"Reading from: $extSrcFilePath")
+    val data = reader.readFromSourceFile(extSrcFilePath)
+    val targetFilePath = s"$workingDir/$parquetFile"
 
-      loadBusinessDataToParquet(PAYE, appConfig)
-    }
-
+    println(s"Writing to: $targetFilePath")
+    reader.writeParquet(data, targetFilePath)
   }
+
+
+  def loadTcnToCsvLookupToParquet(appConfig: AppConfig) = {
+
+    // Get source/target directories
+
+    // Lookups source directory
+    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
+    val lookupsDir = lookupsConfig.dir
+    val tcnToSicFile = lookupsConfig.tcnToSic
+
+    // Application working directory
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val parquetFile = appDataConfig.tcn
+
+    val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
+
+    // Get CSV reader for this data source
+    val reader: BIDataReader = new CsvReader(sc, "temp_tcn")
+
+    // Process the data
+    println(s"Reading from: $extSrcFilePath")
+    val data = reader.readFromSourceFile(extSrcFilePath)
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    println(s"Writing to: $targetFilePath")
+    reader.writeParquet(data, targetFilePath)
+  }
+
+  def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
+
+    loadBusinessDataToParquet(CH, appConfig)
+
+    loadBusinessDataToParquet(VAT, appConfig)
+
+    loadBusinessDataToParquet(PAYE, appConfig)
+
+    loadTcnToCsvLookupToParquet(appConfig)
+  }
+
+}

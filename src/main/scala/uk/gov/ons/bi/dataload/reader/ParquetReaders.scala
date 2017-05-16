@@ -40,7 +40,8 @@ class ParquetReader(sc: SparkContext)
 }
 
 @Singleton
-class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class CompanyRecsParquetReader(sc: SparkContext)
+  extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
@@ -79,7 +80,8 @@ class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: Spark
 }
 
 @Singleton
-class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class ProcessedLinksParquetReader(sc: SparkContext)
+  extends ParquetReader(sc: SparkContext) {
 
   // Need these for DF/SQL ops
   import sqlContext.implicits._
@@ -109,7 +111,8 @@ class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: Sp
 }
 
 @Singleton
-class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class PayeRecsParquetReader(sc: SparkContext)
+  extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
@@ -120,6 +123,7 @@ class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCon
     // Only interested in a subset of columns
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     df.registerTempTable("temp_paye")
+
     val extracted = sqlContext.sql(
       """
         |SELECT
@@ -163,7 +167,8 @@ class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCon
 }
 
 @Singleton
-class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class VatRecsParquetReader(sc: SparkContext)
+  extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
@@ -205,7 +210,8 @@ class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCont
 }
 
 @Singleton
-class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class BIEntriesParquetReader(sc: SparkContext)
+  extends ParquetReader(sc: SparkContext) {
 
   def loadFromParquet(appConfig: AppConfig): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
