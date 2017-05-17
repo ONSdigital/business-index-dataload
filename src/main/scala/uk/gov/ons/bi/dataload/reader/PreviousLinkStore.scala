@@ -7,15 +7,18 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames._
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 import scala.util.{Success, Try}
 
 /**
   * Created by websc on 08/03/2017.
   */
-class PreviousLinkStore(sc: SparkContext)
-  extends BIDataReader(sc: SparkContext) {
+class PreviousLinkStore(ctxMgr: ContextMgr)
+  extends BIDataReader {
+
+  val sc = ctxMgr.sc
+  val sqlContext = ctxMgr.sqlContext
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
     // If Prev Links not found, returns an empty DataFrame with same schema
