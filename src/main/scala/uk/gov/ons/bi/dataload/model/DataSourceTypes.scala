@@ -4,6 +4,9 @@ package uk.gov.ons.bi.dataload.model
   * Created by websc on 10/02/2017.
   */
 
+// These are used to tag our various intermediate objects with the relevant data source type
+// during processing. In some cases we want to be able to treat them all the same, in others
+// we want to distinguish between them.  These traits allow us to do this.
 
 trait BIDataSource
 

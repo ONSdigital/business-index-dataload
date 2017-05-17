@@ -1,17 +1,16 @@
 package uk.gov.ons.bi.dataload.loader
 
 import com.google.inject.Singleton
-import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 14/02/2017.
   */
 
 @Singleton
-class SourceDataToParquetLoader(val sc: SparkContext) {
+class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
   def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
@@ -35,14 +34,12 @@ class SourceDataToParquetLoader(val sc: SparkContext) {
     val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
 
     // Get corresponding reader based on BIDataSource
-    val reader: BIDataReader = new CsvReader(sc, tempTable)
+    val reader: BIDataReader = new CsvReader(ctxMgr, tempTable)
 
     // Process the data
-    println(s"Reading from: $extSrcFilePath")
     val data = reader.readFromSourceFile(extSrcFilePath)
     val targetFilePath = s"$workingDir/$parquetFile"
 
-    println(s"Writing to: $targetFilePath")
     reader.writeParquet(data, targetFilePath)
   }
 
@@ -64,17 +61,13 @@ class SourceDataToParquetLoader(val sc: SparkContext) {
     val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
 
     // Get CSV reader for this data source
-    val reader: BIDataReader = new CsvReader(sc, "temp_tcn")
+    val reader: BIDataReader = new CsvReader(ctxMgr, "temp_tcn")
 
     // Process the data
-    println(s"Reading from: $extSrcFilePath")
     val data = reader.readFromSourceFile(extSrcFilePath)
-
-    data.printSchema()
 
     val targetFilePath = s"$workingDir/$parquetFile"
 
-    println(s"Writing to: $targetFilePath")
     reader.writeParquet(data, targetFilePath)
   }
 

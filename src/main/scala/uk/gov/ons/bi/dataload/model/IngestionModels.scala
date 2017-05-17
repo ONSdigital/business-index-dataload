@@ -9,7 +9,6 @@ package uk.gov.ons.bi.dataload.model
 // BusinessElement trait allows us to mix different data records in Ubrn... classes below
 sealed trait BusinessElement
 
-
 case class CompanyRec(companyNo: Option[String], companyName: Option[String],
                       companyStatus: Option[String], sicCode1: Option[String], postcode: Option[String]
                      ) extends BusinessElement
@@ -20,7 +19,7 @@ case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Opt
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
-                   tcn: Option[String] = None, sic: Option[String] = None)
+                   stc: Option[Int] = None, sic: Option[Int] = None)
   extends BusinessElement
 
 

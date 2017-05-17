@@ -1,19 +1,19 @@
 package uk.gov.ons.bi.dataload.reader
 
-import com.google.inject.Singleton
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
+import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 /**
   * Created by websc on 21/02/2017.
   */
 
-class CsvReader(sc: SparkContext, tempTableName: String)
-  extends BIDataReader(sc: SparkContext) {
+class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
+  extends BIDataReader {
 
+  val sqlContext = ctxMgr.sqlContext
+  
   def fixSchema(df: DataFrame): DataFrame = {
-
-    // We have some spaces in the column names, which makes it hard to query dataframe
+    // We have some spaces in the column names, which makes it hard to query dataframe in SQL.
     // This code removes any spaces or dots in the column names
     var newDf = df
     for (col <- df.columns) {
@@ -36,8 +36,6 @@ class CsvReader(sc: SparkContext, tempTableName: String)
   }
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
-
-    println(s"Reading from CSV files: $srcFilePath")
 
     val df = sqlContext.read
       .format("com.databricks.spark.csv")
