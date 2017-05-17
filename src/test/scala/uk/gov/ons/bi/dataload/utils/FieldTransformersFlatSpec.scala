@@ -17,7 +17,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Post Code"),
     Some(2), Some(120.0D), Some(30.0D),
-    Some(60.0D), Some(90.0D), Some("Jun16"))
+    Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some(1500))
 
 
   "A Transformer" should "get latest job figure from PAYE record" in {
@@ -85,6 +85,16 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "return correct Industry Code (from PAYE record)" in {
+
+    val expected = fullPayeRec.sic
+    val recs = Some(Seq(fullPayeRec))
+    val br = Business(100, None, None, recs)
+    val result: Option[Long] = Transformers.getIndustryCode(br)
+
+    result should be(expected)
+  }
+
   "A Transformer" should "return VAT Industry Code from Business with bad Company SIC, good VAT SIC" in {
 
     val expected = fullVatRec.sic92
@@ -95,12 +105,14 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-  "A Transformer" should "return None from Business with bad Company SIC, no VAT SIC" in {
+  "A Transformer" should "return PAYE SIC from Business with bad Company SIC, no VAT SIC" in {
 
-    val expected = None
     val co = fullCompanyRec.copy(sicCode1 = Some("X123 FUBAR"))
     val vat = fullVatRec.copy(sic92 = None)
-    val br = Business(100, Some(co), Some(Seq(vat)), None)
+    val paye = fullPayeRec
+    val br = Business(100, Some(co), Some(Seq(vat)), Some(Seq(paye)))
+
+    val expected = fullPayeRec.sic
     val result = Transformers.getIndustryCode(br)
 
     result should be(expected)

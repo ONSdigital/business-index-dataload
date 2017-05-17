@@ -96,16 +96,19 @@ object Transformers {
 
   def getIndustryCode(br: Business): Option[Long] = {
     // Extract potential values from CH/VAT records
-    // Take first VATrecord (if any)
+    // Take first VAT record (if any)
     val co: Option[String] = br.company.flatMap {
       _.sicCode1
     }
     val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.sic92.map(_.toString)
     }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.sic.map(_.toString)
+    }
 
     // list in order of preference
-    val candidates = Seq(co, vat)
+    val candidates = Seq(co, vat, paye)
 
     // apply numeric extractor so we can skip invalid Company SIC if necessary
     val numericCandidates: Seq[Option[Long]] = candidates.map(extractNumericSicCode(_))

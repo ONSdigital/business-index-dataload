@@ -160,10 +160,10 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 
         val jobsLastUpd = if (row.isNullAt(8)) None else Option(row.getString(8))
 
-        val stc = if (row.isNullAt(3)) None else Option(row.getInt(9))
-        val sic = if (row.isNullAt(3)) None else Option(row.getInt(10))
+        val stc = if (row.isNullAt(9)) None else Option(row.getInt(9))
+        val sic = if (row.isNullAt(10)) None else Option(row.getInt(10))
 
-        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd,stc,sic)
+        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd, stc, sic)
       }
       (payeRefStr, rec)
     }
