@@ -26,16 +26,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   import sqlContext.implicits._
 
-  def isDfEmpty(df: DataFrame): Boolean = {
-    // If no first record, then it's empty
-    Try {
-      df.first()
-    }
-    match {
-      case Success(t) => false
-      case Failure(x) => true
-    }
-  }
 
   def excludeMatches(oldLinks: DataFrame, newLinks: DataFrame, matched: DataFrame): LinkMatchResults = {
     // Exclude matched UBRNs from oldLinks, and exclude matched GIDs from newLinks.
@@ -43,7 +33,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     // If no data was matched, just return the original old/new sub-sets
     val results: LinkMatchResults =
-      if (isDfEmpty(matched))
+      if (BiSparkDataFrames.isDfEmpty(matched))
         LinkMatchResults(oldLinks, newLinks, matched)
       else {
         val unmatchedOldUbrns = oldLinks.select("UBRN").except(matched.select("UBRN"))
@@ -60,7 +50,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
   def applySqlRule(matchQuery: String, oldLinks: DataFrame, newLinks: DataFrame) = {
     // Short-circuit to skip query if old frame is empty, as no matches will exist
     val matched: DataFrame =
-      if (isDfEmpty(oldLinks)) {
+      if (BiSparkDataFrames.isDfEmpty(oldLinks)) {
         BiSparkDataFrames.emptyMatchedLinkWithUbrnGidDf(ctxMgr)
       }
       else {
@@ -260,7 +250,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   def processNewOldLinks(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
     // We can skip all the checks if the old set is empty
-    if (isDfEmpty(oldLinks))
+    if (BiSparkDataFrames.isDfEmpty(oldLinks))
       (BiSparkDataFrames.emptyLinkWithUbrnDf(ctxMgr), newLinks)
     else
       applyAllMatchingRules(newLinks, oldLinks)

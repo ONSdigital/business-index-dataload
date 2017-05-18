@@ -12,6 +12,8 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 @Singleton
 class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
+  val log = ctxMgr.log
+
   def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
     // Get source/target directories
@@ -60,6 +62,8 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
 
+    log.info(s"Reading TCN-SIC lookup from: $extSrcFilePath")
+
     // Get CSV reader for this data source
     val reader: BIDataReader = new CsvReader(ctxMgr, "temp_tcn")
 
@@ -67,6 +71,8 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     val data = reader.readFromSourceFile(extSrcFilePath)
 
     val targetFilePath = s"$workingDir/$parquetFile"
+
+    log.info(s"Writing TCN-SIC lookup to: $targetFilePath")
 
     reader.writeParquet(data, targetFilePath)
   }

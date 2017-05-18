@@ -123,6 +123,8 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     payeDf.registerTempTable("paye")
 
+    // lookup columns are currently uppercase i.e. TCN and SIC07
+    // lookup columns are integers, but PAYE columns are strings.
     lookupDf.registerTempTable("sic_lookup")
 
     val extracted = sqlContext.sql(
@@ -137,9 +139,9 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.june_jobs AS DOUBLE) AS june_jobs,
         | CAST(paye.sep_jobs AS DOUBLE) AS sept_jobs,
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
-        | paye.stc,
-        | sic_lookup.sic07
-        |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.tcn = paye.stc)
+        | CAST(paye.stc AS INT) AS stc,
+        | sic_lookup.SIC07
+        |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin)
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.

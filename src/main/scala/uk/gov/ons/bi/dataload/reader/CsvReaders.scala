@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.reader
 
 import org.apache.spark.sql.DataFrame
+import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 /**
@@ -9,6 +10,8 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
   extends BIDataReader {
+
+  val log = ctxMgr.log
 
   val sqlContext = ctxMgr.sqlContext
   
@@ -31,7 +34,6 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
         |SELECT *
         |FROM $tempTableName
         |""".stripMargin)
-
     extract
   }
 
@@ -42,6 +44,13 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
       .option("header", "true") // Use first line of all files as header
       .option("inferSchema", "true") // Automatically infer data types
       .load(srcFilePath)
+
+
+    if (BiSparkDataFrames.isDfEmpty(df))
+      log.warn(s"No data loaded from CSV file: $srcFilePath")
+    else
+      log.info(s"Loaded CSV file: $srcFilePath")
+
     // fix spaces etc in column names
     val fixedDf = fixSchema(df)
 

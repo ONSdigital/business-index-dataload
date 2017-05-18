@@ -4,10 +4,23 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by websc on 16/03/2017.
   */
 object BiSparkDataFrames {
+
+  def isDfEmpty(df: DataFrame): Boolean = {
+    // If no first record, then it's empty
+    Try {
+      df.first()
+    }
+    match {
+      case Success(t) => false
+      case Failure(x) => true
+    }
+  }
 
   // DataFrame schema for legal unit ("link") with UBRN
   val linkWithUbrnSchema = StructType(Seq(
