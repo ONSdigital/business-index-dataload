@@ -112,7 +112,20 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     val paye = fullPayeRec
     val br = Business(100, Some(co), Some(Seq(vat)), Some(Seq(paye)))
 
-    val expected = fullPayeRec.sic
+    val expected = paye.sic
+    val result = Transformers.getIndustryCode(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return None from Business with bad Company SIC, no VAT or PAYE SIC" in {
+
+    val co = fullCompanyRec.copy(sicCode1 = Some("X123 FUBAR"))
+    val vat = fullVatRec.copy(sic92 = None)
+    val paye = fullPayeRec.copy(sic = None)
+    val br = Business(100, Some(co), Some(Seq(vat)), Some(Seq(paye)))
+
+    val expected = None
     val result = Transformers.getIndustryCode(br)
 
     result should be(expected)
