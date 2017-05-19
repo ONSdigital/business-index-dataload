@@ -18,11 +18,14 @@ case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Opt
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
-                   junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String])
+                   junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
+                   stc: Option[Int] = None, sic: Option[Int] = None)
   extends BusinessElement
 
 
 // These are intermediate structures that we use during the main Spark "link-and-join" processing.
+
+case class TcnSicLookup(tcn: Int, sic: Int)
 
 case class Business(ubrn: BiTypes.Ubrn, company: Option[CompanyRec],
                     vat: Option[Seq[VatRec]], paye: Option[Seq[PayeRec]])

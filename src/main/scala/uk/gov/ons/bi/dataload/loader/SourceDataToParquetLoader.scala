@@ -1,59 +1,94 @@
 package uk.gov.ons.bi.dataload.loader
 
 import com.google.inject.Singleton
-import org.apache.spark.{SparkConf, SparkContext}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 14/02/2017.
   */
 
 @Singleton
-class SourceDataToParquetLoader (val sc: SparkContext){
+class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
-    def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
+  val log = ctxMgr.log
 
-      // Get source/target directories
-      val extDataConfig = appConfig.ExtDataConfig
-      val extBaseDir = extDataConfig.dir
+  def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
 
-      val appDataConfig = appConfig.AppDataConfig
-      val workingDir = appDataConfig.workingDir
+    // Get source/target directories
 
-      // Get directories and file names for specified data source
-      val (extSrcFile, extDataDir, parquetFile) = biSource match {
-        case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
-        case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
-        case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
-      }
+    // External data (HMRC)
+    val extDataConfig = appConfig.ExtDataConfig
+    val extBaseDir = extDataConfig.dir
 
-      val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
+    // Application working directory
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
 
-      // Get corresponding reader based on BIDataSource
-      val reader: BIDataReader = biSource match {
-        case VAT => new VatCsvReader(sc)
-        case CH => new CompaniesHouseCsvReader(sc)
-        case PAYE => new PayeCsvReader(sc)
-      }
-
-      // Process the data
-      println(s"Reading from: $extSrcFilePath")
-      val data = reader.readFromSourceFile(extSrcFilePath)
-      val targetFilePath = s"$workingDir/$parquetFile"
-
-      println(s"Writing to: $targetFilePath")
-      reader.writeParquet(data, targetFilePath)
+    // Get directories and file names etc for specified data source
+    val (extSrcFile, extDataDir, parquetFile, tempTable) = biSource match {
+      case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat, "temp_vat")
+      case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch, "temp_ch")
+      case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
     }
 
-    def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
+    val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
+    log.info(s"Reading $biSource data from: $extSrcFilePath")
 
-      loadBusinessDataToParquet(CH, appConfig)
+    // Get corresponding reader based on BIDataSource
+    val reader: BIDataReader = new CsvReader(ctxMgr, tempTable)
 
-      loadBusinessDataToParquet(VAT, appConfig)
+    // Process the data
+    val data = reader.readFromSourceFile(extSrcFilePath)
+    val targetFilePath = s"$workingDir/$parquetFile"
+    log.info(s"Writing $biSource data to: $targetFilePath")
 
-      loadBusinessDataToParquet(PAYE, appConfig)
-    }
-
+    reader.writeParquet(data, targetFilePath)
   }
+
+
+  def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig) = {
+
+    // Get source/target directories
+
+    // Lookups source directory
+    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
+    val lookupsDir = lookupsConfig.dir
+    val tcnToSicFile = lookupsConfig.tcnToSic
+
+    // Application working directory
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+
+    val parquetFile = appDataConfig.tcn
+
+    val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
+
+    log.info(s"Reading TCN-SIC lookup from: $extSrcFilePath")
+
+    // Get CSV reader for this data source
+    val reader: BIDataReader = new CsvReader(ctxMgr, "temp_tcn")
+
+    // Process the data
+    val data = reader.readFromSourceFile(extSrcFilePath)
+
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    log.info(s"Writing TCN-SIC lookup to: $targetFilePath")
+
+    reader.writeParquet(data, targetFilePath)
+  }
+
+  def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
+
+    loadBusinessDataToParquet(CH, appConfig)
+
+    loadBusinessDataToParquet(VAT, appConfig)
+
+    loadBusinessDataToParquet(PAYE, appConfig)
+
+    loadTcnToSicCsvLookupToParquet(appConfig)
+  }
+
+}

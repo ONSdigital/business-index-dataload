@@ -1,21 +1,20 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
-import uk.gov.ons.bi.dataload.utils.AppConfig
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 03/03/2017.
   */
 
 @Singleton
-class LinksPreprocessor(sc: SparkContext) {
+class LinksPreprocessor(ctxMgr: ContextMgr) {
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // get source/target directories
-    val linksDataConfig = appConfig.LinksDataConfig
+    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
     val jsonfile = linksDataConfig.json
     val jsonFilePath = s"$dataDir/$jsonfile"
@@ -27,7 +26,7 @@ class LinksPreprocessor(sc: SparkContext) {
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
     // Load the new Links from JSON
-    val jsonReader = new LinkJsonReader(sc)
+    val jsonReader = new LinkJsonReader(ctxMgr)
     val newLinks = getNewLinksDataFromJson(jsonReader, appConfig)
     newLinks.cache()
 
@@ -42,12 +41,12 @@ class LinksPreprocessor(sc: SparkContext) {
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     // Get previous links
-    val previousLinkStore = new PreviousLinkStore(sc)
+    val previousLinkStore = new PreviousLinkStore(ctxMgr)
     val prevLinks = previousLinkStore.readFromSourceFile(prevLinksFileParquetPath)
     prevLinks.cache()
 
     // Initialise LinkMatcher
-    val matcher = new LinkMatcher(sc)
+    val matcher = new LinkMatcher(ctxMgr)
 
     // Apply all matching rules and get (matched, unmatched) records back
     val (withOldUbrn, needUbrn) = matcher.applyAllMatchingRules(newLinks, prevLinks)

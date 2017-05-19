@@ -1,15 +1,11 @@
 package uk.gov.ons.bi.dataload.reader
 
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.DataFrame
 
 /**
   * Created by websc on 10/02/2017.
   */
-
-abstract class BIDataReader(sc: SparkContext) {
-
-  val sqlContext =  SQLContext.getOrCreate(sc)
+trait BIDataReader {
 
   def readFromSourceFile(srcFilePath: String): DataFrame
 
@@ -17,4 +13,3 @@ abstract class BIDataReader(sc: SparkContext) {
     df.write.mode("overwrite").parquet(targetFilePath)
   }
 }
-

@@ -1,20 +1,20 @@
 package uk.gov.ons.bi.dataload.reader
 
-import com.google.inject.Singleton
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
-
+import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
+import uk.gov.ons.bi.dataload.utils.ContextMgr
 /**
   * Created by websc on 21/02/2017.
   */
 
+class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
+  extends BIDataReader {
 
-abstract class CsvReader(sc: SparkContext)
-  extends BIDataReader(sc: SparkContext) {
-
+  val sqlContext = ctxMgr.sqlContext
+  val log =  ctxMgr.log
+  
   def fixSchema(df: DataFrame): DataFrame = {
-
-    // We have some spaces in the column names, which makes it hard to query dataframe
+    // We have some spaces in the column names, which makes it hard to query dataframe in SQL.
     // This code removes any spaces or dots in the column names
     var newDf = df
     for (col <- df.columns) {
@@ -23,85 +23,38 @@ abstract class CsvReader(sc: SparkContext)
     newDf
   }
 
-  def extractRequiredFields(df: DataFrame): DataFrame
+  def extractRequiredFields(df: DataFrame) = {
+
+    df.registerTempTable(tempTableName)
+
+    val extract = sqlContext.sql(
+      s"""
+        |SELECT *
+        |FROM $tempTableName
+        |""".stripMargin)
+    extract
+  }
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
-
-    println(s"Reading from CSV files: $srcFilePath")
 
     val df = sqlContext.read
       .format("com.databricks.spark.csv")
       .option("header", "true") // Use first line of all files as header
       .option("inferSchema", "true") // Automatically infer data types
       .load(srcFilePath)
+
+
+    if (BiSparkDataFrames.isDfEmpty(df))
+      log.warn(s"No data loaded from CSV file: $srcFilePath")
+    else
+      log.info(s"Loaded CSV file: $srcFilePath")
+
     // fix spaces etc in column names
     val fixedDf = fixSchema(df)
 
     val extracted = extractRequiredFields(fixedDf)
 
     extracted
-  }
-
-}
-
-@Singleton
-class CompaniesHouseCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_companies"
-
-  def extractRequiredFields(df: DataFrame) = {
-
-    df.registerTempTable("raw_companies")
-
-    val extract = sqlContext.sql(
-      """
-        |SELECT *
-        |FROM raw_companies
-        |""".stripMargin)
-
-    extract
-  }
-}
-
-@Singleton
-class PayeCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_paye"
-
-  def extractRequiredFields(df: DataFrame) = {
-    // allows us to include/exclude specific fields here
-
-    df.registerTempTable(rawTable)
-
-    val extract = sqlContext.sql(
-      s"""
-         |SELECT *
-         |FROM ${rawTable}
-         |""".stripMargin)
-
-    extract
-  }
-}
-
-@Singleton
-class VatCsvReader(sc: SparkContext)
-  extends CsvReader(sc: SparkContext) {
-
-  val rawTable = "raw_vat"
-
-  def extractRequiredFields(df: DataFrame): DataFrame = {
-
-    df.registerTempTable(rawTable)
-
-    val extract: DataFrame = sqlContext.sql(
-      s"""
-         |SELECT *
-         |FROM ${rawTable}
-         |""".stripMargin)
-
-    extract
   }
 
 }

@@ -1,23 +1,21 @@
 package uk.gov.ons.bi.dataload.reader
 
 import com.google.inject.Singleton
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
-import org.joda.time.DateTime
+import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.utils.AppConfig
-
-import scala.util.{Success, Try}
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(sc: SparkContext)
-  extends BIDataReader(sc: SparkContext) {
+class ParquetReader(ctxMgr: ContextMgr)
+  extends BIDataReader {
 
-  def readFromSourceFile(srcFilePath: String): DataFrame = {
+  val sqlContext =  ctxMgr.sqlContext
+
+  override def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.parquet(srcFilePath)
   }
 
@@ -31,6 +29,7 @@ class ParquetReader(sc: SparkContext)
       case CH => appDataConfig.ch
       case VAT => appDataConfig.vat
       case PAYE => appDataConfig.paye
+      case TCN_SIC_LOOKUP => appDataConfig.tcn
     }
     val dataFile = s"$workingDir/$parquetData"
 
@@ -40,7 +39,7 @@ class ParquetReader(sc: SparkContext)
 }
 
 @Singleton
-class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
@@ -79,7 +78,7 @@ class CompanyRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: Spark
 }
 
 @Singleton
-class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   // Need these for DF/SQL ops
   import sqlContext.implicits._
@@ -109,31 +108,41 @@ class ProcessedLinksParquetReader(sc: SparkContext) extends ParquetReader(sc: Sp
 }
 
 @Singleton
-class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
 
     // Yields RDD of (PAYE Ref, PAYE record)
 
-    val df = getDataFrameFromParquet(appConfig, PAYE)
+    val payeDf = getDataFrameFromParquet(appConfig, PAYE)
+
+    // Need to join to lookup table TCN-->SIC
+    val lookupDf = getDataFrameFromParquet(appConfig, TCN_SIC_LOOKUP)
 
     // Only interested in a subset of columns
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
-    df.registerTempTable("temp_paye")
+    payeDf.registerTempTable("paye")
+
+    // lookup columns are currently uppercase i.e. TCN and SIC07
+    // lookup columns are integers, but PAYE columns are strings.
+    lookupDf.registerTempTable("sic_lookup")
+
     val extracted = sqlContext.sql(
       """
         |SELECT
-        |CAST(payeref AS STRING) AS payeref,
-        | name1,
-        | postcode,
-        | status,
-        | CAST(dec_jobs AS DOUBLE) AS dec_jobs,
-        | CAST(mar_jobs AS DOUBLE) AS mar_jobs,
-        | CAST(june_jobs AS DOUBLE) AS june_jobs,
-        | CAST(sep_jobs AS DOUBLE) AS sept_jobs,
-        | CAST(jobs_lastupd AS STRING) AS jobs_lastupd
-        |FROM temp_paye
-        |WHERE payeref IS NOT NULL""".stripMargin)
+        |CAST(paye.payeref AS STRING) AS payeref,
+        | paye.name1,
+        | paye.postcode,
+        | paye.status,
+        | CAST(paye.dec_jobs AS DOUBLE) AS dec_jobs,
+        | CAST(paye.mar_jobs AS DOUBLE) AS mar_jobs,
+        | CAST(paye.june_jobs AS DOUBLE) AS june_jobs,
+        | CAST(paye.sep_jobs AS DOUBLE) AS sept_jobs,
+        | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
+        | CAST(paye.stc AS INT) AS stc,
+        | sic_lookup.SIC07
+        |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
+        |WHERE paye.payeref IS NOT NULL""".stripMargin)
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
 
@@ -153,17 +162,18 @@ class PayeRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCon
 
         val jobsLastUpd = if (row.isNullAt(8)) None else Option(row.getString(8))
 
-        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd)
+        val stc = if (row.isNullAt(9)) None else Option(row.getInt(9))
+        val sic = if (row.isNullAt(10)) None else Option(row.getInt(10))
+
+        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd, stc, sic)
       }
       (payeRefStr, rec)
     }
-
   }
-
 }
 
 @Singleton
-class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
 
@@ -205,7 +215,7 @@ class VatRecsParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkCont
 }
 
 @Singleton
-class BIEntriesParquetReader(sc: SparkContext) extends ParquetReader(sc: SparkContext) {
+class BIEntriesParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   def loadFromParquet(appConfig: AppConfig): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
