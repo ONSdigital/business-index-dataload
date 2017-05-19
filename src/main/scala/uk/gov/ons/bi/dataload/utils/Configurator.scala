@@ -1,8 +1,6 @@
 package uk.gov.ons.bi.dataload.utils
 
 import com.google.inject.Singleton
-
-import scala.util.Properties
 import com.typesafe.config.{Config, ConfigFactory}
 
 /**

@@ -1,9 +1,8 @@
 package uk.gov.ons.bi.dataload.ubrn
 
+import com.google.inject.Singleton
 import org.apache.spark.sql._
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
-import com.google.inject.Singleton
-import scala.util.{Failure, Success, Try}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 // HiveContext will be needed for fancy SQL in PAYE and VAT matching rules
@@ -23,8 +22,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   val sc = ctxMgr.sc
   val sqlContext = ctxMgr.sqlContext
-
-  import sqlContext.implicits._
 
 
   def excludeMatches(oldLinks: DataFrame, newLinks: DataFrame, matched: DataFrame): LinkMatchResults = {

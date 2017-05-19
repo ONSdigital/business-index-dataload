@@ -1,7 +1,7 @@
 package uk.gov.ons.bi.dataload
 
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkConf
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.ubrn._
@@ -73,13 +73,6 @@ object LoadBiToEsApp extends DataloadApp {
 
   // decides either if ES index should be created manually or not
   sparkConf.set("es.index.auto.create", esConfig.autocreate)
-
-  // WAN only bit was taken from Address Index project, not sure if we need it here?
-  // IMPORTANT: without this elasticsearch-hadoop will try to access the interlan nodes
-  // that are located on a private ip address. This is generally the case when es is
-  // located on a cloud behind a public ip.
-  // More: https://www.elastic.co/guide/en/elasticsearch/hadoop/master/cloud.html
-  // sparkConf.set("es.nodes.wan.only", esConfig.wanOnly)
 
   // Now we've built the ES SparkConf, let's go to work:
   // Set up the context manager (singleton holding our Spark and SQL/Hive contexts)

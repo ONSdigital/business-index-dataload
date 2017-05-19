@@ -16,12 +16,13 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 @Singleton
 class ContextMgr(sparkConf: SparkConf = new SparkConf()) extends Serializable{
-  // Turns down the logging on the Spark execution to reduce noise
-  org.apache.log4j.LogManager.getLogger("org").setLevel(Level.WARN)
 
-  // Log app-specific stuff via this one
+  // Get logger for this app to use:
+  // This still logs to Spark Log4j default appenders (console or file), as
+  // it is not clear how to specify e.g. a file appender for this app only.
+  // But the log name allows us to filter these entries from the main log.
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("BI-DATALOAD")
-  log.setLevel(Level.INFO)
+  log.setLevel(Level.WARN)
 
   implicit val sc: SparkContext = SparkContext.getOrCreate(sparkConf)
   implicit val sqlContext =  SQLContext.getOrCreate(sc)

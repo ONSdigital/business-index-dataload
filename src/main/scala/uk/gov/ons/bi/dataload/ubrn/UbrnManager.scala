@@ -1,11 +1,9 @@
 package uk.gov.ons.bi.dataload.ubrn
 
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{max, monotonicallyIncreasingId}
 
 import scala.util.{Success, Try}
-import com.google.inject.Singleton
 
 /**
   * Created by websc on 16/03/2017.

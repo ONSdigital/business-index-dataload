@@ -3,7 +3,6 @@ package uk.gov.ons.bi.dataload.reader
 import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
-
 /**
   * Created by websc on 21/02/2017.
   */
@@ -11,9 +10,8 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
   extends BIDataReader {
 
-  val log = ctxMgr.log
-
   val sqlContext = ctxMgr.sqlContext
+  val log =  ctxMgr.log
   
   def fixSchema(df: DataFrame): DataFrame = {
     // We have some spaces in the column names, which makes it hard to query dataframe in SQL.

@@ -1,7 +1,5 @@
 package uk.gov.ons.bi.dataload.utils
 
-import scala.Option
-
 /**
   * Created by websc on 22/02/2017.
   */

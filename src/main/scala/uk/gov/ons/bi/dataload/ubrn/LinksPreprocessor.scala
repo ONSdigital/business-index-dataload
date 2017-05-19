@@ -1,7 +1,6 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}

@@ -34,6 +34,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     }
 
     val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
+    log.info(s"Reading $biSource data from: $extSrcFilePath")
 
     // Get corresponding reader based on BIDataSource
     val reader: BIDataReader = new CsvReader(ctxMgr, tempTable)
@@ -41,12 +42,13 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     // Process the data
     val data = reader.readFromSourceFile(extSrcFilePath)
     val targetFilePath = s"$workingDir/$parquetFile"
+    log.info(s"Writing $biSource data to: $targetFilePath")
 
     reader.writeParquet(data, targetFilePath)
   }
 
 
-  def loadTcnToCsvLookupToParquet(appConfig: AppConfig) = {
+  def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig) = {
 
     // Get source/target directories
 
@@ -58,6 +60,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     // Application working directory
     val appDataConfig = appConfig.AppDataConfig
     val workingDir = appDataConfig.workingDir
+
     val parquetFile = appDataConfig.tcn
 
     val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
@@ -85,7 +88,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     loadBusinessDataToParquet(PAYE, appConfig)
 
-    loadTcnToCsvLookupToParquet(appConfig)
+    loadTcnToSicCsvLookupToParquet(appConfig)
   }
 
 }
