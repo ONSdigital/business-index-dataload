@@ -12,6 +12,7 @@
 * Spark can process Parquet files much more flexibly and efficiently than raw CSV or JSON data.
 * Also, the incoming data formats may change.
 * We convert the incoming files to Parquet as a first step, so that we can perform subsequent processing steps more efficiently.
+* Any lookup data, e.g. PAYE TCN (STC) code --> SIC code conversion, will be provided as CSV files and loaded in the same way here.
 
 ### Links data pre-processed separately ###
 

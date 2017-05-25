@@ -20,6 +20,14 @@
 * The BI entries are written to a Parquet file so we can explore the data if necessary using Python Spark notebooks e.g. for investigating errors or validating the generated data.
 * The BI entries will be uploaded to ElasticSearch in [step 3](./bi-dataload-step-3.md).
 
+### Lookups ###
+
+* The PAYE record does not hold the standard industry code (SIC).
+* Instead it contains a "TCN" or "STC" code.
+* We have a lookup file that allows us to find the SIC value for a given STC.
+* We perform this conversion as part of the Spark SQL processing when we fetch the PAYE data from its Parquet file.
+* The PAYE SIC value is then available for use if necessary in the final Business Index record.
+
 ## How? ##
 
 ### Data file locations ###
