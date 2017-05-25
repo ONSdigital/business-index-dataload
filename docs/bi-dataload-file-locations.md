@@ -40,6 +40,26 @@
            +-- [... see below ]
 ```
 
+### Lookup data ###
+
+* We may need additional reference data e.g. to look up PAYE TCN (STC) code and identify the corresponding SIC code to include in the Business Index entry.
+* This lookup data is provided as CSV files.
+* The CSV files will be placed in a lookups folder in HDFS:
+
+```
+/ons.gov
+    |
+    +-- businessIndex
+           |
+           +-- links:  contains Links JSON file 
+           |
+           +-- lookups: contains CSV files for lookups
+           |
+           +-- [... see below ]
+```
+* This data will be loaded into Parquet files, then integrated into Spark SQL queries as required.
+
+
 ## Application data ##
 
 * This application consists of a data-pipeline that needs to process different data-sets at different stages of the overall data flow.

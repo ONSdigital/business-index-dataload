@@ -65,10 +65,20 @@
 
 * Each run's Links will **replace the existing Links in the ElasticSearch index** i.e. we **do not retain old Links data**  from one run to the next.
 
+### Previous Links files ###
+
+* See [File locations](./bi-dataload-file-locations.md).
+* Every time we run the data ingestion process, we generate a new file of Links with UBRNs (in Parquet format).
+* This file is saved into the application working directory, as it will be used in subsequent steps in the data ingestion process.
+* It is also saved to the "PREVIOUS" folder, ready to be picked up as the "previous links" for the next run.
+* This over-writes the "previous links" file from the last run.
+* The new Links file is also saved in a time-stamped folder under the "PREVIOUS" folder, so we always have a back-up of the Links with UBRNs for a given run.
 
 ### UBRN and Links comparisons ###
 
-* The current data ingestion process applies simplified business rules for checking whether a new Link matches a Link from the previous run.
+#### Current partial implementation (May 2017) ####
+
+* The current data ingestion process (May 2017) applies simplified business rules for checking whether a new Link matches a Link from the previous run.
 
 ```
 	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
@@ -89,14 +99,46 @@
 * The remaining Links may need to be checked further if more refined business matching rules are required.
 * However, this implementation should cover the vast majority of Link matches from one run to the next.
 
-### Previous Links files ###
+#### Full implementation (pending) ####
 
-* See [File locations](./bi-dataload-file-locations.md).
-* Every time we run the data ingestion process, we generate a new file of Links with UBRNs (in Parquet format).
-* This file is saved into the application working directory, as it will be used in subsequent steps in the data ingestion process.
-* It is also saved to the "PREVIOUS" folder, ready to be picked up as the "previous links" for the next run.
-* This over-writes the "previous links" file from the last run.
-* The new Links file is also saved in a time-stamped folder under the "PREVIOUS" folder, so we always have a back-up of the Links with UBRNs for a given run.
+* We defined a full set of rules for UBRN matching and implemented these in April-May 2017.
+* However, these require us to use SQL features that are provided via Spark's HiveContext, not the basic SQLContext.
+* There are problems running this code via Oozie on our current Cloudera platform.
+* We have been advised to upgrade our Cloudera installation, which will also move us to Spark version 2.x.
+* We are waiting for this to be done, so that we can modify our code accordingly and reinstate the full set of UBRN rules.
+
+```
+	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
+	AND (old CH = new CH)
+	THEN
+	  use old UBRN for new Link record
+	ELSIF (old CH IS NULL AND new CH IS NULL)
+	AND (old contents = new contents)
+	THEN
+	  use old UBRN for new Link record
+	ELSIF (old VAT = new VAT)
+	THEN
+	  use old UBRN for new Link record
+	ELSIF (old PAYE = new PAYE)
+	THEN
+	  use old UBRN for new Link record 
+	ELSE
+	  allocate new UBRN
+	END IF
+```
+#### Applying UBRN rules ####
+
+* Each matching rule is applied in turn via Apark SQL queries using the same basic logic:
+
+![MacDown Screenshot](./UBRN-match-queries.jpg)
+
+* We separate the matched records at each stage and only pass the **unmatched** records into the next matching rule.
+
+![MacDown Screenshot](./UBRN-applying-rules.jpg)
+
+* After applying all the rules, any remaining new Link records are allocated a new UBRN as described previously.
+* The combined set of new Link records with UBRNs is then assembled and saved to HDFS.
+
 
 ## Running step 0 ##
 
@@ -116,14 +158,15 @@
 >	`-Dbi-dataload.app-data.env=dev`
 
 * The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
+* Set the JAR file to point to the current version of the packaged application.
 * The task parameters below also assume we are working in "dev" here.
 
 Page 1 Field | Contents
 ------------- | -------------
 Spark Master  | yarn-cluster
 Mode  | cluster
-App Name | ONS BI Dataload 1.2 Step 0 Pre-process Links
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
+App Name | ONS BI Dataload Pre-process Links
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.3.jar
 Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents
