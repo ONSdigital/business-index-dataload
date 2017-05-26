@@ -11,7 +11,7 @@ pipeline {
           withCredentials([
                   [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-test-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
                   [$class: 'StringBinding', credentialsId: 'bi-test-host', variable: 'CLOUDERA_HOST']]) {
-            sh "spawn ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
+            sh "ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
             sh 'expect "password"'
             sh "send $CLOUDERA_ACCESS_PWD\r"
             sh 'interact'
