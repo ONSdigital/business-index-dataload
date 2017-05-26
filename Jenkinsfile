@@ -15,7 +15,6 @@ pipeline {
             sh 'expect "password"'
             sh "send $CLOUDERA_ACCESS_PWD\r"
             sh 'interact'
-          }
             sh 'LIB_DIR = /index/business/ingestion/lib'
             sh 'HDFS_DIR = /ons.gov/businessIndex/test/lib'
             sh 'ssh mkdir -p $LIB_DIR'
@@ -23,7 +22,8 @@ pipeline {
             sh 'ssh hadoop fs -rm $HDFS_DIR'
             sh 'ssh hadoop fs -put -f LIB_DIR/*.jar $HDFS_DIR'
             sh 'ssh rm -r LIB_DIR'
-      }
+          }
+        }
     }
     stage('Deploy Oozie Job') {
       steps {
