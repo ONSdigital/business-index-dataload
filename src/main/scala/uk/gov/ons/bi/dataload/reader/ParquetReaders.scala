@@ -10,8 +10,7 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(ctxMgr: ContextMgr)
-  extends BIDataReader {
+class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
 
   val sqlContext =  ctxMgr.sqlContext
 
@@ -137,7 +136,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.dec_jobs AS DOUBLE) AS dec_jobs,
         | CAST(paye.mar_jobs AS DOUBLE) AS mar_jobs,
         | CAST(paye.june_jobs AS DOUBLE) AS june_jobs,
-        | CAST(paye.sep_jobs AS DOUBLE) AS sept_jobs,
+        | CAST(paye.sept_jobs AS DOUBLE) AS sept_jobs,
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
         | sic_lookup.SIC07
