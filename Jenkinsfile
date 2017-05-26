@@ -8,6 +8,7 @@ pipeline {
     }
     stage('HDFS Upload') {
         steps {
+          echo "Logging in via SSH"
           withCredentials([
                   [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-test-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
                   [$class: 'StringBinding', credentialsId: 'bi-test-host', variable: 'CLOUDERA_HOST']]) {
