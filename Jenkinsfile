@@ -1,9 +1,5 @@
 pipeline {
   agent any
-  environment {
-    CLOUDERA_ACCESS = credentials('bi-test-ci')
-    CLOUDERA_HOST = credentials('bi-test-host')
-  }
   stages {
     stage('Build') {
       steps {
@@ -11,18 +7,22 @@ pipeline {
       }
     }
     stage('HDFS Upload') {
-      steps {
-          sh "spawn ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
-          sh 'expect "password"'
-          sh "send $CLOUDERA_ACCESS_PWD\r"
-          sh 'interact'
-          sh 'LIB_DIR = /index/business/ingestion/lib'
-          sh 'HDFS_DIR = /ons.gov/businessIndex/test/lib'
-          sh 'ssh mkdir -p $LIB_DIR'
-          sh 'ssh cp $WORKSPACE/**/*.jar LIB_DIR'
-          sh 'ssh hadoop fs -rm $HDFS_DIR'
-          sh 'ssh hadoop fs -put -f LIB_DIR/*.jar $HDFS_DIR'
-          sh 'ssh rm -r LIB_DIR'
+      withCredentials([
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-test-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
+              [$class: 'StringBinding', credentialsId: 'bi-test-host', variable: 'CLOUDERA_HOST']]) {
+        steps {
+            sh "spawn ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
+            sh 'expect "password"'
+            sh "send $CLOUDERA_ACCESS_PWD\r"
+            sh 'interact'
+            sh 'LIB_DIR = /index/business/ingestion/lib'
+            sh 'HDFS_DIR = /ons.gov/businessIndex/test/lib'
+            sh 'ssh mkdir -p $LIB_DIR'
+            sh 'ssh cp $WORKSPACE/**/*.jar LIB_DIR'
+            sh 'ssh hadoop fs -rm $HDFS_DIR'
+            sh 'ssh hadoop fs -put -f LIB_DIR/*.jar $HDFS_DIR'
+            sh 'ssh rm -r LIB_DIR'
+        }
       }
     }
     stage('Deploy Oozie Job') {
