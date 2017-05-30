@@ -10,8 +10,8 @@ pipeline {
         steps {
           echo "Logging in via SSH"
           withCredentials([
-                  [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-test-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
-                  [$class: 'StringBinding', credentialsId: 'bi-test-host', variable: 'CLOUDERA_HOST']]) {
+                  [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-dev-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
+                  [$class: 'StringBinding', credentialsId: 'bi-dev-host', variable: 'CLOUDERA_HOST']]) {
             sh "ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
             sh 'expect "password"'
             sh "send $CLOUDERA_ACCESS_PWD\r"
