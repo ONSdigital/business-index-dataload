@@ -1,44 +1,53 @@
 pipeline {
-  agent any
-  stages {
-    stage('Build') {
-      steps {
-        sh '$SBT clean test package'
-      }
+    agent any
+    environment {
+        ENV = "dev"
+        LIB_DIR = "ons.gov/businessIndex/$ENV/lib"
+        OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
     }
-    stage('HDFS Upload') {
-        steps {
-          echo "Logging in via SSH"
-          withCredentials([
-                  [$class: 'UsernamePasswordMultiBinding', credentialsId: 'bi-dev-ci', usernameVariable: 'CLOUDERA_ACCESS_USR', passwordVariable: 'CLOUDERA_ACCESS_PWD'],
-                  [$class: 'StringBinding', credentialsId: 'bi-dev-host', variable: 'CLOUDERA_HOST']]) {
-            sh "ssh $CLOUDERA_ACCESS_USR@$CLOUDERA_HOST"
-            sh 'expect "password"'
-            sh "send $CLOUDERA_ACCESS_PWD\r"
-            sh 'interact'
-            sh 'LIB_DIR = /index/business/ingestion/lib'
-            sh 'HDFS_DIR = /ons.gov/businessIndex/test/lib'
-            sh 'ssh mkdir -p $LIB_DIR'
-            sh 'ssh cp $WORKSPACE/**/*.jar LIB_DIR'
-            sh 'ssh hadoop fs -rm $HDFS_DIR'
-            sh 'ssh hadoop fs -put -f LIB_DIR/*.jar $HDFS_DIR'
-            sh 'ssh rm -r LIB_DIR'
-          }
+    stages {
+        stage('Build') {
+            steps {
+                sh '$SBT clean test package'
+            }
+        }
+        stage('Deploy - Dev') {
+            environment {
+                ENV = "dev"
+            }
+            steps {
+                deploy()
+            }
+        }
+
+    }
+    post {
+        always {
+            junit '**/target/test-reports/*.xml'
         }
     }
-    stage('Deploy Oozie Job') {
-      steps {
-        sh 'OOZIE_DIR = /oozie/workspaces/bi-data-ingestion'
-        sh 'ssh mkdir -p OOZIE_DIR'
-        sh 'ssh cp $WORKSPACE/src/main/resources/oozie/workflow.xml LIB_DIR'
-        sh 'hadoop fs -mkdir -p $OOZIE_DIR'
-        sh 'hadoop fs -put -f $OOZIE_DIR/workflow.xml'
-      }
+}
+
+def deploy() {
+    echo "Deploying to $ENV"
+    sshagent(credentials: ["bi-$ENV-ci-key"]) {
+        withCredentials([string(credentialsId: "bi-$ENV-host", variable: 'HOST')]) {
+            sh '''
+                    ssh bi-$ENV-ci@$HOST mkdir -p $LIB_DIR
+                    scp ${WORKSPACE}/runtime/lib/*.jar bi-dev-ci@$HOST:$LIB_DIR
+                    scp ${WORKSPACE}/target/*/business-index-dataload*.jar bi-$ENV-ci@$HOST:$LIB_DIR
+                    ssh bi-$ENV-ci@$HOST hadoop fs -mkdir -p $LIB_DIR
+                    ssh bi-$ENV-ci@$HOST hadoop fs -rm -f /$LIB_DIR/*.jar
+                    ssh bi-$ENV-ci@$HOST hadoop fs -put $LIB_DIR/*.jar /$LIB_DIR
+                    ssh bi-$ENV-ci@$HOST hadoop fs -put $LIB_DIR/business-index-dataload*.jar /$LIB_DIR
+                    ssh bi-$ENV-ci@$HOST rm -r $LIB_DIR
+                    echo "Successfully copied jar files to $LIB_DIR directory on HDFS"
+                    ssh bi-$ENV-ci@$HOST mkdir -p $OOZIE_DIR
+                    scp ${WORKSPACE}/src/main/resources/oozie/workflow.xml bi-$ENV-ci@$HOST:$OOZIE_DIR
+                    ssh bi-$ENV-ci@$HOST hadoop fs -mkdir -p $OOZIE_DIR
+                    ssh bi-$ENV-ci@$HOST hadoop fs -put -f $OOZIE_DIR/workflow.xml
+                    echo "Successfully deployed Oozie job to $OOZIE_DIR directory on HDFS"
+                 '''
+        }
     }
-  }
-  post {
-    always {
-      junit '**/target/test-reports/*.xml'
-    }
-  }
 }
