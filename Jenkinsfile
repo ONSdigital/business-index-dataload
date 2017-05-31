@@ -19,7 +19,14 @@ pipeline {
                 deploy()
             }
         }
-
+        stage('Create Index - Dev') {
+            environment {
+                ENV = "dev"
+            }
+            steps {
+                createIndex()
+            }
+        }
     }
     post {
         always {
@@ -49,5 +56,85 @@ def deploy() {
                     echo "Successfully deployed Oozie job to $OOZIE_DIR directory on HDFS"
                  '''
         }
+    }
+}
+
+def createIndex() {
+    withCredentials([string(credentialsId: "bi-elastic-url", variable: 'ELASTIC_URL')]) {
+        httpRequest httpMode: 'PUT', requestBody: '''{
+          "mappings": {
+            "business": {
+              "properties": {
+                "BusinessName": {
+                  "type": "string",
+                  "boost": 4.0,
+                  "analyzer": "bi-devAnalyzer"
+                },
+                "BusinessName_suggest": {
+                  "type": "completion",
+                  "analyzer": "simple",
+                  "payloads": false,
+                  "preserve_separators": true,
+                  "preserve_position_increments": true,
+                  "max_input_length": 50
+                },
+                "CompanyNo": {
+                  "type": "string",
+                  "analyzer": "keyword"
+                },
+                "EmploymentBands": {
+                  "type": "string",
+                  "analyzer": "bi-devAnalyzer"
+                },
+                "IndustryCode": {
+                  "type": "long"
+                },
+                "LegalStatus": {
+                  "type": "string",
+                  "index": "not_analyzed",
+                  "include_in_all": false
+                },
+                "PayeRefs": {
+                  "type": "string",
+                  "analyzer": "keyword"
+                },
+                "PostCode": {
+                  "type": "string",
+                  "analyzer": "bi-devAnalyzer"
+                },
+                "TradingStatus": {
+                  "type": "string",
+                  "index": "not_analyzed",
+                  "include_in_all": false
+                },
+                "Turnover": {
+                  "type": "string",
+                  "analyzer": "bi-devAnalyzer"
+                },
+                "UPRN": {
+                  "type": "long"
+                },
+                "VatRefs": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "settings": {
+            "index": {
+              "analysis": {
+                "analyzer": {
+                  "bi-devAnalyzer": {
+                    "filter": [
+                      "lowercase"
+                    ],
+                    "type": "custom",
+                    "tokenizer": "whitespace"
+                  }
+                }
+              }
+            }
+          }
+        }''', responseHandle: 'NONE', timeout: 60, url: "$ELASTIC_URL/bi-$ENV-build-$BUILD_NUMBER", validResponseCodes: '200'
     }
 }
