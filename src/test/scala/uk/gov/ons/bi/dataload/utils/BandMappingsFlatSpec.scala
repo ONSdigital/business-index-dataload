@@ -59,4 +59,20 @@ class BandMappingsFlatSpec extends FlatSpec with Matchers {
     } yield expected should be (BandMappings.tradingStatusBand(input))
   }
 
+  "deathcodeTradingStatusBand" should "translate all values correctly" in {
+
+    val inputs: Seq[Option[String]] =  ((0 to 9).toList.map(_.toString) ++ List("E","M", "BAD")).map(Option(_))
+    val outputs: Seq[Option[String]] = List("A", "C", "C", "C", "C", "C", "A", "C", "C", "C", "C", "C").map(Option(_)) :+ None
+
+    // Allow for a None input value as well
+    val inputsWithNone = inputs ++ None
+    val outputsWithNone = outputs ++ None
+
+    val testParams = inputsWithNone.zip(outputsWithNone)
+
+    for {
+      (input, expected) <- testParams
+    } yield expected should be (BandMappings.deathCodeTradingStatusBand(input))
+  }
+
 }

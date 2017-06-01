@@ -119,11 +119,18 @@ object Transformers {
     indCode
   }
 
-  def getTradingStatus(br: Business): Option[String] = {
+  def getTradingStatusBand(br: Business): Option[String] = {
     // Extract potential values from CH (if any)
-    br.company.flatMap {
-      _.companyStatus
-    }
+    val co = BandMappings.tradingStatusBand(br.company.flatMap {_.companyStatus})
+    val vat: Option[String] = BandMappings.deathCodeTradingStatusBand(
+                                br.vat.flatMap { vs => vs.headOption }.flatMap {_.deathcode})
+    val paye: Option[String] = BandMappings.deathCodeTradingStatusBand(
+                                br.paye.flatMap { ps => ps.headOption }.flatMap {_.deathcode})
+
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
 
@@ -227,9 +234,8 @@ object Transformers {
     val postcode: Option[String] = getPostcode(br)
     val industryCode: Option[Long] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
-    val tradingStatus: Option[String] = getTradingStatus(br)
 
-    val tradingStatusBand = BandMappings.tradingStatusBand(tradingStatus)
+    val tradingStatusBand = getTradingStatusBand(br)
 
     // Not clear what rule is for deriving this:
     val turnover: Option[Long] = getVatTotalTurnover(br)

@@ -50,4 +50,15 @@ object BandMappings {
       case Some("?") => None
       case x => x}
   }
+
+  def deathCodeTradingStatusBand(s: Option[String]): Option[String] = {
+    // Need to know proper rule for converting deathcode to trading status
+    s map {
+      case "0" | "6" => "A"  // active or live
+      case "1"|"2"| "3"| "4"| "5"| "7"| "8"| "9"| "E"| "M" => "C"
+      case _ => "?"
+    } match {
+      case Some("?") => None
+      case x => x}
+  }
 }

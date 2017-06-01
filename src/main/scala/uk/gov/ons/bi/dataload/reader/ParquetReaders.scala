@@ -139,7 +139,8 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.sept_jobs AS DOUBLE) AS sept_jobs,
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
-        | sic_lookup.SIC07
+        | sic_lookup.SIC07,
+        | paye.deathcode
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin)
 
@@ -164,7 +165,10 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         val stc = if (row.isNullAt(9)) None else Option(row.getInt(9))
         val sic = if (row.isNullAt(10)) None else Option(row.getInt(10))
 
-        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs, jobsLastUpd, stc, sic)
+        val deathcode = if (row.isNullAt(11)) None else Option(row.getString(11))
+
+        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
+          jobsLastUpd, stc, sic, deathcode)
       }
       (payeRefStr, rec)
     }
@@ -189,7 +193,8 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |postcode,
         |sic92,
         |status,
-        |CAST(turnover AS LONG) AS turnover
+        |CAST(turnover AS LONG) AS turnover,
+        |deathcode
         |FROM temp_vat
         |WHERE vatref IS NOT NULL""".stripMargin)
 
@@ -204,8 +209,9 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         val sic92 = if (row.isNullAt(3)) None else Option(row.getInt(3))
         val legalStatus = if (row.isNullAt(4)) None else Option(row.getInt(4))
         val turnover = if (row.isNullAt(5)) None else Option(row.getLong(5))
+        val deathcode = if (row.isNullAt(6)) None else Option(row.getString(6))
 
-        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover)
+        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode)
       }
       (vatRefStr, rec)
     }
