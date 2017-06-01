@@ -40,7 +40,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
-    // so we need to cache this data once we've added GID to fix it in place.
+    // so we need to PERSIST this data once we've added GID to fix it in place.
     val newLinks = jsonLinks.withColumn("GID", generateUuid())
     newLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -57,7 +57,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)
     val prevLinks = previousLinkStore.readFromSourceFile(prevLinksFileParquetPath)
-    //prevLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Initialise LinkMatcher
     val matcher = new LinkMatcher(ctxMgr)
