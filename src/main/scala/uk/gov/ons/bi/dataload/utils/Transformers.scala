@@ -120,19 +120,20 @@ object Transformers {
   }
 
   def getTradingStatusBand(br: Business): Option[String] = {
-    // Extract potential values from CH (if any)
-    val co = BandMappings.tradingStatusBand(br.company.flatMap {_.companyStatus})
-    val vat: Option[String] = BandMappings.deathCodeTradingStatusBand(
+    // Company Status can be used as input to convert to Trading Status Band below
+    val co: Option[String] = br.company.flatMap {_.companyStatus}
+
+    // PAYE and VAT have death codes which need converting to trading status first
+    val vat: Option[String] = BandMappings.deathCodeTradingStatus(
                                 br.vat.flatMap { vs => vs.headOption }.flatMap {_.deathcode})
-    val paye: Option[String] = BandMappings.deathCodeTradingStatusBand(
+    val paye: Option[String] = BandMappings.deathCodeTradingStatus(
                                 br.paye.flatMap { ps => ps.headOption }.flatMap {_.deathcode})
 
-    // list in order of preference
-    val candidates = Seq(co, vat, paye)
+    // List in order of preference and convert to Trading Status Band
+    val candidates: Seq[Option[String]] = Seq(co, vat, paye).map(BandMappings.tradingStatusToBand)
     // Take first non-empty name value from list
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
-
 
   def getLegalStatus(br: Business): Option[String] = {
     // Extract potential values from VAT/PAYE records

@@ -13,7 +13,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
   val fullCompanyRec = CompanyRec(Some("Company1"), Some("CompanyOne"), Some("Active"), Some("12345 - fubar"), Some("Company Post Code"))
 
   val fullVatRec = VatRec(Some(100L), Some("VAT Name Line 1"), Some("VAT Post Code"),
-    Some(92), Some(1), Some(12345), Some("M"))
+    Some(92), Some(1), Some(12345), Some("3"))
 
   val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Post Code"),
     Some(2), Some(120.0D), Some(30.0D),
@@ -237,7 +237,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
   }
 
   "A Transformer" should "return correct Trading Status Band (from VAT record)" in {
-    val expected = Some("C")
+    val expected = Some("I")
     val vatRecs = Some(Seq(fullVatRec))
     val br = Business(100, None, vatRecs, None)
     val result = Transformers.getTradingStatusBand(br)
