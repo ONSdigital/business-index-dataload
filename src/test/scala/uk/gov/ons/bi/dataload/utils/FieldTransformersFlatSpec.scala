@@ -246,10 +246,33 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
   }
 
   "A Transformer" should "return correct Trading Status Band (from PAYE record)" in {
-
     val expected = Some("A")
     val payeRecs = Some(Seq(fullPayeRec))
     val br = Business(100, None, None, payeRecs)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band where VAT is bad, PAYE is OK" in {
+    val expected = Some("A") // PAYE rec deathcode should result in A
+    val vatRecs = Some(Seq(fullVatRec.copy(deathcode = Some("BAD"))))
+    val payeRecs = Some(Seq(fullPayeRec))
+
+    val br = Business(100, None, vatRecs, payeRecs)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band of None where all codes are bad" in {
+    val expected = None
+
+    val co = fullCompanyRec.copy(companyStatus = Some("BAD"))
+    val vatRecs = Some(Seq(fullVatRec.copy(deathcode = Some("BAD"))))
+    val payeRecs = Some(Seq(fullPayeRec.copy(deathcode = Some("BAD"))))
+
+    val br = Business(100, Some(co), vatRecs, payeRecs)
     val result = Transformers.getTradingStatusBand(br)
 
     result should be(expected)
