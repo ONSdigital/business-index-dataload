@@ -1,9 +1,13 @@
 package uk.gov.ons.bi.dataload.ubrn
 
+import java.util.UUID
+
 import com.google.inject.Singleton
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, UserDefinedFunction}
 import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.storage.StorageLevel
 
 /**
   * Created by websc on 03/03/2017.
@@ -11,6 +15,10 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 @Singleton
 class LinksPreprocessor(ctxMgr: ContextMgr) {
+
+
+  // Create UDF to generate a UUID
+  val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
     // get source/target directories
@@ -25,10 +33,16 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
+    // Lot of caching needed here, so we cache to disk and memory
     // Load the new Links from JSON
     val jsonReader = new LinkJsonReader(ctxMgr)
-    val newLinks = getNewLinksDataFromJson(jsonReader, appConfig)
-    newLinks.cache()
+    val jsonLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+
+    // WARNING:
+    // UUID is generated when data is materialised e.g. in a SELECT statement,
+    // so we need to cache this data once we've added GID to fix it in place.
+    val newLinks = jsonLinks.withColumn("GID", generateUuid())
+    newLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Parquet file locations from configuration (or runtime params)
     val appDataConfig = appConfig.AppDataConfig
@@ -43,7 +57,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)
     val prevLinks = previousLinkStore.readFromSourceFile(prevLinksFileParquetPath)
-    prevLinks.cache()
+    prevLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Initialise LinkMatcher
     val matcher = new LinkMatcher(ctxMgr)
@@ -64,7 +78,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
-    linksToSave.cache()
+    linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Clear cached data we no longer need
     prevLinks.unpersist()

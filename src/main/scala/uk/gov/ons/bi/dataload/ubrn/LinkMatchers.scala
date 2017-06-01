@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
 import org.apache.spark.sql._
+import org.apache.spark.storage.StorageLevel
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
@@ -173,18 +174,18 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     val chResults = getChMatches(oldLinks, newLinks)
 
     // Cache results as they will be re-used below
-    chResults.unmatchedOldLinks.cache()
-    chResults.unmatchedNewLinks.cache()
-    chResults.matched.cache()
+    chResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    chResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    chResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Get records where CH is absent from both sets but other contents are same
     val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
 
     // Reset cached data
 
-    contentResults.unmatchedOldLinks.cache()
-    contentResults.unmatchedNewLinks.cache()
-    contentResults.matched.cache()
+    contentResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    contentResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    contentResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
 
     chResults.unmatchedOldLinks.unpersist()
     chResults.unmatchedNewLinks.unpersist()
@@ -197,9 +198,9 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     // Reset cached data
 
-    vatResults.unmatchedOldLinks.cache()
-    vatResults.unmatchedNewLinks.cache()
-    vatResults.matched.cache()
+    vatResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    vatResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    vatResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
 
     contentResults.unmatchedOldLinks.unpersist()
     contentResults.unmatchedNewLinks.unpersist()
@@ -209,9 +210,9 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     // Reset cached data
 
-    payeResults.unmatchedOldLinks.cache()
-    payeResults.unmatchedNewLinks.cache()
-    payeResults.matched.cache()
+    payeResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    payeResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    payeResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
 
     vatResults.unmatchedOldLinks.unpersist()
     vatResults.unmatchedNewLinks.unpersist()
@@ -224,7 +225,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
       //.unionAll(vatResults.matched)
       //.unionAll(payeResults.matched)
 
-    withOldUbrn.cache()
+    withOldUbrn.persist(StorageLevel.MEMORY_AND_DISK)
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:
     // When VAT and PAYE rules restored, use the commented version of needUbrn instead:
