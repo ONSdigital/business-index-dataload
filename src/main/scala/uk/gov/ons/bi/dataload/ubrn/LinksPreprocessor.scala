@@ -57,7 +57,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)
     val prevLinks = previousLinkStore.readFromSourceFile(prevLinksFileParquetPath)
-    prevLinks.persist(StorageLevel.MEMORY_AND_DISK)
+    //prevLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Initialise LinkMatcher
     val matcher = new LinkMatcher(ctxMgr)
@@ -78,7 +78,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)
 
     // Cache the results because we want to write them to multiple files
-    linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
+    //linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Clear cached data we no longer need
     prevLinks.unpersist()

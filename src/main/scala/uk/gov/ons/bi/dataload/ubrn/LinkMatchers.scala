@@ -174,19 +174,21 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     val chResults = getChMatches(oldLinks, newLinks)
 
     // Cache results as they will be re-used below
+/*
     chResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
     chResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
     chResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
+*/
 
     // Get records where CH is absent from both sets but other contents are same
     val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
 
     // Reset cached data
 
-    contentResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
+ /*   contentResults.unmatchedOldLinks.persist(StorageLevel.MEMORY_AND_DISK)
     contentResults.unmatchedNewLinks.persist(StorageLevel.MEMORY_AND_DISK)
     contentResults.matched.persist(StorageLevel.MEMORY_AND_DISK)
-
+*/
     chResults.unmatchedOldLinks.unpersist()
     chResults.unmatchedNewLinks.unpersist()
 
@@ -225,13 +227,13 @@ class LinkMatcher(ctxMgr: ContextMgr) {
       //.unionAll(vatResults.matched)
       //.unionAll(payeResults.matched)
 
-    withOldUbrn.persist(StorageLevel.MEMORY_AND_DISK)
+    //withOldUbrn.persist(StorageLevel.MEMORY_AND_DISK)
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:
     // When VAT and PAYE rules restored, use the commented version of needUbrn instead:
     // val needUbrn: DataFrame = payeResults.unmatchedNewLinks
     val needUbrn: DataFrame = contentResults.unmatchedNewLinks
-    needUbrn.cache()
+    //needUbrn.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Clear remaining cached data
     //vatResults.matched.unpersist() // Uncomment this when VAT and PAYE rules restored
