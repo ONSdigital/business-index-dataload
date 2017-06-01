@@ -14,12 +14,13 @@ case class CompanyRec(companyNo: Option[String], companyName: Option[String],
                      ) extends BusinessElement
 
 case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Option[String],
-                  sic92: Option[Int], legalStatus: Option[Int], turnover: Option[Long]) extends BusinessElement
+                  sic92: Option[Int], legalStatus: Option[Int],
+                  turnover: Option[Long], deathcode: Option[String] = None) extends BusinessElement
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
-                   stc: Option[Int] = None, sic: Option[Int] = None)
+                   stc: Option[Int] = None, sic: Option[Int] = None, deathcode: Option[String] = None)
   extends BusinessElement
 
 

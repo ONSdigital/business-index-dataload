@@ -1,8 +1,11 @@
 package uk.gov.ons.bi.dataload.utils
 
+import uk.gov.ons.bi.dataload.utils.BandMappings.TradingStatus
+
 /**
   * Created by websc on 22/02/2017.
   */
+
 
 object BandMappings {
 
@@ -38,14 +41,36 @@ object BandMappings {
     case _ => "I"
   }
 
-  def tradingStatusBand(s: Option[String]): Option[String] = {
+
+  object TradingStatus  {
+    val ACTIVE = "Active"
+    val CLOSED = "Closed"
+    val DORMANT = "Dormant"
+    val INSOLVENT = "Insolvent"
+    val UNKNOWN = "?"
+  }
+
+  def tradingStatusToBand(s: Option[String]): Option[String] = {
     // ONSRBIB-570: invalid code should now translate as None
     s map {
-      case "Active" => "A"
-      case "Closed" => "C"
-      case "Dormant" => "D"
-      case "Insolvent" => "I"
+      case TradingStatus.ACTIVE => "A"
+      case TradingStatus.CLOSED => "C"
+      case TradingStatus.DORMANT => "D"
+      case TradingStatus.INSOLVENT => "I"
       case _ => "?"
+    } match {
+      case Some("?") => None
+      case x => x}
+  }
+
+  def deathCodeTradingStatus(s: Option[String]): Option[String] = {
+    // converts VAT / PAYE deathcode to trading status
+    s map {
+      case "0" | "2" | "4" | "6" | "7" | "8" | "E" | "M" | "S" | "T" => TradingStatus.ACTIVE
+      case "1" | "9" => TradingStatus.CLOSED
+      case "3" => TradingStatus.INSOLVENT
+      case "5" => TradingStatus.DORMANT
+      case _ => TradingStatus.UNKNOWN
     } match {
       case Some("?") => None
       case x => x}

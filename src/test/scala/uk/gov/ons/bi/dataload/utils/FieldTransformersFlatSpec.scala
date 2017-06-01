@@ -10,14 +10,14 @@ import uk.gov.ons.bi.dataload.model.{Business, CompanyRec, PayeRec, VatRec}
 
 class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
-  val fullCompanyRec = CompanyRec(Some("Company1"), Some("CompanyOne"), Some("Status"), Some("12345 - fubar"), Some("Company Post Code"))
+  val fullCompanyRec = CompanyRec(Some("Company1"), Some("CompanyOne"), Some("Active"), Some("12345 - fubar"), Some("Company Post Code"))
 
   val fullVatRec = VatRec(Some(100L), Some("VAT Name Line 1"), Some("VAT Post Code"),
-    Some(92), Some(1), Some(12345))
+    Some(92), Some(1), Some(12345), Some("3"))
 
   val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Post Code"),
     Some(2), Some(120.0D), Some(30.0D),
-    Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some(1500))
+    Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some(1500),Some("6"))
 
 
   "A Transformer" should "get latest job figure from PAYE record" in {
@@ -222,6 +222,62 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
     result should be(expected)
   }
+
+
+
+  //===============================================================================
+
+  "A Transformer" should "return correct Trading Status Band (from Company record)" in {
+
+    val expected = Some("A")
+    val br = Business(100, Some(fullCompanyRec), None, None)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band (from VAT record)" in {
+    val expected = Some("I")
+    val vatRecs = Some(Seq(fullVatRec))
+    val br = Business(100, None, vatRecs, None)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band (from PAYE record)" in {
+    val expected = Some("A")
+    val payeRecs = Some(Seq(fullPayeRec))
+    val br = Business(100, None, None, payeRecs)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band where VAT is bad, PAYE is OK" in {
+    val expected = Some("A") // PAYE rec deathcode should result in A
+    val vatRecs = Some(Seq(fullVatRec.copy(deathcode = Some("BAD"))))
+    val payeRecs = Some(Seq(fullPayeRec))
+
+    val br = Business(100, None, vatRecs, payeRecs)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+
+  "A Transformer" should "return correct Trading Status Band of None where all codes are bad" in {
+    val expected = None
+
+    val co = fullCompanyRec.copy(companyStatus = Some("BAD"))
+    val vatRecs = Some(Seq(fullVatRec.copy(deathcode = Some("BAD"))))
+    val payeRecs = Some(Seq(fullPayeRec.copy(deathcode = Some("BAD"))))
+
+    val br = Business(100, Some(co), vatRecs, payeRecs)
+    val result = Transformers.getTradingStatusBand(br)
+
+    result should be(expected)
+  }
+  //===============================================================================
 
   "A Transformer" should "return correct Company Name (from Company record)" in {
 
