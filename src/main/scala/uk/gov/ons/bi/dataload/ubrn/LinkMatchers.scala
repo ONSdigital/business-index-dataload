@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
 import org.apache.spark.sql._
+import org.apache.spark.storage.StorageLevel
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
@@ -172,22 +173,8 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     // Get CH matches where CH is present in both sets
     val chResults = getChMatches(oldLinks, newLinks)
 
-    // Cache results as they will be re-used below
-    chResults.unmatchedOldLinks.cache()
-    chResults.unmatchedNewLinks.cache()
-    chResults.matched.cache()
-
     // Get records where CH is absent from both sets but other contents are same
     val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
-
-    // Reset cached data
-
-    contentResults.unmatchedOldLinks.cache()
-    contentResults.unmatchedNewLinks.cache()
-    contentResults.matched.cache()
-
-    chResults.unmatchedOldLinks.unpersist()
-    chResults.unmatchedNewLinks.unpersist()
 
  /*
     // Uncomment all this when VAT and PAYE rules restored  *** NEEDS HIVE CONTEXT!!! ***
@@ -195,26 +182,8 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     // Get records where VAT ref matches
     val vatResults = getVatMatches(contentResults.unmatchedOldLinks, contentResults.unmatchedNewLinks)
 
-    // Reset cached data
-
-    vatResults.unmatchedOldLinks.cache()
-    vatResults.unmatchedNewLinks.cache()
-    vatResults.matched.cache()
-
-    contentResults.unmatchedOldLinks.unpersist()
-    contentResults.unmatchedNewLinks.unpersist()
-
     // Get records where PAYE ref matches
     val payeResults = getPayeMatches(vatResults.unmatchedOldLinks, vatResults.unmatchedNewLinks)
-
-    // Reset cached data
-
-    payeResults.unmatchedOldLinks.cache()
-    payeResults.unmatchedNewLinks.cache()
-    payeResults.matched.cache()
-
-    vatResults.unmatchedOldLinks.unpersist()
-    vatResults.unmatchedNewLinks.unpersist()
 */
     // Finally we should have:
     // - one sub-set of new links that we have matched, so they now have a UBRN:
@@ -224,21 +193,10 @@ class LinkMatcher(ctxMgr: ContextMgr) {
       //.unionAll(vatResults.matched)
       //.unionAll(payeResults.matched)
 
-    withOldUbrn.cache()
-
     // - and one sub-set of new links that we could not match, so they need new UBRN:
     // When VAT and PAYE rules restored, use the commented version of needUbrn instead:
     // val needUbrn: DataFrame = payeResults.unmatchedNewLinks
     val needUbrn: DataFrame = contentResults.unmatchedNewLinks
-    needUbrn.cache()
-
-    // Clear remaining cached data
-    //vatResults.matched.unpersist() // Uncomment this when VAT and PAYE rules restored
-    //payeResults.matched.unpersist() // Uncomment this when VAT and PAYE rules restored
-    chResults.matched.unpersist()
-    contentResults.matched.unpersist()
-    //payeResults.unmatchedNewLinks.unpersist() // Uncomment this when VAT and PAYE rules restored
-    //payeResults.unmatchedOldLinks.unpersist() // Uncomment this when VAT and PAYE rules restored
 
     // Return the stuff we want
 
