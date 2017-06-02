@@ -194,7 +194,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |sic92,
         |status,
         |CAST(turnover AS LONG) AS turnover,
-        |deathcode
+        |CAST (deathcode AS STRING) AS deathcode
         |FROM temp_vat
         |WHERE vatref IS NOT NULL""".stripMargin)
 
