@@ -24,6 +24,9 @@ class ContextMgr(sparkConf: SparkConf = new SparkConf()) extends Serializable{
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("BI-DATALOAD")
   log.setLevel(Level.WARN)
 
+  // Suppress logging from outside the app
+  org.apache.log4j.LogManager.getRootLogger.setLevel(Level.WARN)
+
   implicit val sc: SparkContext = SparkContext.getOrCreate(sparkConf)
   implicit val sqlContext =  SQLContext.getOrCreate(sc)
 
