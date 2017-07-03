@@ -58,19 +58,19 @@ object HmrcBiCsvExtractor {
     val biData = pqReader.loadFromParquet(appConfig)
 
     // Cache to avoid re-loading data for each output
-    biData.persist()
+    //biData.persist()
     log.info(s"BI index file contains ${biData.count} records.")
 
-    // Extract the different sets of data we want
+    // Extract the different sets of data we want, and write to output files
     val legalEntities = getLegalEntities(biData)
-    val vat = getVatExploded(biData)
-    val paye =  getPayeExploded(biData)
-
-    // Write CSV files
     log.info(s"Writing ${legalEntities.count} Legal Entities to $legalFile")
     BiCsvWriter.writeCsvOutput(legalEntities, legalFile)
+
+    val vat = getVatExploded(biData)
     log.info(s"Writing ${vat.count} VAT entries to $vatFile")
     BiCsvWriter.writeCsvOutput(vat, vatFile)
+
+    val paye =  getPayeExploded(biData)
     log.info(s"Writing ${paye.count} PAYE entries to $payeFile")
     BiCsvWriter.writeCsvOutput(paye, payeFile)
 

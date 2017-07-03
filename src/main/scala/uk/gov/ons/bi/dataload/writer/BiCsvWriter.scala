@@ -20,6 +20,9 @@ object BiCsvWriter {
     outputDf.write.mode("overwrite")
         .format("com.databricks.spark.csv")
         .option("header", "true")
+        .option("quote","\"")
+        .option("quoteMode","ALL")
+        .option("nullValue","")
         .save(outputFile)
 
   }
