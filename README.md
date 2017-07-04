@@ -146,3 +146,5 @@
 > * [Step 2](./docs/bi-dataload-step-2.md).
 > * [Step 3](./docs/bi-dataload-step-3.md).
 > * [Testing](./docs/bi-dataload-testing.md).
+> * [CSV extract](./bi-dataload-csv-extract.md).
+
