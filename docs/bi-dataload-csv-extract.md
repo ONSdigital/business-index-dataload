@@ -27,9 +27,9 @@
 ### Data outputs ###
 
 * All the output files were generated via Spark and written to HDFS.
-* Thsi means the actual data is written as multiple `part-NNNNN` files inside a directory such as `bi-paye-jun-2017.csv`.
+* Thsi means the actual data is written as multiple `part-NNNNN` files inside a directory such as `bi-paye.csv`.
 * The Spark process repartitioned the data onto a single partition before output  in order to creat a single `part-NNNNN` file in the relevant output directory.
-* This file was then downloaded manually and re-named before being sent to HRMC.
+* This file was then downloaded manually and re-named e.g. as `bi-paye-jun-2017.csv` before being sent to HRMC.
 
 ### Spark CSV ###
 
@@ -43,7 +43,7 @@
 > * `univocity-parsers-1.5.1.jar`: Additional dependency for Spark CSV
 
 * The JARS should be stored in HDFS so that they can be loaded by the Oozie job at runtime.
-* If Spark is upgraded to version 2.x on Cloudera, these libraries will no longer be required.
+* When Spark is upgraded to version 2.x on Cloudera, these libraries will no longer be required.
 
 
 #### Oozie Task Definition ####
