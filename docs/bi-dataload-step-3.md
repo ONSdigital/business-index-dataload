@@ -57,7 +57,7 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 3 Upload to ElasticSearch
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.2.jar
+Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.4.jar
 Main class | uk.gov.ons.bi.dataload.LoadBiToEsApp
 
 Page 2 Field | Contents
@@ -74,3 +74,5 @@ Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memo
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
 > * [Testing](./bi-dataload-testing.md).
+> * [CSV extract](./bi-dataload-csv-extract.md).
+

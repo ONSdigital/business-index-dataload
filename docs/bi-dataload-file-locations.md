@@ -99,3 +99,4 @@
 > * [Step 2](./bi-dataload-step-2.md).
 > * [Step 3](./bi-dataload-step-3.md).
 > * [Testing](./bi-dataload-testing.md).
+> * [CSV extract](./bi-dataload-csv-extract.md).

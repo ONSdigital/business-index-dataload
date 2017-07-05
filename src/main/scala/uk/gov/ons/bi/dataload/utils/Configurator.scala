@@ -116,6 +116,8 @@ class AppConfig {
 
     lazy val prev = getConfigStr("prev", localConfig)
 
+    lazy val extract = getConfigStr("extract", localConfig)
+
     // files
 
     lazy val paye = getConfigStr("paye", localConfig)
@@ -142,6 +144,7 @@ class AppConfig {
          | dir = $dir,
          | work = $work,
          | prev = $prev,
+         | extract = $extract,
          | paye = $paye,
          | vat= $vat,
          | ch = $ch,
