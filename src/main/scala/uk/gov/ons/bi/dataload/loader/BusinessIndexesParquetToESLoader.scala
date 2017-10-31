@@ -5,8 +5,8 @@ import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils._
 
 /**
-  * Created by websc on 22/02/2017.
-  */
+ * Created by websc on 22/02/2017.
+ */
 object BusinessIndexesParquetToESLoader {
 
   def loadBIEntriesToES(ctxMgr: ContextMgr, appConfig: AppConfig) = {
@@ -17,7 +17,7 @@ object BusinessIndexesParquetToESLoader {
 
     val indexType = esConf.indexType
 
-     // read BI entries
+    // read BI entries
 
     val pqReader = new BIEntriesParquetReader(ctxMgr)
 
@@ -30,6 +30,6 @@ object BusinessIndexesParquetToESLoader {
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
-    biDf.saveToEs(s"$index/$indexType",extraEsConfig)
+    biDf.saveToEs(s"$index/$indexType", extraEsConfig)
   }
 }

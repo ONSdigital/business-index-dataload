@@ -1,8 +1,8 @@
 package uk.gov.ons.bi.dataload.utils
 
 /**
-  * Created by websc on 22/02/2017.
-  */
+ * Created by websc on 22/02/2017.
+ */
 
 object BandMappings {
 
@@ -24,7 +24,6 @@ object BandMappings {
       case x if x < 500 => "N"
       case _ => "O"
     }
-
 
   def turnoverBand(z: Option[Long]): Option[String] = z map {
     case x if x < 100 => "A"
@@ -48,6 +47,7 @@ object BandMappings {
       case _ => "?"
     } match {
       case Some("?") => None
-      case x => x}
+      case x => x
+    }
   }
 }

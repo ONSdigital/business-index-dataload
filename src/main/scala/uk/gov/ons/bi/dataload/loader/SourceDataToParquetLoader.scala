@@ -3,11 +3,11 @@ package uk.gov.ons.bi.dataload.loader
 import com.google.inject.Singleton
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.{ AppConfig, ContextMgr }
 
 /**
-  * Created by websc on 14/02/2017.
-  */
+ * Created by websc on 14/02/2017.
+ */
 
 @Singleton
 class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
@@ -46,7 +46,6 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     reader.writeParquet(data, targetFilePath)
   }
-
 
   def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig) = {
 

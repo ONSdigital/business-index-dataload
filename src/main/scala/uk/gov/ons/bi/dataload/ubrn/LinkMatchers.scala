@@ -10,10 +10,9 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 //import org.apache.spark.sql.expressions._
 //import org.apache.spark.sql.functions._
 
-
 /**
-  * Created by websc on 16/03/2017.
-  */
+ * Created by websc on 16/03/2017.
+ */
 
 case class LinkMatchResults(unmatchedOldLinks: DataFrame, unmatchedNewLinks: DataFrame, matched: DataFrame)
 
@@ -22,7 +21,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   val sc = ctxMgr.sc
   val sqlContext = ctxMgr.sqlContext
-
 
   def excludeMatches(oldLinks: DataFrame, newLinks: DataFrame, matched: DataFrame): LinkMatchResults = {
     // Exclude matched UBRNs from oldLinks, and exclude matched GIDs from newLinks.
@@ -49,8 +47,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     val matched: DataFrame =
       if (BiSparkDataFrames.isDfEmpty(oldLinks)) {
         BiSparkDataFrames.emptyMatchedLinkWithUbrnGidDf(ctxMgr)
-      }
-      else {
+      } else {
 
         // Set these each time
         oldLinks.registerTempTable("old_links")
@@ -76,7 +73,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     applySqlRule(matchQuery, oldLinks, newLinks)
   }
-
 
   def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
     // Different rule for each matching process
@@ -105,7 +101,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     // We therefore rank the old and new VATs (in order of VAT reference) within each UBRN or GID.
     // Then we take UBRN and GID for the first match only.
 
-
     val matchQuery =
       """
               SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
@@ -125,7 +120,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     applySqlRule(matchQuery, oldLinks, newLinks)
   }
-
 
   def getPayeMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
 
@@ -189,7 +183,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     chResults.unmatchedOldLinks.unpersist()
     chResults.unmatchedNewLinks.unpersist()
 
- /*
+    /*
     // Uncomment all this when VAT and PAYE rules restored  *** NEEDS HIVE CONTEXT!!! ***
 
     // Get records where VAT ref matches
@@ -219,10 +213,10 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     // Finally we should have:
     // - one sub-set of new links that we have matched, so they now have a UBRN:
     val withOldUbrn: DataFrame = chResults.matched
-                                          .unionAll(contentResults.matched)
+      .unionAll(contentResults.matched)
     // UNION with these when we restore the VAT and PAYE matching logic above
-      //.unionAll(vatResults.matched)
-      //.unionAll(payeResults.matched)
+    //.unionAll(vatResults.matched)
+    //.unionAll(payeResults.matched)
 
     withOldUbrn.cache()
 

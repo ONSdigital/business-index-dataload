@@ -1,22 +1,21 @@
 package uk.gov.ons.bi.dataload.model
 
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{ DataFrame, Row }
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
-  * Created by websc on 16/03/2017.
-  */
+ * Created by websc on 16/03/2017.
+ */
 object BiSparkDataFrames {
 
   def isDfEmpty(df: DataFrame): Boolean = {
     // If no first record, then it's empty
     Try {
       df.first()
-    }
-    match {
+    } match {
       case Success(t) => false
       case Failure(x) => true
     }
@@ -30,7 +29,7 @@ object BiSparkDataFrames {
     StructField("PAYE", ArrayType(StringType), true)
   ))
 
-  def emptyLinkWithUbrnDf(ctxMgr: ContextMgr):DataFrame  = {
+  def emptyLinkWithUbrnDf(ctxMgr: ContextMgr): DataFrame = {
     val sc = ctxMgr.sc
     val sqlContext = ctxMgr.sqlContext
     sqlContext.createDataFrame(sc.emptyRDD[Row], linkWithUbrnSchema)
@@ -45,7 +44,7 @@ object BiSparkDataFrames {
     StructField("PAYE", ArrayType(StringType), true)
   ))
 
-  def emptyMatchedLinkWithUbrnGidDf(ctxMgr: ContextMgr):DataFrame  = {
+  def emptyMatchedLinkWithUbrnGidDf(ctxMgr: ContextMgr): DataFrame = {
     val sc = ctxMgr.sc
     val sqlContext = ctxMgr.sqlContext
     sqlContext.createDataFrame(sc.emptyRDD[Row], matchedLinkWithUbrnGidSchema)
