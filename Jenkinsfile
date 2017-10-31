@@ -3,7 +3,6 @@
 
 pipeline {
     environment {
-        LIB_DIR = "ons.gov/businessIndex/$ENV/lib"
         OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
 
         RELEASE_TYPE = "PATCH"
@@ -55,18 +54,21 @@ pipeline {
                 colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
                 script {
                     env.NODE_STAGE = "Build"
-                    sh '''
-                        $SBT clean compile "project api" universal:packageBin coverage test coverageReport
-                    '''
+                    sh """
+                        $SBT clean compile "project load" coverage test coverageReport
+                    """
                     stash name: 'compiled'
                     if (BRANCH_NAME == BRANCH_DEV) {
                         env.DEPLOY_NAME = DEPLOY_DEV
+                        LIB_DIR = "ons.gov/businessIndex/${env.DEPLOY_NAME}/lib"
                     }
                     else if  (BRANCH_NAME == BRANCH_TEST) {
                         env.DEPLOY_NAME = DEPLOY_TEST
+                        LIB_DIR = "ons.gov/businessIndex/${env.DEPLOY_NAME}/lib"
                     }
                     else if (BRANCH_NAME == BRANCH_PROD) {
                         env.DEPLOY_NAME = DEPLOY_PROD
+                        LIB_DIR = "ons.gov/businessIndex/${env.DEPLOY_NAME}/lib"
                     }
                     else {
                         colourText("info", "Not a deployable Git banch!")
@@ -86,13 +88,13 @@ pipeline {
                         "Style" : {
                             colourText("info","Running style tests")
                             sh """
-                            $SBT scalastyleGenerateConfig
-                            $SBT scalastyle
-                        """
+                                $SBT scalastyleGenerateConfig
+                                $SBT scalastyle
+                            """
                         },
                         "Additional" : {
                             colourText("info","Running additional tests")
-                            sh "$SBT scapegoat"
+                            // sh "$SBT scapegoat"
                         }
                 )
             }
@@ -107,8 +109,8 @@ pipeline {
                     colourText("info","Generating reports for tests")
                     //   junit '**/target/test-reports/*.xml'
 
-                    step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.11/coverage-report/*.xml'])
-                    step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.11/scapegoat-report/scapegoat-scalastyle.xml'])
+                    step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.10/coverage-report/*.xml'])
+                    step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.10/scapegoat-report/scapegoat-scalastyle.xml'])
                 }
                 failure {
                     colourText("warn","Failed to retrieve reports.")
@@ -199,6 +201,14 @@ pipeline {
         }
 
         stage('Create Index - Dev') {
+            agent any
+            when {
+                anyOf {
+                    branch BRANCH_DEV
+                    branch BRANCH_TEST
+                    branch BRANCH_PROD
+                }
+            }
             steps {
                 colourText("info", 'Creating New Index.....')
                 createIndex()
