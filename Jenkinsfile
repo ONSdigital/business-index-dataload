@@ -2,7 +2,6 @@
 @Library('jenkins-pipeline-shared@feature/version') _
 
 pipeline {
-    agent any
     environment {
         LIB_DIR = "ons.gov/businessIndex/$ENV/lib"
         OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
