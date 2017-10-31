@@ -1,9 +1,8 @@
 package uk.gov.ons.bi.dataload.model
 
 /**
-  * Created by websc on 03/03/2017.
-  */
-
+ * Created by websc on 03/03/2017.
+ */
 
 object BiTypes {
   // UBRN is currently defined as a Long number, but this may change, so use a synonym

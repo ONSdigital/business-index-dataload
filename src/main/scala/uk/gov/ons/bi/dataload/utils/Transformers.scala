@@ -1,16 +1,15 @@
 package uk.gov.ons.bi.dataload.utils
 
-
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model._
 
 import scala.util.matching.Regex
-import scala.util.{Success, Try}
+import scala.util.{ Success, Try }
 
 /**
-  * Created by websc on 24/02/2017.
-  */
+ * Created by websc on 24/02/2017.
+ */
 object Transformers {
 
   // Convert the grouped UBRN + Lists into Business records
@@ -126,7 +125,6 @@ object Transformers {
     }
   }
 
-
   def getLegalStatus(br: Business): Option[String] = {
     // Extract potential values from VAT/PAYE records
     // Take first VAT/PAYE record (if any)
@@ -137,7 +135,7 @@ object Transformers {
       _.legalStatus.map(_.toString)
     }
     // If we only have a Company, we just give it a generic status of "1"
-    val ch: Option[String] = br.company.map {co: CompanyRec => "1"}
+    val ch: Option[String] = br.company.map { co: CompanyRec => "1" }
 
     // list in order of preference
     val candidates = Seq(ch, vat, paye)
@@ -150,7 +148,7 @@ object Transformers {
     // Maybe there are no VATs or no turnover values.
     // We want to return an Option on the sum of turnovers if they are present.
     // If there are no VAT recs, or no rutnovers, return None.
-    val turnovers: Seq[Long] = br.vat.map{ vatList =>
+    val turnovers: Seq[Long] = br.vat.map { vatList =>
       vatList.map(_.turnover)
     }.getOrElse(Nil).flatten
 
@@ -204,9 +202,9 @@ object Transformers {
       case _ => -1
     }
       .reverse match {
-      case Nil => None
-      case xs => xs.head._2
-    }
+        case Nil => None
+        case xs => xs.head._2
+      }
     // BI mapping expects an integer
     ju.map(_.toInt)
   }

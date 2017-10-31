@@ -40,9 +40,9 @@ lazy val Resolvers = Seq(
 )
 
 lazy val testSettings = Seq(
-  sourceDirectory in ITest := baseDirectory.value / "/test/it",
-  resourceDirectory in ITest := baseDirectory.value / "/test/resources",
-  scalaSource in ITest := baseDirectory.value / "test/it",
+  sourceDirectory in ITest := baseDirectory.value / "src/test/scala/it",
+  resourceDirectory in ITest := baseDirectory.value / "src/test/resources",
+  scalaSource in ITest := baseDirectory.value / "src/test/scala/it",
   // test setup
   parallelExecution in Test := false
 )

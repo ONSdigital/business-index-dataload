@@ -1,13 +1,13 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{max, monotonicallyIncreasingId}
+import org.apache.spark.sql.functions.{ max, monotonicallyIncreasingId }
 
-import scala.util.{Success, Try}
+import scala.util.{ Success, Try }
 
 /**
-  * Created by websc on 16/03/2017.
-  */
+ * Created by websc on 16/03/2017.
+ */
 object UbrnManager {
 
   val defaultBaseUbrn = 100000000000L
@@ -19,8 +19,7 @@ object UbrnManager {
     Try {
       val row = df.agg(max(df(ubrnColName))).collect.head
       row.getLong(0)
-    }
-    match {
+    } match {
       case Success(n: Long) => Some(n)
       case _ => Some(defaultBaseUbrn)
     }

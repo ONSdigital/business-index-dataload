@@ -2,11 +2,11 @@ package uk.gov.ons.bi.dataload.utils
 
 import org.joda.time.DateTime
 import org.scalatest._
-import uk.gov.ons.bi.dataload.model.{Business, CompanyRec, PayeRec, VatRec}
+import uk.gov.ons.bi.dataload.model.{ Business, CompanyRec, PayeRec, VatRec }
 
 /**
-  * Created by websc on 27/02/2017.
-  */
+ * Created by websc on 27/02/2017.
+ */
 
 class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
@@ -18,7 +18,6 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
   val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Post Code"),
     Some(2), Some(120.0D), Some(30.0D),
     Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some(1500))
-
 
   "A Transformer" should "get latest job figure from PAYE record" in {
 
@@ -149,7 +148,6 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
-
   "A Transformer" should "return all VAT references" in {
 
     val vat1 = fullVatRec
@@ -232,7 +230,6 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
     result should be(expected)
   }
-
 
   "A Transformer" should "return correct Company Name (from VAT record)" in {
 

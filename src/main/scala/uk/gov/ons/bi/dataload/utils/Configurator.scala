@@ -1,11 +1,11 @@
 package uk.gov.ons.bi.dataload.utils
 
 import com.google.inject.Singleton
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 /**
-  * Created by websc on 03/02/2017.
-  */
+ * Created by websc on 03/02/2017.
+ */
 @Singleton
 class AppConfig {
 
@@ -60,7 +60,7 @@ class AppConfig {
 
     val baseDir = getConfigStr("dir", onsDataConfig)
 
-    val linksDataConfig  = new {
+    val linksDataConfig = new {
 
       private val linksConfig = onsDataConfig.getConfig("links")
 
@@ -130,12 +130,11 @@ class AppConfig {
 
     lazy val tcn = getConfigStr("tcn", localConfig)
 
-
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.
     lazy val (workingDir, prevDir) =
-    if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
-    else (s"$dir/$work", s"$dir/$prev")
+      if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
+      else (s"$dir/$work", s"$dir/$prev")
 
     override def toString: String = {
       s"""[env = $env,
@@ -207,5 +206,4 @@ class AppConfig {
   }
 
 }
-
 

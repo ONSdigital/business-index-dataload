@@ -1,20 +1,18 @@
 package uk.gov.ons.bi.dataload.linker
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{ DataFrame, Row }
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
-
+import uk.gov.ons.bi.dataload.utils.{ AppConfig, ContextMgr, Transformers }
 
 /**
-  * Created by websc on 16/02/2017.
-  */
+ * Created by websc on 16/02/2017.
+ */
 object LinkedBusinessBuilder {
   // NOTE:
   // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
   // errors when there is a lot of nested RDD processing around here. Might be better in Spark 2.x?
-
 
   // This object contains Spark-specific code for processing RDDs and DataFrames.
   // Non-Spark transformations are in the separate Transformers object.
@@ -49,8 +47,10 @@ object LinkedBusinessBuilder {
 
   // ***************** Link UBRN to Company/VAT/PAYE data **************************
 
-  def getLinkedCompanyData(uwks: RDD[UbrnWithKey],
-                           appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+  def getLinkedCompanyData(
+    uwks: RDD[UbrnWithKey],
+    appConfig: AppConfig, ctxMgr: ContextMgr
+  ): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
@@ -61,15 +61,17 @@ object LinkedBusinessBuilder {
 
     val linkedData: RDD[UbrnWithData] = uwks.filter { r => r.src == CH }.map { r => (r.key, r) }
       .join(cos)
-      .map { case (key, (uwk, data))
-      => UbrnWithData(uwk.ubrn, uwk.src, data)
+      .map {
+        case (key, (uwk, data)) => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
 
     linkedData
   }
 
-  def getLinkedVatData(uwks: RDD[UbrnWithKey],
-                       appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+  def getLinkedVatData(
+    uwks: RDD[UbrnWithKey],
+    appConfig: AppConfig, ctxMgr: ContextMgr
+  ): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
@@ -81,15 +83,17 @@ object LinkedBusinessBuilder {
 
     val linkedData: RDD[UbrnWithData] = uwks.filter { r => r.src == VAT }.map { r => (r.key, r) }
       .join(vats)
-      .map { case (key, (uwk, data))
-      => UbrnWithData(uwk.ubrn, uwk.src, data)
+      .map {
+        case (key, (uwk, data)) => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
 
     linkedData
   }
 
-  def getLinkedPayeData(uwks: RDD[UbrnWithKey],
-                        appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithData] = {
+  def getLinkedPayeData(
+    uwks: RDD[UbrnWithKey],
+    appConfig: AppConfig, ctxMgr: ContextMgr
+  ): RDD[UbrnWithData] = {
 
     // Company/VAT/PAYE: format data as (key, data) pairs so we can use RDD joins below
 
@@ -100,13 +104,12 @@ object LinkedBusinessBuilder {
 
     val linkedData: RDD[UbrnWithData] = uwks.filter { r => r.src == PAYE }.map { r => (r.key, r) }
       .join(payes)
-      .map { case (key, (uwk, data))
-      => UbrnWithData(uwk.ubrn, uwk.src, data)
+      .map {
+        case (key, (uwk, data)) => UbrnWithData(uwk.ubrn, uwk.src, data)
       }
 
     linkedData
   }
-
 
   def getLinksAsUwks(appConfig: AppConfig, ctxMgr: ContextMgr): RDD[UbrnWithKey] = {
     // Load Links from Parquet

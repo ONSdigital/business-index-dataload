@@ -4,16 +4,16 @@ import com.google.inject.Singleton
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.{ AppConfig, ContextMgr }
 
 /**
-  * Created by websc on 16/02/2017.
-  */
+ * Created by websc on 16/02/2017.
+ */
 @Singleton
 class ParquetReader(ctxMgr: ContextMgr)
-  extends BIDataReader {
+    extends BIDataReader {
 
-  val sqlContext =  ctxMgr.sqlContext
+  val sqlContext = ctxMgr.sqlContext
 
   override def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.parquet(srcFilePath)
@@ -60,7 +60,8 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
         | SICCodeSicText_1,
         | RegAddressPostCode
         |FROM temp_comp
-        |WHERE CompanyNumber IS NOT NULL""".stripMargin)
+        |WHERE CompanyNumber IS NOT NULL""".stripMargin
+    )
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
@@ -94,14 +95,14 @@ class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxM
       $"VAT",
       $"PAYE"
     ).map { row =>
-      val ubrn = if (row.isNullAt(0)) 1L else row.getLong(0)
-      // CH is currently provided as an array but we only want the first entry (if any)
-      val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
-      val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
-      val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
+        val ubrn = if (row.isNullAt(0)) 1L else row.getLong(0)
+        // CH is currently provided as an array but we only want the first entry (if any)
+        val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
+        val vat: Option[Seq[String]] = if (row.isNullAt(2)) None else Option(row.getSeq[String](2))
+        val paye: Option[Seq[String]] = if (row.isNullAt(3)) None else Option(row.getSeq[String](3))
 
-      LinkRec(ubrn, ch, vat, paye)
-    }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
+        LinkRec(ubrn, ch, vat, paye)
+      }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
 
   }
 
@@ -142,7 +143,8 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.stc AS INT) AS stc,
         | sic_lookup.SIC07
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
-        |WHERE paye.payeref IS NOT NULL""".stripMargin)
+        |WHERE paye.payeref IS NOT NULL""".stripMargin
+    )
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
 
@@ -192,7 +194,8 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |status,
         |CAST(turnover AS LONG) AS turnover
         |FROM temp_vat
-        |WHERE vatref IS NOT NULL""".stripMargin)
+        |WHERE vatref IS NOT NULL""".stripMargin
+    )
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
