@@ -106,7 +106,7 @@ pipeline {
                     }
                 }
                 success {
-                    colourText("info","Generating reports for tests")
+                    colourText("success","Generated reports for tests")
                     //   junit '**/target/test-reports/*.xml'
 
                     step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.10/coverage-report/*.xml'])
