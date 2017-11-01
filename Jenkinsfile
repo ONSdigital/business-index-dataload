@@ -83,7 +83,6 @@ pipeline {
                 parallel (
                         "Unit" :  {
                             colourText("info","Running unit tests")
-                            // sh "$SBT test"
                         },
                         "Style" : {
                             colourText("info","Running style tests")
@@ -106,7 +105,7 @@ pipeline {
                     }
                 }
                 success {
-                    colourText("success","Generated reports for tests")
+                    colourText("info","Generating reports for tests")
                     //   junit '**/target/test-reports/*.xml'
 
                     step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.10/coverage-report/*.xml'])
