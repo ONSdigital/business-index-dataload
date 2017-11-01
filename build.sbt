@@ -2,8 +2,14 @@ import com.typesafe.config.ConfigFactory
 import sbtassembly.AssemblyPlugin.autoImport._
 
 
-lazy val configPath = System.getProperty("config.path")
-lazy val appConfig = ConfigFactory.parseFile(new File( "src/main/resources/application.conf")).resolve().getConfig("bi-dataload")
+lazy val applicationConfig = settingKey[(Boolean, String, String, String, String)]("config values")
+
+applicationConfig := {
+  val conf = ConfigFactory.parseFile((resourceDirectory in Compile).value / "application.conf").resolve()
+    .getConfig("bi-dataload.artifactory")
+  (conf.getBoolean("publish-init"), conf.getString("publish-repository"), conf.getString("host"),
+    conf.getString("user"), conf.getString("password"))
+}
 
 // key-bindings
 lazy val ITest = config("it") extend Test
@@ -24,12 +30,6 @@ lazy val Constant = new {
   val organisation = "ons"
   val team = "bi"
   val local = "mac"
-
-  val publishTrigger: Boolean = appConfig.getBoolean("artifactory.publish-init")
-  val publishRepo: String = appConfig.getString("artifactory.publish-repository")
-  val artifactoryHost: String = appConfig.getString("artifactory.host")
-  val artifactoryUser: String = appConfig.getString("artifactory.user")
-  val artifactoryPassword: String = appConfig.getString("artifactory.password")
 }
 
 
@@ -52,8 +52,9 @@ lazy val noPublishSettings = Seq(
   publishLocal := {}
 )
 
+//@TODO - unify all map job in one + remove ._?
 lazy val publishingSettings = Seq(
-  publishArtifact := Constant.publishTrigger,
+  publishArtifact := applicationConfig.value._1,
   publishMavenStyle := false,
   checksums in publish := Nil,
   publishArtifact in Test := false,
@@ -64,7 +65,7 @@ lazy val publishingSettings = Seq(
     if (System.getProperty("os.name").toLowerCase.startsWith(Constant.local) )
       Some(Resolver.file("file", new File(s"${System.getProperty("user.home").toLowerCase}/Desktop/")))
     else
-      Some("Artifactory Realm" at Constant.publishRepo)
+       Some("Artifactory Realm" at applicationConfig.value._2)
   },
   artifact in (Compile, assembly) ~= { art =>
     art.copy(`type` = "jar", `classifier` = Some("assembly"))
@@ -72,7 +73,7 @@ lazy val publishingSettings = Seq(
   artifactName := { (sv: ScalaVersion, module: ModuleID, artefact: Artifact) =>
     module.organization + "_" + artefact.name + "-" + artefact.classifier.getOrElse("package") + "-" + module.revision + "." + artefact.extension
   },
-  credentials += Credentials("Artifactory Realm", Constant.artifactoryHost, Constant.artifactoryUser, Constant.artifactoryPassword),
+  credentials += (applicationConfig map { case (_, _, x, y, z) => Credentials("Artifactory Realm", x, y, z) }).value,
   releaseTagComment := s"Releasing $name ${(version in ThisBuild).value}",
   releaseCommitMessage := s"Setting Release tag to ${(version in ThisBuild).value}",
   // no commit - ignore zip and other package files
@@ -105,7 +106,8 @@ lazy val commonSettings = Seq (
     //"-Ywarn-unused-import", //  Warn when imports are unused (don't want IntelliJ to do it automatically)
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
-  resolvers ++= Resolvers ++ Seq("Artifactory" at s"${Constant.publishRepo}"),
+  resolvers ++= Resolvers ++ Seq("Artifactory" at s"${applicationConfig.value._2}"),
+//  resolvers ++= Resolvers ++ Seq("Artifactory" at s"${(applicationConfig map { case (_, x, _, _, _) => x }).value}"),
   coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*"
 )
 

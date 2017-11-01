@@ -1,10 +1,10 @@
 //sbt defaults
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.14")
 
-
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.9.3")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")
+
 
 // Build
 
@@ -29,5 +29,7 @@ addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 
 
 // test
+
+//addSbtPlugin("com.sksamuel.scapegoat" %% "sbt-scapegoat" % "1.0.4")
 
 addSbtPlugin("org.scalastyle" % "scalastyle-sbt-plugin" % "0.8.0")
