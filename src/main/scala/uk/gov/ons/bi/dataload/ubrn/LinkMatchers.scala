@@ -22,7 +22,7 @@ case class LinkMatchResults(unmatchedOldLinks: DataFrame, unmatchedNewLinks: Dat
 class LinkMatcher(ctxMgr: ContextMgr) {
 
   val sc = ctxMgr.sc
-  val sqlContext = ctxMgr.sqlContext
+  val sqlContext = ctxMgr.spark
 
 
   def excludeMatches(oldLinks: DataFrame, newLinks: DataFrame, matched: DataFrame): LinkMatchResults = {

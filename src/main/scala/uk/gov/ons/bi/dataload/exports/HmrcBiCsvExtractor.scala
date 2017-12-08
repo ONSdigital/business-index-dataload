@@ -17,7 +17,7 @@ object HmrcBiCsvExtractor {
     val log = ctxMgr.log
     log.setLevel(Level.INFO)
     val sc = ctxMgr.sc
-    val sqlContext = ctxMgr.sqlContext
+    val sqlContext = ctxMgr.spark
     import sqlContext.implicits._
 
     val workingDir = appConfig.AppDataConfig.workingDir

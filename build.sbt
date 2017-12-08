@@ -1,20 +1,21 @@
 name := """business-index-dataload"""
 
-version := "1.4"
+version := "1.5"
 
 // Building with Scala 2.10 because Cloudera Spark 1.6.0 is still on Scala 2.10
-scalaVersion := "2.10.6"
+//Now updating to Scala 2.11 as updating to Spark 2.1.0
+scalaVersion := "2.11.8"
 
 // Change this to another test framework if you prefer
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 lazy val Versions = new {
-  val spark = "1.6.0"
-  val sparkCsv = "1.5.0"
+  val spark = "2.1.0"
+  //val sparkCsv = "1.5.0"
   val joda = "2.9.4"
   val jodaConvert = "1.8.1"
   val json4s = "3.5.0"
-  val es = "2.4.4"
+  val es = "6.0.0"
 }
 
 libraryDependencies ++= Seq(
@@ -24,7 +25,8 @@ libraryDependencies ++= Seq(
 //  "org.apache.spark" %% "spark-hive" % Versions.spark % "provided",
   "joda-time" % "joda-time" % Versions.joda,
   "org.joda" % "joda-convert" % Versions.jodaConvert,
-  "org.elasticsearch" %% "elasticsearch-spark" % Versions.es % "provided" excludeAll ExclusionRule(organization = "javax.servlet")
+  "com.typesafe" % "config" % "1.3.2",
+"org.elasticsearch" %% "elasticsearch-spark-20" % Versions.es  excludeAll ExclusionRule(organization = "javax.servlet")
 )
 
 // ============

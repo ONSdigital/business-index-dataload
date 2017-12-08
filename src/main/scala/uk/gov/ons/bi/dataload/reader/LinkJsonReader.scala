@@ -9,7 +9,7 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 class LinkJsonReader (ctxMgr: ContextMgr)
   extends BIDataReader {
 
-  val sqlContext = ctxMgr.sqlContext
+  val sqlContext = ctxMgr.spark
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.json(srcFilePath)

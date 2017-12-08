@@ -1,8 +1,8 @@
 package uk.gov.ons.bi.dataload.reader
 
 import com.google.inject.Singleton
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.rdd._
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
@@ -12,7 +12,7 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 @Singleton
 class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
 
-  val sqlContext =  ctxMgr.sqlContext
+  val sqlContext =  ctxMgr.spark
 
   override def readFromSourceFile(srcFilePath: String): DataFrame = {
     sqlContext.read.parquet(srcFilePath)
@@ -46,7 +46,8 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
     val df = getDataFrameFromParquet(appConfig, CH)
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
-    df.registerTempTable("temp_comp")
+    //df.registerTempTable("temp_comp")
+    df.createOrReplaceTempView("temp_comp")
 
     // Only interested in a subset of columns. SQL is easier to maintain here.
 
@@ -59,7 +60,7 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
         | SICCodeSicText_1,
         | RegAddressPostCode
         |FROM temp_comp
-        |WHERE CompanyNumber IS NOT NULL""".stripMargin)
+        |WHERE CompanyNumber IS NOT NULL""".stripMargin).rdd
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
@@ -72,7 +73,6 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
 
       (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode))
     }
-
   }
 }
 
@@ -92,7 +92,7 @@ class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxM
       $"CH",
       $"VAT",
       $"PAYE"
-    ).map { row =>
+    ).rdd.map { row =>
       val ubrn = if (row.isNullAt(0)) 1L else row.getLong(0)
       // CH is currently provided as an array but we only want the first entry (if any)
       val ch: Option[String] = if (row.isNullAt(1)) None else row.getSeq[String](1).headOption
@@ -101,9 +101,7 @@ class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxM
 
       LinkRec(ubrn, ch, vat, paye)
     }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
-
   }
-
 }
 
 @Singleton
@@ -142,7 +140,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | sic_lookup.SIC07,
         | paye.deathcode
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
-        |WHERE paye.payeref IS NOT NULL""".stripMargin)
+        |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
 
@@ -196,7 +194,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |CAST(turnover AS LONG) AS turnover,
         |CAST (deathcode AS STRING) AS deathcode
         |FROM temp_vat
-        |WHERE vatref IS NOT NULL""".stripMargin)
+        |WHERE vatref IS NOT NULL""".stripMargin).rdd
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>

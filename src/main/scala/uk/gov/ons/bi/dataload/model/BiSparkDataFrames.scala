@@ -32,7 +32,7 @@ object BiSparkDataFrames {
 
   def emptyLinkWithUbrnDf(ctxMgr: ContextMgr):DataFrame  = {
     val sc = ctxMgr.sc
-    val sqlContext = ctxMgr.sqlContext
+    val sqlContext = ctxMgr.spark
     sqlContext.createDataFrame(sc.emptyRDD[Row], linkWithUbrnSchema)
   }
 
@@ -47,7 +47,7 @@ object BiSparkDataFrames {
 
   def emptyMatchedLinkWithUbrnGidDf(ctxMgr: ContextMgr):DataFrame  = {
     val sc = ctxMgr.sc
-    val sqlContext = ctxMgr.sqlContext
+    val sqlContext = ctxMgr.spark
     sqlContext.createDataFrame(sc.emptyRDD[Row], matchedLinkWithUbrnGidSchema)
   }
 

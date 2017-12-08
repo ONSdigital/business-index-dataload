@@ -15,7 +15,7 @@ class PreviousLinkStore(ctxMgr: ContextMgr)
   extends BIDataReader {
 
   val sc = ctxMgr.sc
-  val sqlContext = ctxMgr.sqlContext
+  val sqlContext = ctxMgr.spark
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
     // If Prev Links not found, returns an empty DataFrame with same schema

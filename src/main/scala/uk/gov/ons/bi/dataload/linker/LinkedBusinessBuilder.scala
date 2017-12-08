@@ -31,11 +31,21 @@ object LinkedBusinessBuilder {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
-    val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
+    //Seems to be fixed in Spark 2.1.0, can now use toDF to convert directly from RDD[BusinessIndex] to DataFrame however previous method no longer workss
 
-    val sqc = ctxMgr.sqlContext
+    //val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
 
-    val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
+    val sqc = ctxMgr.spark
+    import sqc.implicits._
+    //val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
+
+    val biDf: DataFrame = biRdd.toDF
+
+    // Add id field and rename ubrn to UPRN
+    val biDf2: DataFrame = biDf.withColumn("id", $"ubrn").withColumnRenamed("ubrn", "UPRN")
+
+    // Reorder the fields into the correct order
+    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "TurnoverBand", "EmploymentBand", "CompanyNo", "VatRefs", "PayeRefs" )
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
@@ -44,7 +54,7 @@ object LinkedBusinessBuilder {
     val parquetBiFile = appDataConfig.bi
     val biFile = s"$workDir/$parquetBiFile"
 
-    biDf.write.mode("overwrite").parquet(biFile)
+    biDf3.write.mode("overwrite").parquet(biFile)
   }
 
   // ***************** Link UBRN to Company/VAT/PAYE data **************************

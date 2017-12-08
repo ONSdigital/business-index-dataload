@@ -27,6 +27,8 @@ class AppConfig {
 
     private val localConfig = root.getConfig("ext-data")
 
+    lazy val env = getConfigStr("env", localConfig)
+
     lazy val dir = getConfigStr("dir", localConfig)
 
     lazy val paye = getConfigStr("paye", localConfig)
@@ -42,7 +44,8 @@ class AppConfig {
     lazy val vatDir = getConfigStr("vat-dir", localConfig)
 
     override def toString: String = {
-      s"""[dir = $dir,
+      s"""[env = $env
+         | dir = $dir,
          | paye = $paye,
          | vat= $vat,
          | ch = $ch,
@@ -67,7 +70,8 @@ class AppConfig {
       // Links dir is below ONS data dir
       private val localDir = getConfigStr("dir", linksConfig)
       // We provide the full path
-      val dir = s"$baseDir/$localDir"
+      //val dir = s"/$baseDir/$localDir" This is the correct version but we are substituting it so that we can use the /user/bi-dev-ci directory
+      val dir = s"/$localDir" // Incorrect value, replace with version above once /dev/ons.gov/businessIndex/links exists
 
       val json = getConfigStr("json", linksConfig)
 
@@ -85,7 +89,7 @@ class AppConfig {
       // Lookups dir is below ONS data dir
       private val localDir = getConfigStr("dir", lookupsConfig)
       // We provide the full path
-      val dir = s"$baseDir/$localDir"
+      val dir = s"/$baseDir/$localDir"
 
       val tcnToSic = getConfigStr("tcn-to-sic", lookupsConfig)
 
@@ -136,7 +140,7 @@ class AppConfig {
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.
     lazy val (workingDir, prevDir) =
-    if (env != "") (s"$dir/$env/$work", s"$dir/$env/$prev")
+    if (env != "") (s"/$env/$dir/$work", s"/$env/$dir/$prev")
     else (s"$dir/$work", s"$dir/$prev")
 
     override def toString: String = {

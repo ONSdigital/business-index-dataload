@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload
 
 
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.ubrn._
@@ -31,16 +32,18 @@ trait DataloadApp extends App {
 }
 
 object SourceDataToParquetApp extends DataloadApp {
-  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet")
-  val ctxMgr = new ContextMgr(sparkConf)
+  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet")
+  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Load business data files to Parquet").enableHiveSupport.getOrCreate
+  val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
   sourceDataLoader.loadSourceBusinessDataToParquet(appConfig)
 }
 
 object LinkDataApp extends DataloadApp {
-  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index")
-  val ctxMgr = new ContextMgr(sparkConf)
+  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index")
+  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Link data for Business Index").enableHiveSupport.getOrCreate
+  val ctxMgr = new ContextMgr(sparkSess)
   // Use an object because defining builder as a class causes weird Spark errors here.
   // Pass context stuff explicitly to builder method.
   LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
@@ -60,32 +63,43 @@ object LoadBiToEsApp extends DataloadApp {
   */
 
   // Need to configure ES interface on SparkConf, so need to build SparkConf here.
+  // In Spark these configurations need to be added to the SparkSession
 
   val sparkConfigInfo = appConfig.SparkConfigInfo
-  val sparkConf = new SparkConf().setAppName(sparkConfigInfo.appName)
-  sparkConf.set("spark.serializer", sparkConfigInfo.serializer)
-
   val esConfig = appConfig.ESConfig
 
-  sparkConf.set("es.nodes", esConfig.nodes)
+  //val sparkConf = new SparkConf().setAppName(sparkConfigInfo.appName)
+  val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+    .config("spark.serializer", sparkConfigInfo.serializer)
+    .config("es.nodes", esConfig.nodes)
+    .config("es.port", esConfig.port.toString)
+    .config("es.net.http.auth.user", esConfig.esUser)
+    .config("es.net.http.auth.pass", esConfig.esPass)
+    .config("es.index.auto.create", esConfig.autocreate)
+    .getOrCreate
+  //sparkConf.set("spark.serializer", sparkConfigInfo.serializer)
+  //val esConfig = appConfig.ESConfig
+
+  /*sparkConf.set("es.nodes", esConfig.nodes)
   sparkConf.set("es.port", esConfig.port.toString)
   sparkConf.set("es.net.http.auth.user", esConfig.esUser)
-  sparkConf.set("es.net.http.auth.pass", esConfig.esPass)
+  sparkConf.set("es.net.http.auth.pass", esConfig.esPass)*/
 
   // decides either if ES index should be created manually or not
-  sparkConf.set("es.index.auto.create", esConfig.autocreate)
+  //sparkConf.set("es.index.auto.create", esConfig.autocreate)
 
   // Now we've built the ES SparkConf, let's go to work:
   // Set up the context manager (singleton holding our Spark and SQL/Hive contexts)
-  val ctxMgr = new ContextMgr(sparkConf)
+  val ctxMgr = new ContextMgr(sparkSess)
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 
 }
 
 object PreprocessLinksApp extends DataloadApp {
   // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
-  val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data")
-  val ctxMgr = new ContextMgr(sparkConf)
+  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data")
+  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  val ctxMgr = new ContextMgr(sparkSess)
   val lpp = new LinksPreprocessor(ctxMgr)
   lpp.loadAndPreprocessLinks(appConfig)
 }

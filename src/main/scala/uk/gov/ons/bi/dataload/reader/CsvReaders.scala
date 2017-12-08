@@ -10,7 +10,7 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
   extends BIDataReader {
 
-  val sqlContext = ctxMgr.sqlContext
+  val sqlContext = ctxMgr.spark
   val log =  ctxMgr.log
   
   def fixSchema(df: DataFrame): DataFrame = {

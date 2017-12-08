@@ -3,11 +3,12 @@ package uk.gov.ons.bi.dataload.ubrn
 import java.util.UUID
 
 import com.google.inject.Singleton
-import org.apache.spark.sql.{DataFrame, UserDefinedFunction}
+import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.sql.expressions.UserDefinedFunction
 
 /**
   * Created by websc on 03/03/2017.

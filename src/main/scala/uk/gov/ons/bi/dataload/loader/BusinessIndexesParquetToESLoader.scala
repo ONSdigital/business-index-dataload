@@ -1,8 +1,8 @@
 package uk.gov.ons.bi.dataload.loader
 
-import org.elasticsearch.spark.sql._
-import uk.gov.ons.bi.dataload.reader._
+import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils._
+import org.elasticsearch.spark.sql._
 
 /**
   * Created by websc on 22/02/2017.
