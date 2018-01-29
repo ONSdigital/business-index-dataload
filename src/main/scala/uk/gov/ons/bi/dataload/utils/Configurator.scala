@@ -183,6 +183,8 @@ class AppConfig {
 
     lazy val wanOnly = getConfigStr("wan-only", localConfig)
 
+    lazy val parquetDir = getConfigStr("parquet-dir", localConfig)
+
     override def toString: String = {
       s"""[nodes = $nodes,
          | port = $port,
@@ -191,7 +193,8 @@ class AppConfig {
          | index = $index,
          | index-type = $indexType,
          | autocreate = $autocreate,
-         | wanOnly = $wanOnly
+         | wanOnly = $wanOnly,
+         | parquetDir=$parquetDir
          | ]
         """.stripMargin
     }
