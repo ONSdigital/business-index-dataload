@@ -42,10 +42,10 @@ object LinkedBusinessBuilder {
     val biDf: DataFrame = biRdd.toDF
 
     // Add id field and rename ubrn to UPRN
-    val biDf2: DataFrame = biDf.withColumn("id", $"ubrn").withColumnRenamed("ubrn", "UPRN")
+    val biDf2: DataFrame = biDf.withColumn("id", $"ubrn").withColumnRenamed("ubrn", "UPRN").withColumnRenamed("TurnoverBand", "Turnover").withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
-    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "TurnoverBand", "EmploymentBand", "CompanyNo", "VatRefs", "PayeRefs" )
+    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 

@@ -194,7 +194,7 @@ class AppConfig {
          | index-type = $indexType,
          | autocreate = $autocreate,
          | wanOnly = $wanOnly,
-         | parquetDir=$parquetDir
+         | parquetDir = $parquetDir
          | ]
         """.stripMargin
     }
