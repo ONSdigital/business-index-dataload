@@ -1,7 +1,6 @@
 package uk.gov.ons.bi.dataload
 
 
-import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
@@ -32,7 +31,6 @@ trait DataloadApp extends App {
 }
 
 object SourceDataToParquetApp extends DataloadApp {
-  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Load business data files to Parquet")
   val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Load business data files to Parquet").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
@@ -41,7 +39,6 @@ object SourceDataToParquetApp extends DataloadApp {
 }
 
 object LinkDataApp extends DataloadApp {
-  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Link data for Business Index")
   val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Link data for Business Index").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   // Use an object because defining builder as a class causes weird Spark errors here.
@@ -68,7 +65,6 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  //val sparkConf = new SparkConf().setAppName(sparkConfigInfo.appName)
   val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
@@ -97,7 +93,6 @@ object LoadBiToEsApp extends DataloadApp {
 
 object PreprocessLinksApp extends DataloadApp {
   // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
-  //val sparkConf = new SparkConf().setAppName("ONS BI Dataload: Apply UBRN rules to Link data")
   val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   val lpp = new LinksPreprocessor(ctxMgr)
