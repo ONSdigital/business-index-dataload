@@ -3,8 +3,7 @@ package uk.gov.ons.bi.dataload.loader
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils._
 import org.elasticsearch.spark.sql._
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+
 
 /**
   * Created by websc on 22/02/2017.
@@ -35,13 +34,9 @@ object BusinessIndexesParquetToESLoader {
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
     // Create a timestamp to use with the ElasticSearch output file
-    val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
-    val now = DateTime.now()
-
-    val ts = now.toString(fmt)
 
     //Write the dataframe out to a file in HDFS with a timestamp in the name
-    biDf.write.parquet(s"$parquetDir$ts")
+    biDf.write.mode("overwrite").parquet(s"$parquetDir")
 
     biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }
