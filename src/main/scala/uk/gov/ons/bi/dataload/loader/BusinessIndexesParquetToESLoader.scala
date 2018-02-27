@@ -33,8 +33,6 @@ object BusinessIndexesParquetToESLoader {
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
-    // Create a timestamp to use with the ElasticSearch output file
-
     //Write the dataframe out to a file in HDFS with a timestamp in the name
     biDf.write.mode("overwrite").parquet(s"$parquetDir")
 
