@@ -35,8 +35,8 @@ object LinkedBusinessBuilder {
 
     //val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
 
-    val sqc = ctxMgr.spark
-    import sqc.implicits._
+    val spark = ctxMgr.spark
+    import spark.implicits._
     //val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
 
     val biDf: DataFrame = biRdd.toDF

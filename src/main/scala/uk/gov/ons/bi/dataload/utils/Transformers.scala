@@ -4,7 +4,6 @@ package uk.gov.ons.bi.dataload.utils
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import uk.gov.ons.bi.dataload.model._
-
 import scala.util.matching.Regex
 import scala.util.{Success, Try}
 

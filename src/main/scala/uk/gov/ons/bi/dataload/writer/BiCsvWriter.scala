@@ -1,7 +1,6 @@
 package uk.gov.ons.bi.dataload.writer
 
 import org.apache.spark.sql.DataFrame
-import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 /**
   * Created by websc on 29/06/2017.
@@ -18,12 +17,11 @@ object BiCsvWriter {
                     else  df
 
     outputDf.write.mode("overwrite")
-        .format("com.databricks.spark.csv")
         .option("header", "true")
         .option("quote","\"")
         .option("quoteMode","ALL")
         .option("nullValue","")
-        .save(outputFile)
+        .csv(outputFile)
 
   }
 }

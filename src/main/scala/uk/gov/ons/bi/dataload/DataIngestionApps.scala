@@ -59,8 +59,7 @@ object LoadBiToEsApp extends DataloadApp {
     target/scala-2.10/business-index-dataload_2.10-1.0.jar
   */
 
-  // Need to configure ES interface on SparkConf, so need to build SparkConf here.
-  // In Spark these configurations need to be added to the SparkSession
+  // Need to configure ES interface on SparkSession, so need to build SparkSession here.
 
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
@@ -73,19 +72,12 @@ object LoadBiToEsApp extends DataloadApp {
     .config("es.net.http.auth.pass", esConfig.esPass)
     .config("es.index.auto.create", esConfig.autocreate)
     .getOrCreate
-  //sparkConf.set("spark.serializer", sparkConfigInfo.serializer)
-  //val esConfig = appConfig.ESConfig
 
-  /*sparkConf.set("es.nodes", esConfig.nodes)
-  sparkConf.set("es.port", esConfig.port.toString)
-  sparkConf.set("es.net.http.auth.user", esConfig.esUser)
-  sparkConf.set("es.net.http.auth.pass", esConfig.esPass)*/
+  // this line decides either if ES index should be created manually or not
+  // config("es.index.auto.create", esConfig.autocreate)
 
-  // decides either if ES index should be created manually or not
-  //sparkConf.set("es.index.auto.create", esConfig.autocreate)
-
-  // Now we've built the ES SparkConf, let's go to work:
-  // Set up the context manager (singleton holding our Spark and SQL/Hive contexts)
+  // Now we've built the ES SparkSession, let's go to work:
+  // Set up the context manager (singleton holding our SparkSession)
   val ctxMgr = new ContextMgr(sparkSess)
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 

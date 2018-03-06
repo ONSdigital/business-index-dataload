@@ -1,7 +1,7 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{max, monotonicallyIncreasingId}
+import org.apache.spark.sql.functions.{max, monotonically_increasing_id}
 
 import scala.util.{Success, Try}
 
@@ -10,7 +10,7 @@ import scala.util.{Success, Try}
   */
 object UbrnManager {
 
-  val defaultBaseUbrn = 100000000000L
+  val defaultBaseUbrn = 1000000000000000L
   val defaultUbrnColName = "UBRN"
 
   def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
@@ -40,7 +40,7 @@ object UbrnManager {
     val df1partition = df.repartition(1)
 
     // Now add the new generated UBRN column and sequence value
-    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, monotonicallyIncreasingId + base)
+    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, monotonically_increasing_id() + base)
 
     // Repartition back to original num partitions (more data shuffling)
     df1partWithUbrn.repartition(numPartitions)

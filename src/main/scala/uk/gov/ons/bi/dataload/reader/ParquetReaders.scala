@@ -12,10 +12,10 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 @Singleton
 class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
 
-  val sqlContext =  ctxMgr.spark
+  val spark =  ctxMgr.spark
 
   override def readFromSourceFile(srcFilePath: String): DataFrame = {
-    sqlContext.read.parquet(srcFilePath)
+    spark.read.parquet(srcFilePath)
   }
 
   def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
@@ -51,7 +51,7 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
 
     // Only interested in a subset of columns. SQL is easier to maintain here.
 
-    val extracted = sqlContext.sql(
+    val extracted = spark.sql(
       """
         |SELECT
         | CompanyNumber,
@@ -80,7 +80,7 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
 class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
 
   // Need these for DF/SQL ops
-  import sqlContext.implicits._
+  import spark.implicits._
 
   def loadFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
@@ -118,13 +118,13 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 
     // Only interested in a subset of columns
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
-    payeDf.registerTempTable("paye")
+    payeDf.createOrReplaceTempView("paye")
 
     // lookup columns are currently uppercase i.e. TCN and SIC07
     // lookup columns are integers, but PAYE columns are strings.
-    lookupDf.registerTempTable("sic_lookup")
+    lookupDf.createOrReplaceTempView("sic_lookup")
 
-    val extracted = sqlContext.sql(
+    val extracted = spark.sql(
       """
         |SELECT
         |CAST(paye.payeref AS STRING) AS payeref,
@@ -183,8 +183,8 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
     val df = getDataFrameFromParquet(appConfig, VAT)
 
     // Only interested in a subset of columns. SQL is easier to maintain here.
-    df.registerTempTable("temp_vat")
-    val extracted = sqlContext.sql(
+    df.createOrReplaceTempView("temp_vat")
+    val extracted = spark.sql(
       """
         |SELECT CAST(vatref AS LONG) AS vatref,
         |name1,
@@ -230,7 +230,7 @@ class BIEntriesParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: C
 
     val dataFile = s"$workingDir/$biData"
 
-    sqlContext.read.parquet(dataFile)
+    spark.read.parquet(dataFile)
   }
 }
 

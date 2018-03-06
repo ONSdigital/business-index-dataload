@@ -32,8 +32,8 @@ object BiSparkDataFrames {
 
   def emptyLinkWithUbrnDf(ctxMgr: ContextMgr):DataFrame  = {
     val sc = ctxMgr.sc
-    val sqlContext = ctxMgr.spark
-    sqlContext.createDataFrame(sc.emptyRDD[Row], linkWithUbrnSchema)
+    val spark = ctxMgr.spark
+    spark.createDataFrame(sc.emptyRDD[Row], linkWithUbrnSchema)
   }
 
   // DataFrame schema for legal unit ("link") with UBRN and Group ID
@@ -47,8 +47,8 @@ object BiSparkDataFrames {
 
   def emptyMatchedLinkWithUbrnGidDf(ctxMgr: ContextMgr):DataFrame  = {
     val sc = ctxMgr.sc
-    val sqlContext = ctxMgr.spark
-    sqlContext.createDataFrame(sc.emptyRDD[Row], matchedLinkWithUbrnGidSchema)
+    val spark = ctxMgr.spark
+    spark.createDataFrame(sc.emptyRDD[Row], matchedLinkWithUbrnGidSchema)
   }
 
   // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.

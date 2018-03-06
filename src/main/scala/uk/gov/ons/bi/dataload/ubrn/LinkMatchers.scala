@@ -7,9 +7,7 @@ import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 // HiveContext will be needed for fancy SQL in PAYE and VAT matching rules
-//import org.apache.spark.sql.hive.HiveContext
-//import org.apache.spark.sql.expressions._
-//import org.apache.spark.sql.functions._
+
 
 
 /**
@@ -22,7 +20,7 @@ case class LinkMatchResults(unmatchedOldLinks: DataFrame, unmatchedNewLinks: Dat
 class LinkMatcher(ctxMgr: ContextMgr) {
 
   val sc = ctxMgr.sc
-  val sqlContext = ctxMgr.spark
+  val spark = ctxMgr.spark
 
 
   def excludeMatches(oldLinks: DataFrame, newLinks: DataFrame, matched: DataFrame): LinkMatchResults = {
@@ -54,10 +52,10 @@ class LinkMatcher(ctxMgr: ContextMgr) {
       else {
 
         // Set these each time
-        oldLinks.registerTempTable("old_links")
-        newLinks.registerTempTable("new_links")
+        oldLinks.createOrReplaceTempView("old_links")
+        newLinks.createOrReplaceTempView("new_links")
         // Execute SQL rule and get matched records
-        sqlContext.sql(matchQuery)
+        spark.sql(matchQuery)
       }
     // Remove matched data from sets of data to be processed
     excludeMatches(oldLinks, newLinks, matched)
@@ -97,7 +95,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   def getVatMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
     //
-    // VAT matching logic:  *** NEEDS HIVE CONTEXT!!! ***
+    // VAT matching logic:  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
     //
     // Take unmatched records.
     // Explode VAT arrays to create old/new Links with a single VAT reference in each.
@@ -131,7 +129,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
   def getPayeMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
 
     //
-    // PAYE matching logic:  *** NEEDS HIVE CONTEXT!!! ***
+    // PAYE matching logic:  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
     //
     // Take unmatched records.
     // Explode PAYE arrays to create old/new Links with a single PAYE reference in each.
@@ -162,7 +160,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   def combineLinksToSave(linksWithUbrn1: DataFrame, linksWithUbrn2: DataFrame): DataFrame = {
     linksWithUbrn1.select("UBRN", "CH", "VAT", "PAYE")
-      .unionAll(linksWithUbrn2.select("UBRN", "CH", "VAT", "PAYE"))
+      .union(linksWithUbrn2.select("UBRN", "CH", "VAT", "PAYE"))
   }
 
   def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
@@ -176,27 +174,27 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     // Get records where CH is absent from both sets but other contents are same
     val contentResults = getContentMatchesNoCh(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks)
 
- /*
-    // Uncomment all this when VAT and PAYE rules restored  *** NEEDS HIVE CONTEXT!!! ***
+
+    // Uncomment all this when VAT and PAYE rules restored  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
 
     // Get records where VAT ref matches
     val vatResults = getVatMatches(contentResults.unmatchedOldLinks, contentResults.unmatchedNewLinks)
 
     // Get records where PAYE ref matches
     val payeResults = getPayeMatches(vatResults.unmatchedOldLinks, vatResults.unmatchedNewLinks)
-*/
+
     // Finally we should have:
     // - one sub-set of new links that we have matched, so they now have a UBRN:
     val withOldUbrn: DataFrame = chResults.matched
-                                          .unionAll(contentResults.matched)
+                                          .union(contentResults.matched)
     // UNION with these when we restore the VAT and PAYE matching logic above
-      //.unionAll(vatResults.matched)
-      //.unionAll(payeResults.matched)
+      .union(vatResults.matched)
+      .union(payeResults.matched)
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:
     // When VAT and PAYE rules restored, use the commented version of needUbrn instead:
-    // val needUbrn: DataFrame = payeResults.unmatchedNewLinks
-    val needUbrn: DataFrame = contentResults.unmatchedNewLinks
+    val needUbrn: DataFrame = payeResults.unmatchedNewLinks
+    // val needUbrn: DataFrame = contentResults.unmatchedNewLinks
 
     // Return the stuff we want
 
