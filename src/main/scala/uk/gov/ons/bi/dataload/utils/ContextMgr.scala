@@ -4,11 +4,13 @@ package uk.gov.ons.bi.dataload.utils
   * Created by websc on 17/05/2017.
   */
 
-// HiveContext is needed for UBRN allocation rules however this is already a part of the SparkSession
+// HiveContext is needed for UBRN allocation rules. As we are now using Spark 2.x the SparkSession has the required functionality
+
 import com.google.inject.Singleton
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.SparkContext
+
 
 /**
   * Created by websc on 28/04/2017.
@@ -26,7 +28,7 @@ class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSup
   // Suppress logging from outside the app
   org.apache.log4j.LogManager.getRootLogger.setLevel(Level.WARN)
 
-  implicit val sc: SparkContext = sparkSession.sparkContext
-  implicit val spark: SparkSession = sparkSession
+  implicit val sc: SparkContext = sparkSession.sparkContext    // As many rdd functions still rely on a SparkContext I have kept this val in the Class
+  implicit val spark: SparkSession = sparkSession              // This value can be used in place of a SqlContext, HiveContext and a SparkConf
 
 }

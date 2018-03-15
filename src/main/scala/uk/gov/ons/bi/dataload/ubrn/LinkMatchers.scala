@@ -188,7 +188,7 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     val withOldUbrn: DataFrame = chResults.matched
                                           .union(contentResults.matched)
     // UNION with these when we restore the VAT and PAYE matching logic above
-      .union(vatResults.matched)
+      .union(vatResults.matched)   // If the VAT and PAYE rules are removed comment out these unions and switch the needUbrn calls
       .union(payeResults.matched)
 
     // - and one sub-set of new links that we could not match, so they need new UBRN:

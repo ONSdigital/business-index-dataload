@@ -70,7 +70,7 @@ class AppConfig {
       // Links dir is below ONS data dir
       private val localDir = getConfigStr("dir", linksConfig)
       // We provide the full path
-      //val dir = s"/$baseDir/$localDir" This is the correct version but we are substituting it so that we can use the /user/bi-dev-ci directory
+      //val dir = s"/$baseDir/$localDir" This is the original version but we are substituting it so that we can use the /user/bi-dev-ci directory
       val dir = s"/$localDir" // Incorrect value, replace with version above once /dev/ons.gov/businessIndex/links exists
 
       val json = getConfigStr("json", linksConfig)

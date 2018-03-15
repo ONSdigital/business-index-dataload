@@ -33,7 +33,7 @@ object BusinessIndexesParquetToESLoader {
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
-    //Write the dataframe out to a file in HDFS with a timestamp in the name
+    //Write the dataframe out to a file in HDFS
     biDf.write.mode("overwrite").parquet(s"$parquetDir")
 
     biDf.saveToEs(s"$index/$indexType",extraEsConfig)

@@ -18,9 +18,10 @@
 ### ElasticSearch processing ###
 
 * This step uses the ElasticSearch Spark API.
+* Many configuration parameters need to be added to the SparkSession via the config method (previously these were added to the SparkConf) 
 * This library needs to be provided as a JAR file at runtime.
 
-> * `elasticsearch-spark_2.10-2.4.4.jar`
+> * `elasticsearch-spark-20_2.11-6.0.0.jar`
 
 * The JAR should be stored in HDFS so that it can be loaded by the Oozie job at runtime.
 * The ElasticSearch node IP address and index name are specified via configuration parameters.
@@ -40,7 +41,7 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
+* Assumes files are installed in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
 * Performance may depend on ElasticSearch cluster resources which are outside the scope of this application.
 * This example specifies 8 Spark executors.
 * It may be possible to tweak the various Spark settings to use less memory etc, but this configuration seems to work OK with current data-sets.
@@ -57,12 +58,16 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 3 Upload to ElasticSearch
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.4.jar
+Jars/py files | hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.5.jar
 Main class | uk.gov.ons.bi.dataload.LoadBiToEsApp
 
 Page 2 Field | Contents
 ------------- | -------------
-Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/dev/lib/elasticsearch-spark_2.10-2.4.4.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
+Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --jars hdfs://prod1/user/bi-dev-ci/businessIndex/lib/elasticsearch-spark-20_2.11-6.0.0.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
+
+* Since the Oozie doesn't support Spark 2.x we now have to use the Oozie shell node and supply a shell script with the spark2-submit command for this process.
+* The shell scripts are stored in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
+* If the Oozie version is ever updated we may be able to switch back to using the Spark Job node (or if Oozie shareLib ever replaces spark 1.6 with spark 2.x).
 
 ## Further information ##
 

@@ -31,7 +31,7 @@ object LinkedBusinessBuilder {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
-    //Seems to be fixed in Spark 2.1.0, can now use toDF to convert directly from RDD[BusinessIndex] to DataFrame however previous method no longer workss
+    //Seems to be fixed in Spark 2.x, can now use toDF to convert directly from RDD[BusinessIndex] to DataFrame however previous method no longer works
 
     //val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
 
@@ -42,7 +42,10 @@ object LinkedBusinessBuilder {
     val biDf: DataFrame = biRdd.toDF
 
     // Add id field and rename ubrn to UPRN
-    val biDf2: DataFrame = biDf.withColumn("id", $"ubrn").withColumnRenamed("ubrn", "UPRN").withColumnRenamed("TurnoverBand", "Turnover").withColumnRenamed("EmploymentBand","EmploymentBands")
+    val biDf2: DataFrame = biDf.withColumn("id", $"ubrn")
+      .withColumnRenamed("ubrn", "UPRN")
+      .withColumnRenamed("TurnoverBand", "Turnover")
+      .withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
     val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )

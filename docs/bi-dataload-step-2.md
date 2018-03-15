@@ -51,14 +51,14 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
+* Assumes files are installed in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
 * This example specifies 8 Spark executors to ensure sufficient resources when performing the joins on large data-sets.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 * We set the "env" parameter below so the Spark process knows where to read/write application data:
 
 >	`-Dbi-dataload.app-data.env=dev`
 
-* The default value in the config file is "dev", but the parameter is included here to  remind you that you may need to change it.
+* The default value in the config file is "dev", but the parameter is included here to remind you that you may need to change it.
 * The task parameters below also assume we are working in "dev" here.
 
 
@@ -67,12 +67,16 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Step 2 Build BI Entries From Links And Business Data
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.4.jar
+Jars/py files | hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.5.jar
 Main class | uk.gov.ons.bi.dataload.LinkDataApp
 
 Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --driver-memory 4G --num-executors 8 --executor-memory 3G --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx6g"
+
+* Since the Oozie doesn't support Spark 2.x we now have to use the Oozie shell node and supply a shell script with the spark2-submit command for this process.
+* The shell scripts are stored in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
+* If the Oozie version is ever updated we may be able to switch back to using the Spark Job node (or if Oozie shareLib ever replaces spark 1.6 with spark 2.x).
 
 ## Further information ##
 
