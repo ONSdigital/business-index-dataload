@@ -43,7 +43,7 @@
 * Apache Spark 2.2.0 on Cloudera is compiled for Scala 2.11.
 * This means we also need to use Scala 2.11 for our application.
 * Since the Cloudera Spark installation has been upgraded to Spark 2.x, we have re-compiled the Scala code with Scala 2.11, which is the default Scala version for Spark 2.x.
-* This can be updated in the future by changing the Scala version in the `build.sbt` file.
+* This was updated by changing the Scala version in the `build.sbt` file.
 
 ### ElasticSearch 5.6.x ###
 
