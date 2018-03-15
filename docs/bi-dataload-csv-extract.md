@@ -77,7 +77,7 @@ Page 2 Field | Contents
 Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://prod1/user/bi-dev-ci/businessIndex/lib/config-1.3.2.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
 
 * Since the Oozie doesn't support Spark 2.x we now have to use the Oozie shell node and supply a shell script with the spark2-submit command for this process.
-* The shell scripts are stored in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
+* Therefore if this process ever needs to be run again a shell script will have to produced to run it with Oozie in the prod1 environment.
 * If the Oozie version is ever updated we may be able to switch back to using the Spark Job node (or if Oozie shareLib ever replaces the spark 1.6 jars with the spark 2.x jars).
 
 ## Further information ##
