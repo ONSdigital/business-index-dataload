@@ -25,7 +25,7 @@
 ### Challenges for UBRN generation ###
 
 * The BI data ingestion process runs on a distributed Cloudera/HDFS/Spark platform.
-* This creates challenges for generating the sequence value, compared to the relatively straightforward mechanisms avalable on a non-distributed platform (such as a database sequence on Oracle RDBMS).
+* This creates challenges for generating the sequence value, compared to the relatively straightforward mechanisms available on a non-distributed platform (such as a database sequence on Oracle RDBMS).
 * It is not practical to generate a unique contiguous sequence number on a distributed platform, because at any given time the system cannot be sure that a sequence value generated on one node has not already been used by a process running on another node.
 
 ### Generating the UBRN ###
@@ -82,7 +82,7 @@
 
 ```
 	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
-	AND (old CH = new.CH)
+	AND (old CH = new CH)
 	THEN
 	  use old UBRN for new Link record
 	ELSIF (old CH IS NULL AND new CH IS NULL)
@@ -102,10 +102,9 @@
 #### Full implementation (pending) ####
 
 * We defined a full set of rules for UBRN matching and implemented these in April-May 2017.
-* However, these require us to use SQL features that are provided via Spark's HiveContext, not the basic SQLContext.
-* There are problems running this code via Oozie on our current Cloudera platform.
-* We have been advised to upgrade our Cloudera installation, which will also move us to Spark version 2.x.
-* We are waiting for this to be done, so that we can modify our code accordingly and reinstate the full set of UBRN rules.
+* In Spark 2.x the SQLContext and HiveContext have been replaced by the SparkSession.
+* This code requires us to use SQL features previously provided via Spark's HiveContext, not the basic SQLContext. This functionality is available via the SparkSession.
+* Now that this has been done, we have modified our code accordingly and reinstated the full set of UBRN rules.
 
 ```
 	IF (old CH IS NOT NULL AND new CH IS NOT NULL)
@@ -128,7 +127,7 @@
 ```
 #### Applying UBRN rules ####
 
-* Each matching rule is applied in turn via Apark SQL queries using the same basic logic:
+* Each matching rule is applied in turn via Spark SQL queries using the same basic logic:
 
 ![MacDown Screenshot](./UBRN-match-queries.jpg)
 
@@ -150,7 +149,7 @@
 
 #### Oozie Task Definition ####
 
-* Assumes files are installed in HDFS `hdfs://dev4/ons.gov/businessIndex/lib`.
+* Assumes files are installed in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
 * This example specifies 6 Spark executors to ensure sufficient resources when loading the JSON file, as JSON-processing and Link-matching are both quite demanding.
 * It may be possible to tweak the various Spark memory settings to use less memory, but this configuration seems to work OK with current data-sets.
 * We set the "env" parameter below so the Spark process knows where to read/write application data:
@@ -166,12 +165,16 @@ Page 1 Field | Contents
 Spark Master  | yarn-cluster
 Mode  | cluster
 App Name | ONS BI Dataload Pre-process Links
-Jars/py files | hdfs://dev4/ons.gov/businessIndex/dev/lib/business-index-dataload_2.10-1.4.jar
+Jars/py files | hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.5.jar
 Main class | uk.gov.ons.bi.dataload.PreprocessLinksApp
 
 Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --num-executors 6 --driver-memory 3G --executor-memory 3G --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
+
+* Since the Oozie doesn't support Spark 2.x we now have to use the Oozie shell node and supply a shell script with the spark2-submit command for this process.
+* The shell scripts are stored in HDFS `hdfs://prod1/user/bi-dev-ci/businessIndex/lib`.
+* If the Oozie version is ever updated we may be able to switch back to using the Spark Job node (or if Oozie shareLib ever replaces spark 1.6 with spark 2.x).
 
 ## Further information ##
 

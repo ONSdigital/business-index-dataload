@@ -35,16 +35,6 @@
 
 * This process uses the Spark CSV package for writing data directly from a Spark data frame to CSV.
 * In Spark 2.x, this package is part of the standard Spark installation, so there is no need to install it separately.
-* However, our Cloudera cluster is currently on Apache Spark 1.6.0, so we need to load the Spark CSV package and its dependencies separately.
-* The corresponding JAR files must be specified at runtime.
-
-> * `spark-csv_2.10-1.5.0.jar`: Spark CSV package
-> * `commons-csv-1.1.jar`: Additional dependency for Spark CSV
-> * `univocity-parsers-1.5.1.jar`: Additional dependency for Spark CSV
-
-* The JARS should be stored in HDFS so that they can be loaded by the Oozie job at runtime.
-* When Spark is upgraded to version 2.x on Cloudera, these libraries will no longer be required.
-
 
 #### Oozie Task Definition ####
 
@@ -69,6 +59,26 @@ Main class | uk.gov.ons.bi.dataload.HmrcBiExportApp
 Page 2 Field | Contents
 ------------- | -------------
 Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://dev4/ons.gov/businessIndex/dev/lib/spark-csv_2.10-1.5.0.jar,hdfs://dev4/ons.gov/businessIndex/dev/lib/univocity-parsers-1.5.1.jar,hdfs://dev4/ons.gov/businessIndex/dev/lib/commons-csv-1.1.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
+
+### Running in Prod1 ###
+
+* To run this process in Prod1 these environment variables will need to be
+
+Page 1 Field | Contents
+------------- | -------------
+Spark Master  | yarn-cluster
+Mode  | cluster
+App Name | ONS BI Dataload: Extract BI data to CSV files
+Jars/py files | hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.5.jar
+Main class | uk.gov.ons.bi.dataload.HmrcBiExportApp
+
+Page 2 Field | Contents
+------------- | -------------
+Properties / Options list | --num-executors 8 --driver-memory 2G --executor-memory 3G --jars hdfs://prod1/user/bi-dev-ci/businessIndex/lib/config-1.3.2.jar --driver-java-options "-Dbi-dataload.app-data.env=dev -Xms1g -Xmx5g"
+
+* Since the Oozie doesn't support Spark 2.x we now have to use the Oozie shell node and supply a shell script with the spark2-submit command for this process.
+* Therefore if this process ever needs to be run again a shell script will have to produced to run it with Oozie in the prod1 environment.
+* If the Oozie version is ever updated we may be able to switch back to using the Spark Job node (or if Oozie shareLib ever replaces the spark 1.6 jars with the spark 2.x jars).
 
 ## Further information ##
 

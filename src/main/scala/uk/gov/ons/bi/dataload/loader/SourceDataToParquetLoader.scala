@@ -21,6 +21,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     // External data (HMRC)
     val extDataConfig = appConfig.ExtDataConfig
     val extBaseDir = extDataConfig.dir
+    val extEnv = extDataConfig.env
 
     // Application working directory
     val appDataConfig = appConfig.AppDataConfig
@@ -33,7 +34,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
       case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
     }
 
-    val extSrcFilePath = s"$extBaseDir/$extDataDir/$extSrcFile"
+    val extSrcFilePath = s"/$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
     log.info(s"Reading $biSource data from: $extSrcFilePath")
 
     // Get corresponding reader based on BIDataSource
@@ -53,6 +54,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     // Get source/target directories
 
     // Lookups source directory
+    val lookupsEnv = appConfig.AppDataConfig.env
     val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
     val lookupsDir = lookupsConfig.dir
     val tcnToSicFile = lookupsConfig.tcnToSic
@@ -63,7 +65,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     val parquetFile = appDataConfig.tcn
 
-    val extSrcFilePath = s"$lookupsDir/$tcnToSicFile"
+    val extSrcFilePath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
 
     log.info(s"Reading TCN-SIC lookup from: $extSrcFilePath")
 

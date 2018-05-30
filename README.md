@@ -21,7 +21,7 @@
 * The ONS Cloudera cluster was mandated as the core platform for the BI data ingestion process.
 * This application uses the following components:
 
-> * Apache Spark (currently version 1.6.0)
+> * Apache Spark (currently version 2.2.0)
 > * HDFS
 > * Hue browser interface
 > * Oozie
@@ -30,38 +30,39 @@
 * Application code and supporting libraries are held as JAR files in HDFS.
 * This allows Oozie to access the code without having to install it on specific nodes within the cluster.
 
-### Spark 1.6.0 ###
+### Spark 2.2.0 ###
 
 * We use Apache Spark for all the Cloudera-based processing.
 * Spark provides well-integrated tools for reading, processing and storing data on a distributed platform, such as Hadoop.
 * Parquet files are used for interim storage, as Parquet is optimised for performance and Spark can make intelligent use of this format.
 * The Spark CSV package is used for reading the source CSV files.
-* Spark CSV has to be provided separately for Spark 1.6.0, but will be included in the default installation of Spark 2.x.
+* Spark CSV was provided separately for Spark 1.6.0, but is now included in the default installation of Spark 2.x.
 
-### Scala 2.10 ###
+### Scala 2.11 ###
 
-* Apache Spark 1.6.0 on Cloudera is compiled for Scala 2.10.
-* This means we also need to use Scala 2.10 for our application.
-* When the Cloudera Spark installation is upgraded to Spark 2.x, we may need to re-compile the Scala code with Scala 2.11, which is the default Scala version for Spark 2.x.
-* You can do this by changing the Scala version in the `build.sbt` file.
+* Apache Spark 2.2.0 on Cloudera is compiled for Scala 2.11.
+* This means we also need to use Scala 2.11 for our application.
+* Since the Cloudera Spark installation has been upgraded to Spark 2.x, we have re-compiled the Scala code with Scala 2.11, which is the default Scala version for Spark 2.x.
+* This was updated by changing the Scala version in the `build.sbt` file.
 
-### ElasticSearch 2.3.x ###
+### ElasticSearch 5.6.x ###
 
-* We are currently using an ElasticSearch cluster which is at version 2.3.
-* If this cluster is upgraded to ElasticSearch 5.x, we may need to modify the Scala code to use the corresponding version of the ES/Spark API library.
+* We are currently using an ElasticSearch cluster which was at version 2.3 but has recently been upgraded to version 5.6.
+* This required an upgrade of the ElasticSearch/Spark jar to version 20_2.11-6.0.0.
+* So far we haven't needed to change the usage of the ES/Spark API library.
 
 ### Additional libraries ###
 
 * We use a couple of extra Scala and Java libraries.
-* Spark CSV:
-
-> * `spark-csv_2.10-1.5.0.jar`: Spark CSV package
-> * `commons-csv-1.1.jar`: Additional dependency for Spark CSV
-> * `univocity-parsers-1.5.1.jar`: Additional dependency for Spark CSV
+* Since upgrading to Spark 2.x we no longer need the additional Spark CSV jars
 
 * ElasticSearch Spark API:
 
-> * `elasticsearch-spark_2.10-2.4.4.jar`
+> * `elasticsearch-spark-20_2.11-6.0.0.jar`
+
+* Typesafe jar for config functions
+
+> * `config-1.3.2.jar`
 
 * These are provided as JARs at runtime (see individual steps below for more information).
 * See the `build.sbt` file for Maven/SBT artifact details.
@@ -100,7 +101,7 @@
 > * via command-line Java driver options (e.g. in Oozie):
 
 ```
-	spark-submit --class com.example.Sparky 
+	spark2-submit --class com.example.Sparky 
 	             --master local[*] 
 	             --driver-java-options "-Dbi-dataload.es.index=my_index_name" 
 	 target/scala-2.11/spark-dummy_2.11-1.0.jar

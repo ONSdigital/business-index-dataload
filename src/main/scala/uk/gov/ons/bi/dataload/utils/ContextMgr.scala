@@ -4,18 +4,19 @@ package uk.gov.ons.bi.dataload.utils
   * Created by websc on 17/05/2017.
   */
 
-// HiveContext is needed for UBRN allocation rules
-// import org.apache.spark.sql.hive.HiveContext
+// HiveContext is needed for UBRN allocation rules. As we are now using Spark 2.x the SparkSession has the required functionality
+
 import com.google.inject.Singleton
 import org.apache.log4j.Level
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
+
 
 /**
   * Created by websc on 28/04/2017.
   */
 @Singleton
-class ContextMgr(sparkConf: SparkConf = new SparkConf()) extends Serializable{
+class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSupport.getOrCreate) extends Serializable{
 
   // Get logger for this app to use:
   // This still logs to Spark Log4j default appenders (console or file), as
@@ -27,9 +28,7 @@ class ContextMgr(sparkConf: SparkConf = new SparkConf()) extends Serializable{
   // Suppress logging from outside the app
   org.apache.log4j.LogManager.getRootLogger.setLevel(Level.WARN)
 
-  implicit val sc: SparkContext = SparkContext.getOrCreate(sparkConf)
-  implicit val sqlContext =  SQLContext.getOrCreate(sc)
+  implicit val sc: SparkContext = sparkSession.sparkContext    // As many rdd functions still rely on a SparkContext I have kept this val in the Class
+  implicit val spark: SparkSession = sparkSession              // This value can be used in place of a SqlContext, HiveContext and a SparkConf
 
-  // We will use HiveContext instead of SQLContext once environment is fixed
-  // implicit val sqlContext = new HiveContext(sc)
 }

@@ -1,8 +1,9 @@
 package uk.gov.ons.bi.dataload.loader
 
-import org.elasticsearch.spark.sql._
-import uk.gov.ons.bi.dataload.reader._
+import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils._
+import org.elasticsearch.spark.sql._
+
 
 /**
   * Created by websc on 22/02/2017.
@@ -17,6 +18,8 @@ object BusinessIndexesParquetToESLoader {
 
     val indexType = esConf.indexType
 
+    val parquetDir = esConf.parquetDir
+
      // read BI entries
 
     val pqReader = new BIEntriesParquetReader(ctxMgr)
@@ -29,6 +32,9 @@ object BusinessIndexesParquetToESLoader {
 
     // Use "id" field for ES "es.mapping.id" property, appears in doc as _id.
     val extraEsConfig = Map("es.mapping.id" -> "id")
+
+    //Write the dataframe out to a file in HDFS
+    biDf.write.mode("overwrite").parquet(s"$parquetDir")
 
     biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }

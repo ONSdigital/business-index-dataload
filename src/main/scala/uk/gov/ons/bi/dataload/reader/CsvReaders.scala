@@ -10,7 +10,7 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
   extends BIDataReader {
 
-  val sqlContext = ctxMgr.sqlContext
+  val spark = ctxMgr.spark
   val log =  ctxMgr.log
   
   def fixSchema(df: DataFrame): DataFrame = {
@@ -25,9 +25,9 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
 
   def extractRequiredFields(df: DataFrame) = {
 
-    df.registerTempTable(tempTableName)
+    df.createOrReplaceTempView(tempTableName)
 
-    val extract = sqlContext.sql(
+    val extract = spark.sql(
       s"""
         |SELECT *
         |FROM $tempTableName
@@ -37,11 +37,10 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
 
-    val df = sqlContext.read
-      .format("com.databricks.spark.csv")
+    val df = spark.read
       .option("header", "true") // Use first line of all files as header
       .option("inferSchema", "true") // Automatically infer data types
-      .load(srcFilePath)
+      .csv(srcFilePath)
 
 
     if (BiSparkDataFrames.isDfEmpty(df))
