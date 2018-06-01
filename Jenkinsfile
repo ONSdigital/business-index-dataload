@@ -50,4 +50,6 @@ pipeline {
             steps {
                 sh "sbt test"
             }
+        }
+    }
 }
