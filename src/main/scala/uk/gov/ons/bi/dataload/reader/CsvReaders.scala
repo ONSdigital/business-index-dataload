@@ -39,7 +39,7 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
 
     val df = spark.read
       .option("header", "true") // Use first line of all files as header
-      .option("inferSchema", "true") // Automatically infer data types
+      .option("inferSchema", "false") // Automatically infer data types
       .csv(srcFilePath)
 
 
