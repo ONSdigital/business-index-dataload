@@ -1,3 +1,6 @@
+#!groovy
+@Library('jenkins-pipeline-shared@master') _
+
 pipeline {
     environment {
         OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
@@ -11,8 +14,6 @@ pipeline {
         DEPLOY_DEV = "dev"
         DEPLOY_TEST = "test"
         DEPLOY_PROD = "prod"
-
-        CF_CREDS = "sbr-api-dev-secret-key"
 
         GIT_TYPE = "Github"
         GIT_CREDS = "github-sbr-user"
@@ -50,6 +51,29 @@ pipeline {
             steps {
                 sh "sbt test"
             }
+        }
+
+        stage ('Package and Push Artifact') {
+            agent any
+            steps {
+                copyToEdgeNode()
+            }
+        }
+    }
+}
+
+def copyToEdgeNode() {
+    echo "Deploying to $DEPLOY_DEV"
+    sshagent(credentials: ["bi-dev-ci-ssh-key"]) {
+        withCredentials([string(credentialsId: "prod1-edgenode-2", variable: 'EDGE_NODE'),
+                         string(credentialsId: "hdfs-jar-path-dev", variable: 'JAR_PATH')]) {
+            sh '''
+                ssh bi-$DEPLOY_DEV-ci@$HBASE_NODE mkdir -p $MODULE_NAME/lib
+                scp ${WORKSPACE}/target/scala-*/business-index-dataload*.jar bi-$DEPLOY_DEV-ci@EDGE_NODE:$MODULE_NAME/lib/
+                echo "Successfully copied jar file to $MODULE_NAME/lib directory on $EDGE_NODE"
+                ssh bi-$DEPLOY_DEV-ci@$EDGE_NODE hdfs dfs -put -f $MODULE_NAME/lib/business-index-dataload_2.11-1.5.jar $JAR_PATH
+                echo "Successfully copied jar file to HDFS"
+	        '''
         }
     }
 }
