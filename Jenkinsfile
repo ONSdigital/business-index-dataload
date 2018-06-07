@@ -68,7 +68,7 @@ def copyToEdgeNode() {
         withCredentials([string(credentialsId: "prod1-edgenode-2", variable: 'EDGE_NODE'),
                          string(credentialsId: "hdfs-jar-path-dev", variable: 'JAR_PATH')]) {
             sh '''
-                ssh bi-$DEPLOY_DEV-ci@$HBASE_NODE mkdir -p $MODULE_NAME/lib
+                ssh bi-$DEPLOY_DEV-ci@$EDGE_NODE mkdir -p $MODULE_NAME/lib
                 scp ${WORKSPACE}/target/scala-*/business-index-dataload*.jar bi-$DEPLOY_DEV-ci@EDGE_NODE:$MODULE_NAME/lib/
                 echo "Successfully copied jar file to $MODULE_NAME/lib directory on $EDGE_NODE"
                 ssh bi-$DEPLOY_DEV-ci@$EDGE_NODE hdfs dfs -put -f $MODULE_NAME/lib/business-index-dataload_2.11-1.5.jar $JAR_PATH
