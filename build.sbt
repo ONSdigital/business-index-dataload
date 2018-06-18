@@ -11,7 +11,7 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 lazy val Versions = new {
   val spark = "2.1.0"
-  //val sparkCsv = "1.5.0"
+  val sparkSql = "2.1.1"
   val joda = "2.9.4"
   val jodaConvert = "1.8.1"
   val json4s = "3.5.0"
@@ -20,7 +20,7 @@ lazy val Versions = new {
 
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % Versions.spark % "provided",
-  "org.apache.spark" %% "spark-sql" % Versions.spark % "provided",
+  "org.apache.spark" %% "spark-sql" % Versions.sparkSql % "provided",
 // Restore this when the Cloudera bug is fixed so we can use HiveContext for UBRN rules
 //  "org.apache.spark" %% "spark-hive" % Versions.spark % "provided",
   "joda-time" % "joda-time" % Versions.joda,
