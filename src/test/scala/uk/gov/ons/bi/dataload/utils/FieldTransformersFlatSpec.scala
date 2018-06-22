@@ -13,11 +13,11 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
   val fullCompanyRec = CompanyRec(Some("Company1"), Some("CompanyOne"), Some("Active"), Some("12345 - fubar"), Some("Company Post Code"))
 
   val fullVatRec = VatRec(Some(100L), Some("VAT Name Line 1"), Some("VAT Post Code"),
-    Some(92), Some(1), Some(12345), Some("3"))
+    Some("92"), Some(1), Some(12345), Some("3"))
 
   val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Post Code"),
     Some(2), Some(120.0D), Some(30.0D),
-    Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some(1500),Some("6"))
+    Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some("1500"),Some("6"))
 
 
   "A Transformer" should "get latest job figure from PAYE record" in {
@@ -31,7 +31,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   "A Transformer" should "return correct Industry Code (from Company record)" in {
 
-    val expected = Some(12345L)
+    val expected = Some("12345")
 
     val br = Business(100, Some(fullCompanyRec), None, None)
     val result = Transformers.getIndustryCode(br)
@@ -80,7 +80,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     val expected = fullVatRec.sic92
     val vatRecs = Some(Seq(fullVatRec))
     val br = Business(100, None, vatRecs, None)
-    val result: Option[Long] = Transformers.getIndustryCode(br)
+    val result: Option[String] = Transformers.getIndustryCode(br)
 
     result should be(expected)
   }
@@ -90,7 +90,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     val expected = fullPayeRec.sic
     val recs = Some(Seq(fullPayeRec))
     val br = Business(100, None, None, recs)
-    val result: Option[Long] = Transformers.getIndustryCode(br)
+    val result: Option[String] = Transformers.getIndustryCode(br)
 
     result should be(expected)
   }
@@ -133,9 +133,9 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   "A Transformer" should "extract numeric SIC code correctly from string" in {
 
-    val expected = Some(123L)
+    val expected = Some("123")
     val sic = Some("123 FUBAR")
-    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+    val result: Option[String] = Transformers.extractNumericSicCode(sic)
 
     result should be(expected)
   }
@@ -144,7 +144,7 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
     val expected = None
     val sic = Some("X123 FUBAR")
-    val result: Option[Long] = Transformers.extractNumericSicCode(sic)
+    val result: Option[String] = Transformers.extractNumericSicCode(sic)
 
     result should be(expected)
   }
