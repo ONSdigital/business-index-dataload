@@ -81,19 +81,19 @@ object Transformers {
     candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def extractNumericSicCode(sic: Option[String]): Option[Long] = {
+  def extractNumericSicCode(sic: Option[String]): Option[String] = {
     // Extracts numeric SIC code, assuming it is first element in string
     val numStartRegex: Regex = "(\\d+).*".r
     Try { // weird syntax for RE check: pattern(result) = stringToCheck
       val numStartRegex(extracted) = sic.getOrElse("")
       extracted
     } match {
-      case Success(numStr) => Some(numStr.toLong)
+      case Success(numStr) => Some(numStr)
       case _ => None
     }
   }
 
-  def getIndustryCode(br: Business): Option[Long] = {
+  def getIndustryCode(br: Business): Option[String] = {
     // Extract potential values from CH/VAT records
     // Take first VAT record (if any)
     val co: Option[String] = br.company.flatMap {
@@ -110,10 +110,10 @@ object Transformers {
     val candidates = Seq(co, vat, paye)
 
     // apply numeric extractor so we can skip invalid Company SIC if necessary
-    val numericCandidates: Seq[Option[Long]] = candidates.map(extractNumericSicCode(_))
+    val numericCandidates: Seq[Option[String]] = candidates.map(extractNumericSicCode(_))
 
     // Take first non-empty value from list
-    val indCode: Option[Long] = numericCandidates.foldLeft[Option[Long]](None)(_ orElse _)
+    val indCode: Option[String] = numericCandidates.foldLeft[Option[String]](None)(_ orElse _)
 
     indCode
   }
@@ -232,7 +232,7 @@ object Transformers {
 
     val businessName: Option[String] = getCompanyName(br)
     val postcode: Option[String] = getPostcode(br)
-    val industryCode: Option[Long] = getIndustryCode(br)
+    val industryCode: Option[String] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
 
     val tradingStatusBand = getTradingStatusBand(br)
