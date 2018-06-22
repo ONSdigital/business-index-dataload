@@ -189,7 +189,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |SELECT CAST(vatref AS LONG) AS vatref,
         |name1,
         |postcode,
-        |sic92,
+        |CAST(sic92 AS STRING) AS sic92,
         |status,
         |CAST(turnover AS LONG) AS turnover,
         |CAST (deathcode AS STRING) AS deathcode
