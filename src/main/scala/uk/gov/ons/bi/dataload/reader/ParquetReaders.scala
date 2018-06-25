@@ -137,7 +137,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.sept_jobs AS DOUBLE) AS sept_jobs,
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
-        | sic_lookup.SIC07,
+        | CAST(sic_lookup.SIC07 AS STRING) AS SIC07,
         | paye.deathcode
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
