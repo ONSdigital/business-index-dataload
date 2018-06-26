@@ -140,11 +140,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat1 = UbrnWithData(ubrn, VAT, vat1)
 
     val vat2 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT2"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat2 = UbrnWithData(ubrn, VAT, vat2)
 
     val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
@@ -174,11 +174,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val ubrn = 100L
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat1 = UbrnWithData(ubrn, VAT, vat1)
 
     val vat2 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT2"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat2 = UbrnWithData(ubrn, VAT, vat2)
 
     val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
@@ -243,11 +243,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat1 = UbrnWithData(ubrn, VAT, vat1)
 
     val vat2 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT2"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat2 = UbrnWithData(ubrn, VAT, vat2)
 
     val uwds = List(uwdCh, uwdVat1, uwdVat2)
@@ -266,11 +266,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val ubrn = 100L
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat1 = UbrnWithData(ubrn, VAT, vat1)
 
     val vat2 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT2"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat2 = UbrnWithData(ubrn, VAT, vat2)
 
     val uwds = List(uwdVat1, uwdVat2)
@@ -354,11 +354,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat1 = UbrnWithData(ubrn, VAT, vat1)
 
     val vat2 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT2"), postcode = Some("AB1 2CD"),
-      sic92 = Some(9), legalStatus = Some(2), turnover = Some(12345L))
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L))
     val uwdVat2 = UbrnWithData(ubrn, VAT, vat2)
 
     val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
@@ -383,7 +383,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expectedVatRefs = Some(List(vat1.vatRef.get, vat2.vatRef.get))
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
-    val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some(123L),
+    val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some("123"),
       Some("1"),  // default legal status for Company
       Some("A"),  // trading status
       Some("H"),

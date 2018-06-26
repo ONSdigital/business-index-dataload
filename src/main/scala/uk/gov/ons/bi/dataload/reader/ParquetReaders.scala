@@ -137,7 +137,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.sept_jobs AS DOUBLE) AS sept_jobs,
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
-        | sic_lookup.SIC07,
+        | CAST(sic_lookup.SIC07 AS STRING) AS SIC07,
         | paye.deathcode
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
@@ -161,7 +161,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         val jobsLastUpd = if (row.isNullAt(8)) None else Option(row.getString(8))
 
         val stc = if (row.isNullAt(9)) None else Option(row.getInt(9))
-        val sic = if (row.isNullAt(10)) None else Option(row.getInt(10))
+        val sic = if (row.isNullAt(10)) None else Option(row.getString(10))
 
         val deathcode = if (row.isNullAt(11)) None else Option(row.getString(11))
 
@@ -189,7 +189,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         |SELECT CAST(vatref AS LONG) AS vatref,
         |name1,
         |postcode,
-        |sic92,
+        |CAST(sic92 AS STRING) AS sic92,
         |status,
         |CAST(turnover AS LONG) AS turnover,
         |CAST (deathcode AS STRING) AS deathcode
@@ -204,7 +204,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         val vatRef = if (row.isNullAt(0)) None else Option(row.getLong(0))
         val nameLine1 = if (row.isNullAt(1)) None else Option(row.getString(1))
         val postcode = if (row.isNullAt(2)) None else Option(row.getString(2))
-        val sic92 = if (row.isNullAt(3)) None else Option(row.getInt(3))
+        val sic92 = if (row.isNullAt(3)) None else Option(row.getString(3))
         val legalStatus = if (row.isNullAt(4)) None else Option(row.getInt(4))
         val turnover = if (row.isNullAt(5)) None else Option(row.getLong(5))
         val deathcode = if (row.isNullAt(6)) None else Option(row.getString(6))
