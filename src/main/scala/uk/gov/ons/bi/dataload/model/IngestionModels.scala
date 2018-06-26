@@ -26,7 +26,7 @@ case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode:
 
 // These are intermediate structures that we use during the main Spark "link-and-join" processing.
 
-case class TcnSicLookup(tcn: Int, sic: Int)
+case class TcnSicLookup(tcn: Int, sic: String)
 
 case class Business(ubrn: BiTypes.Ubrn, company: Option[CompanyRec],
                     vat: Option[Seq[VatRec]], paye: Option[Seq[PayeRec]])

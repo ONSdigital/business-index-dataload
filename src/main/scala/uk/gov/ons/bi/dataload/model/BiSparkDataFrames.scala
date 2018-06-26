@@ -59,7 +59,7 @@ object BiSparkDataFrames {
     StructField("BusinessName", StringType, true),
     StructField("UPRN", LongType, true), // spec says "UPRN", but we use UBRN
     StructField("PostCode", StringType, true),
-    StructField("IndustryCode", LongType, true),
+    StructField("IndustryCode", StringType, true),
     StructField("LegalStatus", StringType, true),
     StructField("TradingStatus", StringType, true),
     StructField("Turnover", StringType, true),
