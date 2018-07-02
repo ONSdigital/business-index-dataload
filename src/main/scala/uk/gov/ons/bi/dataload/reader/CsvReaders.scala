@@ -139,7 +139,6 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
     StructField("name1", StringType, true),
     StructField("name2", StringType, true),
     StructField("name3", StringType, true),
-    StructField("entref", StringType, true),
     StructField("tradstyle1", StringType, true),
     StructField("tradstyle2", StringType, true),
     StructField("tradstyle3", StringType, true),
