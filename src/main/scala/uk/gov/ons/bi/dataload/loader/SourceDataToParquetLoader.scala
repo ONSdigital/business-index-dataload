@@ -38,10 +38,10 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     log.info(s"Reading $biSource data from: $extSrcFilePath")
 
     // Get corresponding reader based on BIDataSource
-    val reader: BIDataReader = new CsvReader(ctxMgr, tempTable)
+    val reader = new CsvReader(ctxMgr, tempTable)
 
     // Process the data
-    val data = reader.readFromSourceFile(extSrcFilePath)
+    val data = reader.readFromAdminSourceFile(extSrcFilePath, biSource)
     val targetFilePath = s"$workingDir/$parquetFile"
     log.info(s"Writing $biSource data to: $targetFilePath")
 
