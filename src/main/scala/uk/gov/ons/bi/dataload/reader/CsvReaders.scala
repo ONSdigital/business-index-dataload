@@ -1,11 +1,7 @@
 package uk.gov.ons.bi.dataload.reader
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.StructField
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types._
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.model.{BiSparkDataFrames, BusinessDataSource}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
@@ -90,15 +86,15 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
     StructField("fsubemp", StringType, true),
     StructField("unclemp", StringType, true),
     StructField("unclsubemp", StringType, true),
-    StructField("dec_jobs", StringType, true),
-    StructField("mar_jobs", StringType, true),
-    StructField("june_jobs", StringType, true),
-    StructField("sept_jobs", StringType, true),
+    StructField("dec_jobs", DoubleType, true),
+    StructField("mar_jobs", DoubleType, true),
+    StructField("june_jobs", DoubleType, true),
+    StructField("sept_jobs", DoubleType, true),
     StructField("jobs_lastupd", StringType, true),
-    StructField("status", StringType, true),
+    StructField("status", IntegerType, true),
     StructField("prevpaye", StringType, true),
     StructField("employer_cat", StringType, true),
-    StructField("stc", StringType, true),
+    StructField("stc", IntegerType, true),
     StructField("crn", StringType, true),
     StructField("actiondate", StringType, true),
     StructField("addressref", StringType, true),
@@ -121,15 +117,15 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
 
   val vatSchema = StructType(Array(
     StructField("entref", StringType, true),
-    StructField("vatref", StringType, true),
+    StructField("vatref", LongType, true),
     StructField("deathcode", StringType, true),
     StructField("birthdate", StringType, true),
     StructField("deathdate", StringType, true),
     StructField("sic92", StringType, true),
-    StructField("turnover", StringType, true),
+    StructField("turnover", LongType, true),
     StructField("turnover_date", StringType, true),
     StructField("record_type", StringType, true),
-    StructField("status", StringType, true),
+    StructField("status", IntegerType, true),
     StructField("actiondate", StringType, true),
     StructField("crn", StringType, true),
     StructField("marker", StringType, true),
