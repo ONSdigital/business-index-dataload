@@ -13,3 +13,5 @@
 /.idea/vcs.xml
 /.idea/workspace.xml
 /.idea/modules/
+/src/main/main.iml
+/src/test/test.iml
