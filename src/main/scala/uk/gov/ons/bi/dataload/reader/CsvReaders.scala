@@ -146,6 +146,11 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
     StructField("mkr", StringType, true)
   ))
 
+  val tcnSchema = StructType(Array(
+    StructField("TCN", IntegerType, true),
+    StructField("SIC07", StringType, true)
+  ))
+
   def extractRequiredFields(df: DataFrame) = {
 
     df.createOrReplaceTempView(tempTableName)
@@ -162,7 +167,7 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
 
     val df = spark.read
       .option("header", "true") // Use first line of all files as header
-      .option("inferSchema", "true") // Automatically infer data types
+      .schema(tcnSchema)
       .csv(srcFilePath)
 
 
