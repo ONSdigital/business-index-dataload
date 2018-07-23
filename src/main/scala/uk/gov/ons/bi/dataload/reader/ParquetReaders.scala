@@ -58,11 +58,11 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
         | CompanyName,
         | CompanyStatus,
         | SICCodeSicText_1,
-        | RegAddressPostCode
-        | RegAddressAddressLine1
-        | RegAddressAddressLine2
-        | RegAddressPostTown
-        | RegAddressCounty
+        | RegAddressPostCode,
+        | RegAddressAddressLine1,
+        | RegAddressAddressLine2,
+        | RegAddressPostTown,
+        | RegAddressCounty,
         | RegAddressCountry
         |FROM temp_comp
         |WHERE CompanyNumber IS NOT NULL""".stripMargin).rdd
@@ -148,11 +148,11 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
         | CAST(sic_lookup.SIC07 AS STRING) AS SIC07,
-        | paye.deathcode
-        | address1
-        | address2
-        | address3
-        | address4
+        | paye.deathcode,
+        | address1,
+        | address2,
+        | address3,
+        | address4,
         | address5
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
@@ -213,11 +213,11 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         | CAST(sic92 AS STRING) AS sic92,
         | status,
         | CAST(turnover AS LONG) AS turnover,
-        | CAST (deathcode AS STRING) AS deathcode
-        | address1
-        | address2
-        | address3
-        | address4
+        | CAST (deathcode AS STRING) AS deathcode,
+        | address1,
+        | address2,
+        | address3,
+        | address4,
         | address5
         | FROM temp_vat
         | WHERE vatref IS NOT NULL""".stripMargin).rdd
