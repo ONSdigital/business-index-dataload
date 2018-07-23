@@ -186,6 +186,7 @@ object Transformers {
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4},
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
         )
+      case _ => Seq(None)
     }
   }
 
