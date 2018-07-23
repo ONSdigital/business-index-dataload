@@ -9,9 +9,6 @@ import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
 
 
-/**
-  * Created by websc on 16/02/2017.
-  */
 object LinkedBusinessBuilder {
   // NOTE:
   // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
@@ -50,10 +47,7 @@ object LinkedBusinessBuilder {
       .withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
-    val biDf3: DataFrame = biDf2.select("id", "BusinessName","TradingStyle", "UPRN", "PostCode", "IndustryCode", "LegalStatus",
-      "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
-      "Address1", "Address2", "Address3", "Address4", "Address5")
-      //, "Address2","Address3","Address4", "Address5")
+    val biDf3: DataFrame = biDf2.select("*")
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 

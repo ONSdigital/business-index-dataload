@@ -80,6 +80,7 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(co, vat, paye)
 
+<<<<<<< HEAD
     // Take first non-empty name value from list
    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
@@ -137,8 +138,55 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(vat, paye)
 
+=======
+>>>>>>> Add address to Bi
     // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
+   candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
+  def appendTag(address: Option[String], tag: String): Option[String] = {
+    address match {
+      case Some(x) => Some(tag)
+      case None => None
+    }
+  }
+
+  def getAddress(br: Business): Seq[Option[String]] = {
+    val co: Option[String] = br.company.flatMap {_.postcode}
+
+    val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.postcode}
+
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {_.postcode}
+
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+
+    adminSource match {
+      case Some("ch") =>
+        Seq(
+          br.company.flatMap{_.address1},
+          br.company.flatMap{_.address2},
+          br.company.flatMap{_.address3},
+          br.company.flatMap{_.address4},
+          br.company.flatMap{_.address5}
+        )
+      case Some("vat") =>
+        Seq(
+          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address1},
+          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address2},
+          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address3},
+          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address4},
+          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address5}
+        )
+      case Some("paye") =>
+        Seq(
+          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address1},
+          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address2},
+          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address3},
+          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4},
+          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
+        )
+    }
   }
 
   def extractNumericSicCode(sic: Option[String]): Option[String] = {
@@ -294,6 +342,7 @@ object Transformers {
     val tradingStyle: Option[String] = getTradingStlye(br)
 
     val postcode: Option[String] = getPostcode(br)
+<<<<<<< HEAD
     val address: Seq[Option[String]] = getAddress(br)
 
     val address1: Option[String] = getAddress1(br)
@@ -301,6 +350,10 @@ object Transformers {
     val address3: Option[String] = getAddress3(br)
     val address4: Option[String] = getAddress4(br)
     val address5: Option[String] = getAddress5(br)
+=======
+
+    val address: Seq[Option[String]] = getAddress(br)
+>>>>>>> Add address to Bi
 
     val industryCode: Option[String] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
@@ -330,9 +383,13 @@ object Transformers {
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
+<<<<<<< HEAD
       address1,address2,address3,address4,address5,
       //address.head, address(1), address(2), address(3), address(4),
       tradingStyle)
+=======
+      address(0), address(1), address(2), address(3), address(4))
+>>>>>>> Add address to Bi
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {

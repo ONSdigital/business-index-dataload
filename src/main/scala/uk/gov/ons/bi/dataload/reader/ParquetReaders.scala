@@ -58,11 +58,19 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
         | CompanyName,
         | CompanyStatus,
         | SICCodeSicText_1,
+<<<<<<< HEAD
         | RegAddressPostCode,
         | RegAddressAddressLine1,
         | RegAddressAddressLine2,
         | RegAddressPostTown,
         | RegAddressCounty,
+=======
+        | RegAddressPostCode
+        | RegAddressAddressLine1
+        | RegAddressAddressLine2
+        | RegAddressPostTown
+        | RegAddressCounty
+>>>>>>> Add address to Bi
         | RegAddressCountry
         |FROM temp_comp
         |WHERE CompanyNumber IS NOT NULL""".stripMargin).rdd
@@ -148,6 +156,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
         | CAST(sic_lookup.SIC07 AS STRING) AS SIC07,
+<<<<<<< HEAD
         | paye.deathcode,
         | address1,
         | address2,
@@ -155,6 +164,14 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | address4,
         | address5,
         | tradstyle1
+=======
+        | paye.deathcode
+        | address1
+        | address2
+        | address3
+        | address4
+        | address5
+>>>>>>> Add address to Bi
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
 
@@ -181,6 +198,7 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 
         val deathcode = if (row.isNullAt(11)) None else Option(row.getString(11))
 
+<<<<<<< HEAD
         val address1 = if (row.isNullAt(12)) None else Option(row.getString(12))
         val address2 = if (row.isNullAt(13)) None else Option(row.getString(13))
         val address3 = if (row.isNullAt(14)) None else Option(row.getString(14))
@@ -191,6 +209,16 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 
         PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
           jobsLastUpd, stc, sic, deathcode, address1, address2, address3, address4, address5, tradingStyle)
+=======
+        val address1 = if (row.isNullAt(11)) None else Option(row.getString(12))
+        val address2 = if (row.isNullAt(12)) None else Option(row.getString(13))
+        val address3 = if (row.isNullAt(13)) None else Option(row.getString(14))
+        val address4 = if (row.isNullAt(14)) None else Option(row.getString(15))
+        val address5 = if (row.isNullAt(15)) None else Option(row.getString(16))
+
+        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
+          jobsLastUpd, stc, sic, deathcode, address1, address2, address3, address4, address5)
+>>>>>>> Add address to Bi
       }
       (payeRefStr, rec)
     }
@@ -216,6 +244,7 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         | CAST(sic92 AS STRING) AS sic92,
         | status,
         | CAST(turnover AS LONG) AS turnover,
+<<<<<<< HEAD
         | CAST (deathcode AS STRING) AS deathcode,
         | address1,
         | address2,
@@ -223,6 +252,14 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         | address4,
         | address5,
         | tradstyle1
+=======
+        | CAST (deathcode AS STRING) AS deathcode
+        | address1
+        | address2
+        | address3
+        | address4
+        | address5
+>>>>>>> Add address to Bi
         | FROM temp_vat
         | WHERE vatref IS NOT NULL""".stripMargin).rdd
 
@@ -243,10 +280,16 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         val address3 = if (row.isNullAt(9)) None else Option(row.getString(9))
         val address4 = if (row.isNullAt(10)) None else Option(row.getString(10))
         val address5 = if (row.isNullAt(11)) None else Option(row.getString(11))
+<<<<<<< HEAD
         val tradingStyle = if (row.isNullAt(12)) None else Option(row.getString(12))
 
         VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode,
         address1, address2, address3, address4, address5, tradingStyle)
+=======
+
+        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode,
+        address1, address2, address3, address4, address5)
+>>>>>>> Add address to Bi
       }
       (vatRefStr, rec)
     }

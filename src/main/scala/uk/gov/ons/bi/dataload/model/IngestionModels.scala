@@ -11,24 +11,40 @@ sealed trait BusinessElement
 
 case class CompanyRec(companyNo: Option[String], companyName: Option[String],
                       companyStatus: Option[String], sicCode1: Option[String], postcode: Option[String],
+<<<<<<< HEAD
                       address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
                       address4: Option[String] = None, address5: Option[String] = None
                      ) extends BusinessElement
+=======
+                      address1: Option[String], address2: Option[String], address3: Option[String],
+                      address4: Option[String], address5: Option[String]) extends BusinessElement
+>>>>>>> Add address to Bi
 
 case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Option[String],
                   sic92: Option[String], legalStatus: Option[Int],
                   turnover: Option[Long], deathcode: Option[String] = None,
+<<<<<<< HEAD
                   address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
                   address4: Option[String] = None, address5: Option[String] = None, tradingStyle: Option[String] = None
+=======
+                  address1: Option[String], address2: Option[String], address3: Option[String],
+                  address4: Option[String], address5: Option[String]
+>>>>>>> Add address to Bi
                  ) extends BusinessElement
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
                    stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None,
+<<<<<<< HEAD
                    address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
                    address4: Option[String] = None, address5: Option[String] = None, tradingStyle: Option[String] = None
                   ) extends BusinessElement
+=======
+                   address1: Option[String], address2: Option[String], address3: Option[String],
+                   address4: Option[String], address5: Option[String])
+  extends BusinessElement
+>>>>>>> Add address to Bi
 
 
 // These are intermediate structures that we use during the main Spark "link-and-join" processing.
@@ -48,7 +64,12 @@ case class BusinessIndex(ubrn: BiTypes.Ubrn, businessName: Option[String], postC
                          industryCode: Option[String], legalStatus: Option[String], tradingStatus: Option[String],
                          turnoverBand: Option[String], employmentBand: Option[String], companyNo: Option[String],
                          vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]],
+<<<<<<< HEAD
                          address1: Option[String] = None,
                          address2: Option[String] = None, address3: Option[String] = None, address4: Option[String] = None, address5: Option[String] = None,
                          tradingStyle: Option[String] = None)
 
+=======
+                         address1: Option[String], address2: Option[String], address3: Option[String],
+                         address4: Option[String], address5: Option[String])
+>>>>>>> Add address to Bi
