@@ -10,17 +10,23 @@ package uk.gov.ons.bi.dataload.model
 sealed trait BusinessElement
 
 case class CompanyRec(companyNo: Option[String], companyName: Option[String],
-                      companyStatus: Option[String], sicCode1: Option[String], postcode: Option[String]
-                     ) extends BusinessElement
+                      companyStatus: Option[String], sicCode1: Option[String], postcode: Option[String],
+                      address1: Option[String], address2: Option[String], address3: Option[String],
+                      address4: Option[String], address5: Option[String]) extends BusinessElement
 
 case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Option[String],
                   sic92: Option[String], legalStatus: Option[Int],
-                  turnover: Option[Long], deathcode: Option[String] = None) extends BusinessElement
+                  turnover: Option[Long], deathcode: Option[String] = None,
+                  address1: Option[String], address2: Option[String], address3: Option[String],
+                  address4: Option[String], address5: Option[String]
+                 ) extends BusinessElement
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
                    legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
-                   stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None)
+                   stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None,
+                   address1: Option[String], address2: Option[String], address3: Option[String],
+                   address4: Option[String], address5: Option[String])
   extends BusinessElement
 
 
@@ -40,5 +46,6 @@ case class UbrnWithList(ubrn: BiTypes.Ubrn, data: Seq[UbrnWithData])
 case class BusinessIndex(ubrn: BiTypes.Ubrn, businessName: Option[String], postCode: Option[String],
                          industryCode: Option[String], legalStatus: Option[String], tradingStatus: Option[String],
                          turnoverBand: Option[String], employmentBand: Option[String], companyNo: Option[String],
-                         vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]])
-
+                         vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]],
+                         address1: Option[String], address2: Option[String], address3: Option[String],
+                         address4: Option[String], address5: Option[String])
