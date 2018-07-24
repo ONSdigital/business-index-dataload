@@ -80,7 +80,6 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(co, vat, paye)
 
-<<<<<<< HEAD
     // Take first non-empty name value from list
    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
@@ -138,8 +137,6 @@ object Transformers {
     // list in order of preference
     val candidates = Seq(vat, paye)
 
-=======
->>>>>>> Add address to Bi
     // Take first non-empty name value from list
    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
@@ -186,7 +183,6 @@ object Transformers {
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4},
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
         )
-      case _ => Seq(None)
     }
   }
 
@@ -343,18 +339,11 @@ object Transformers {
     val tradingStyle: Option[String] = getTradingStlye(br)
 
     val postcode: Option[String] = getPostcode(br)
-<<<<<<< HEAD
-    val address: Seq[Option[String]] = getAddress(br)
-
     val address1: Option[String] = getAddress1(br)
     val address2: Option[String] = getAddress2(br)
     val address3: Option[String] = getAddress3(br)
     val address4: Option[String] = getAddress4(br)
     val address5: Option[String] = getAddress5(br)
-=======
-
-    val address: Seq[Option[String]] = getAddress(br)
->>>>>>> Add address to Bi
 
     val industryCode: Option[String] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
@@ -384,13 +373,8 @@ object Transformers {
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
-<<<<<<< HEAD
       address1,address2,address3,address4,address5,
-      //address.head, address(1), address(2), address(3), address(4),
       tradingStyle)
-=======
-      address(0), address(1), address(2), address(3), address(4))
->>>>>>> Add address to Bi
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
