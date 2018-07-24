@@ -48,7 +48,7 @@ object LinkedBusinessBuilder {
       .withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
-    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )
+    //val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
@@ -57,7 +57,7 @@ object LinkedBusinessBuilder {
     val parquetBiFile = appDataConfig.bi
     val biFile = s"$workDir/$parquetBiFile"
 
-    biDf3.write.mode("overwrite").parquet(biFile)
+    biDf2.write.mode("overwrite").parquet(biFile)
   }
 
   // ***************** Link UBRN to Company/VAT/PAYE data **************************
@@ -163,6 +163,7 @@ object LinkedBusinessBuilder {
     val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
     // write BI data to parquet file
+
     writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
 
     // clear cached UWKs

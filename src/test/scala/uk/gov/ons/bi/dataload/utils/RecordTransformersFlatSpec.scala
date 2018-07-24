@@ -1,6 +1,8 @@
 package uk.gov.ons.bi.dataload.utils
 
+import org.apache.spark.rdd.RDD
 import org.scalatest.{FlatSpec, ShouldMatchers}
+
 import uk.gov.ons.bi.dataload.model._
 
 
@@ -428,5 +430,4 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     results shouldBe expected
   }
-
 }
