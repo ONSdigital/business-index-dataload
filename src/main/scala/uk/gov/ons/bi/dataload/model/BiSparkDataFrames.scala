@@ -66,7 +66,13 @@ object BiSparkDataFrames {
     StructField("EmploymentBands", StringType, true),
     StructField("CompanyNo", StringType, true),
     StructField("VatRefs", ArrayType(LongType), true), // sequence of Long VAT refs
-    StructField("PayeRefs", ArrayType(StringType), true) // seq of String PAYE refs
+    StructField("PayeRefs", ArrayType(StringType), true), // seq of String PAYE refs
+    StructField("Address1", StringType, true),
+    StructField("Address2", StringType, true),
+    StructField("Address3", StringType, true),
+    StructField("Address4", StringType, true),
+    StructField("Address5", StringType, true),
+    StructField("TradingStyle", StringType, true)
   ))
 
   // Use UBRN as ID (and as UPRN) in index until we have better information
