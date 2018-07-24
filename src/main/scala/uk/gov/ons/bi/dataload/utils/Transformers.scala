@@ -311,8 +311,8 @@ object Transformers {
 
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
-      tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
-      address(0), address(1), address(2), address(3), address(4))
+      tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs)
+    //, address(0), address(1), address(2), address(3), address(4))
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {

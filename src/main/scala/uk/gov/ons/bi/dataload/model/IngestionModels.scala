@@ -47,6 +47,9 @@ case class UbrnWithList(ubrn: BiTypes.Ubrn, data: Seq[UbrnWithData])
 case class BusinessIndex(ubrn: BiTypes.Ubrn, businessName: Option[String], postCode: Option[String],
                          industryCode: Option[String], legalStatus: Option[String], tradingStatus: Option[String],
                          turnoverBand: Option[String], employmentBand: Option[String], companyNo: Option[String],
-                         vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]],
+                         vatRefs: Option[Seq[Long]], payeRefs: Option[Seq[String]])
+/*
+,
                          address1: Option[String], address2: Option[String], address3: Option[String],
                          address4: Option[String], address5: Option[String])
+                         */
