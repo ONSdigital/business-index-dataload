@@ -84,52 +84,6 @@ object Transformers {
    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
-  def appendTag(address: Option[String], tag: String): Option[String] = {
-    address match {
-      case Some(x) => Some(tag)
-      case None => None
-    }
-  }
-
-  def getAddress(br: Business): Seq[Option[String]] = {
-    val co: Option[String] = br.company.flatMap {_.postcode}
-
-    val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.postcode}
-
-    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {_.postcode}
-
-    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
-    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
-
-    adminSource match {
-      case Some("ch") =>
-        Seq(
-          br.company.flatMap{_.address1},
-          br.company.flatMap{_.address2},
-          br.company.flatMap{_.address3},
-          br.company.flatMap{_.address4},
-          br.company.flatMap{_.address5}
-        )
-      case Some("vat") =>
-        Seq(
-          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address1},
-          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address2},
-          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address3},
-          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address4},
-          br.vat.flatMap { ps => ps.headOption }.flatMap {_.address5}
-        )
-      case Some("paye") =>
-        Seq(
-          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address1},
-          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address2},
-          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address3},
-          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4},
-          br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
-        )
-      case _ => Seq(None)
-    }
-  }
-
   def getTradingStlye(br: Business): Option[String] = {
     val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.tradingStyle}
     val paye: Option[String] = br.paye.flatMap{ ps => ps.headOption }.flatMap {_.tradingStyle}

@@ -401,11 +401,11 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       None,
       None,
       None
-     Some("address1"),
-     Some("address2"),
-     Some("address3"),
-     Some("address4"),
-     Some("address5")
+      Some("address1"),
+      Some("address2"),
+      Some("address3"),
+      Some("address4"),
+      Some("address5")
     )
     results shouldBe expected
   }
