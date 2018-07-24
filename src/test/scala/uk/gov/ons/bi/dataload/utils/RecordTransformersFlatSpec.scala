@@ -390,12 +390,13 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       Some("C"),
       company.companyNo,
       expectedVatRefs,
-      expectedPayeRefs,
-      None,
-      None,
-      None,
-      None,
-      None
+      expectedPayeRefs
+//      ,
+//      None,
+//      None,
+//      None,
+//      None,
+//      None
 //      Some("address1"),
 //      Some("address2"),
 //      Some("address3"),
