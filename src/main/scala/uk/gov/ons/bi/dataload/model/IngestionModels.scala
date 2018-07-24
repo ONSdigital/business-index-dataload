@@ -19,7 +19,7 @@ case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Opt
                   sic92: Option[String], legalStatus: Option[Int],
                   turnover: Option[Long], deathcode: Option[String] = None,
                   address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
-                  address4: Option[String] = None, address5: Option[String] = None
+                  address4: Option[String] = None, address5: Option[String] = None, tradingStyle: Option[String] = None
                  ) extends BusinessElement
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
@@ -27,7 +27,7 @@ case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode:
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
                    stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None,
                    address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
-                   address4: Option[String] = None, address5: Option[String] = None
+                   address4: Option[String] = None, address5: Option[String] = None, tradingStyle: Option[String] = None
                   ) extends BusinessElement
 
 
@@ -51,5 +51,5 @@ case class BusinessIndex(ubrn: BiTypes.Ubrn, businessName: Option[String], postC
 /*
 ,
                          address1: Option[String], address2: Option[String], address3: Option[String],
-                         address4: Option[String], address5: Option[String])
+                         address4: Option[String], address5: Option[String], tradingStyle: Option[String])
                          */

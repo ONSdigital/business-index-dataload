@@ -401,7 +401,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 //      Some("address2"),
 //      Some("address3"),
 //      Some("address4"),
-//      Some("address5")
+//      Some("address5"),
+//      Some("trading_style")
     )
     results shouldBe expected
   }

@@ -130,6 +130,17 @@ object Transformers {
     }
   }
 
+  def getTradingStlye(br: Business): Option[String] = {
+    val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.tradingStyle}
+    val paye: Option[String] = br.paye.flatMap{ ps => ps.headOption }.flatMap {_.tradingStyle}
+
+    // list in order of preference
+    val candidates = Seq(vat, paye)
+
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
   def extractNumericSicCode(sic: Option[String]): Option[String] = {
     // Extracts numeric SIC code, assuming it is first element in string
     val numStartRegex: Regex = "(\\d+).*".r
@@ -280,8 +291,9 @@ object Transformers {
   def convertToBusinessIndex(br: Business): BusinessIndex = {
 
     val businessName: Option[String] = getCompanyName(br)
-    val postcode: Option[String] = getPostcode(br)
+    val tradingStyle: Option[String] = getTradingStlye(br)
 
+    val postcode: Option[String] = getPostcode(br)
     val address: Seq[Option[String]] = getAddress(br)
 
     val industryCode: Option[String] = getIndustryCode(br)
@@ -312,7 +324,7 @@ object Transformers {
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs)
-    //, address(0), address(1), address(2), address(3), address(4))
+    //, address(0), address(1), address(2), address(3), address(4), tradingStyle)
   }
 
   def explodeLink(ln: LinkRec): Seq[UbrnWithKey] = {
