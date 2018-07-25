@@ -458,6 +458,12 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     val df = businessIndexes.toDF()
 
-    df.select("BusinessName", "Address1").show()
+    val withCol = df.withColumn("id", $"ubrn")
+      .withColumnRenamed("ubrn", "UPRN")
+      .withColumnRenamed("TurnoverBand", "Turnover")
+      .withColumnRenamed("EmploymentBand","EmploymentBands")
+
+    withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
+      "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
   }
 }
