@@ -434,7 +434,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     results shouldBe expected
   }
 
-  "dataframe" should "be generated with the full address based on priority" in {
+  "dataframe" should "be generated with the added legal unit columns(address, tradingstyle, birthdate) based on priority" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     implicit val sc: SparkContext = sparkSession.sparkContext
@@ -448,7 +448,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
       legalStatus = Some(3), decJobs = Some(12.0), marJobs = Some(3.0),
-      junJobs = Some(6.0), sepJobs = Some(9.0), jobsLastUpd = Some("Mar17"), address1 = Some("payeAddress"))
+      junJobs = Some(6.0), sepJobs = Some(9.0), jobsLastUpd = Some("Mar17"), address1 = Some("payeAddress"), tradingStyle = Some("trading as Paye"))
 
     val uwdCh = UbrnWithData(ubrn, CH, company)
     val uwdPaye = UbrnWithData(ubrn, PAYE, paye1)
@@ -471,8 +471,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
       "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
 
-    val results = withCol.select("Address1", "Address2","Address3","Address4", "Address5").collect().map(_.toString())
-    val expected =  Array("[VatAddress,add2,add3,null,null]")
+    val results = withCol.select("Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").collect().map(_.toString())
+    val expected =  Array("[VatAddress,add2,add3,null,null,trading as Paye]")
 
     results shouldBe expected
   }

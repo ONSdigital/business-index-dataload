@@ -88,6 +88,5 @@ object PreprocessLinksApp extends DataloadApp {
   val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   val lpp = new LinksPreprocessor(ctxMgr)
-  lpp.loadAndPreprocessLinks(appConfig)
 }
 
