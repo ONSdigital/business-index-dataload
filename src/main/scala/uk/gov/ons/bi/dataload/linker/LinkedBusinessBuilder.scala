@@ -47,7 +47,8 @@ object LinkedBusinessBuilder {
       .withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
-    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )
+    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
+    "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle")
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
