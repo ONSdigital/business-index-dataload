@@ -434,23 +434,28 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     results shouldBe expected
   }
 
-  "dataframe" should "be generated with the proper columns" in {
+  "dataframe" should "be generated with the full address based on priority" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     implicit val sc: SparkContext = sparkSession.sparkContext
     import sparkSession.implicits._
 
     val ubrn = 100L
-    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"), address1 = Some("address1"),
-      address3 = None
-    )
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = None, address1 = Some("address1"))
+
+    val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L), address1 = Some("VatAddress"), address2 = Some("add2"), address3 = Some("add3"))
+
+    val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
+      legalStatus = Some(3), decJobs = Some(12.0), marJobs = Some(3.0),
+      junJobs = Some(6.0), sepJobs = Some(9.0), jobsLastUpd = Some("Mar17"), address1 = Some("payeAddress"))
+
     val uwdCh = UbrnWithData(ubrn, CH, company)
+    val uwdPaye = UbrnWithData(ubrn, PAYE, paye1)
+    val uwdVat = UbrnWithData(ubrn, VAT, vat1)
 
-    val uwds = List(uwdCh)
+    val uwds = List(uwdCh, uwdPaye, uwdVat)
     val uwl = UbrnWithList(ubrn, uwds)
-
-    // Construct a full Business record
 
     val rdd = sc.parallelize(Seq(Transformers.buildBusinessRecord(uwl)))
 
@@ -465,5 +470,10 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
     withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
       "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
+
+    val results = withCol.select("Address1", "Address2","Address3","Address4", "Address5").collect().map(_.toString())
+    val expected =  Array("[VatAddress,add2,add3,null,null]")
+
+    results shouldBe expected
   }
 }
