@@ -1,7 +1,9 @@
 package uk.gov.ons.bi.dataload.linker
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row}
+
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}

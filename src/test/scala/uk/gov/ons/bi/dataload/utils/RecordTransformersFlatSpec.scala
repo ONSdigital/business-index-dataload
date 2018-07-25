@@ -1,8 +1,11 @@
 package uk.gov.ons.bi.dataload.utils
 
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.scalatest.{FlatSpec, ShouldMatchers}
 
+import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder._
 import uk.gov.ons.bi.dataload.model._
 
 
@@ -429,5 +432,32 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expected = Some("1") // legalStatus
 
     results shouldBe expected
+  }
+
+  "dataframe" should "be generated with the proper columns" in {
+
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    implicit val sc: SparkContext = sparkSession.sparkContext
+    import sparkSession.implicits._
+
+    val ubrn = 100L
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
+      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"), address1 = Some("address1"),
+      address3 = None
+    )
+    val uwdCh = UbrnWithData(ubrn, CH, company)
+
+    val uwds = List(uwdCh)
+    val uwl = UbrnWithList(ubrn, uwds)
+
+    // Construct a full Business record
+
+    val rdd = sc.parallelize(Seq(Transformers.buildBusinessRecord(uwl)))
+
+    val businessIndexes: RDD[BusinessIndex] = rdd.map(Transformers.convertToBusinessIndex)
+
+    val df = businessIndexes.toDF()
+
+    df.select("BusinessName", "Address1").show()
   }
 }
