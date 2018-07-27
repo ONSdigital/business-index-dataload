@@ -91,6 +91,28 @@ object Transformers {
     }
   }
 
+  def getAddress1(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.address1
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.address1
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.address1
+    }
+
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
   def getAddress(br: Business): Seq[Option[String]] = {
     val co: Option[String] = br.company.flatMap {_.postcode}
 
@@ -295,6 +317,7 @@ object Transformers {
 
     val postcode: Option[String] = getPostcode(br)
     val address: Seq[Option[String]] = getAddress(br)
+    val address1: Option[String] = getAddress1(br)
 
     val industryCode: Option[String] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
@@ -324,7 +347,8 @@ object Transformers {
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
-      address.head, address(1), address(2), address(3), address(4),
+      address1,
+      //address.head, address(1), address(2), address(3), address(4),
       tradingStyle)
   }
 
