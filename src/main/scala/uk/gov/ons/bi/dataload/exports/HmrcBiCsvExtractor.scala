@@ -31,7 +31,9 @@ object HmrcBiCsvExtractor {
 
     def getLegalEntities(df: DataFrame): DataFrame = {
       // Extract the Legal Entity information from BI (excludes VAT and PAYE)
-      df.select("id","BusinessName","TradingStyle","PostCode","IndustryCode","LegalStatus","TradingStatus",
+      df.select("id","BusinessName","TradingStyle","PostCode",
+        "Address1", "Address2","Address3","Address4", "Address5",
+        "IndustryCode","LegalStatus","TradingStatus",
         "Turnover","EmploymentBands","CompanyNo")
     }
 

@@ -91,32 +91,6 @@ object Transformers {
     }
   }
 
-  def getAddress1(br: Business): Option[String] = {
-    // Extract potential values from CH/VAT/PAYE records
-    // Take first VAT/PAYE record (if any)
-
-    val co: Option[String] = br.company.flatMap {
-      _.address1
-    }
-
-    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
-      _.address1
-    }
-    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
-      _.address1
-    }
-
-    // list in order of preference
-    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
-    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
-    adminSource match {
-      case Some("ch") => br.company.flatMap{_.address1}
-      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address1}
-      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address1}
-      case _ => None
-    }
-  }
-
   def getAddress(br: Business): Seq[Option[String]] = {
     val co: Option[String] = br.company.flatMap {_.postcode}
 
@@ -321,7 +295,12 @@ object Transformers {
 
     val postcode: Option[String] = getPostcode(br)
     val address: Seq[Option[String]] = getAddress(br)
+
     val address1: Option[String] = getAddress1(br)
+    val address2: Option[String] = getAddress2(br)
+    val address3: Option[String] = getAddress3(br)
+    val address4: Option[String] = getAddress4(br)
+    val address5: Option[String] = getAddress5(br)
 
     val industryCode: Option[String] = getIndustryCode(br)
     val legalStatus: Option[String] = getLegalStatus(br)
@@ -351,7 +330,7 @@ object Transformers {
     // Build a BI record that we can later upload to ElasticSource
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
-      address1,
+      address1,address2,address3,address4,address5,
       //address.head, address(1), address(2), address(3), address(4),
       tradingStyle)
   }
@@ -372,5 +351,130 @@ object Transformers {
     }.getOrElse(Nil)
 
     company ++ vat ++ paye
+  }
+  def getAddress1(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address1}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address1}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address1}
+      case _ => None
+    }
+  }
+  def getAddress2(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address2}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address2}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address2}
+      case _ => None
+    }
+  }
+  def getAddress3(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address3}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address3}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address3}
+      case _ => None
+    }
+  }
+  def getAddress4(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address4}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address4}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4}
+      case _ => None
+    }
+  }
+  def getAddress5(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.postcode
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.postcode
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.postcode
+    }
+
+    // list in order of preference
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address5}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address5}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
+      case _ => None
+    }
   }
 }
