@@ -102,6 +102,28 @@ object Transformers {
     }
   }
 
+  def getAddress1(br: Business): Option[String] = {
+    // Extract potential values from CH/VAT/PAYE records
+    // Take first VAT/PAYE record (if any)
+
+    val co: Option[String] = br.company.flatMap {
+      _.address1
+    }
+
+    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.address1
+    }
+    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.address1
+    }
+
+    // list in order of preference
+    val candidates = Seq(co, vat, paye)
+
+    // Take first non-empty name value from list
+    candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
   def getAddress(br: Business): Seq[Option[String]] = {
     val co: Option[String] = br.company.flatMap {_.postcode}
 
