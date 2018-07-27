@@ -467,7 +467,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       .withColumnRenamed("ubrn", "UPRN")
       .withColumnRenamed("TurnoverBand", "Turnover")
       .withColumnRenamed("EmploymentBand","EmploymentBands")
-    
+
     //withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs", "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
 
     val results = withCol.select("TradingStyle").collect().map(_.toString())
