@@ -118,10 +118,14 @@ object Transformers {
     }
 
     // list in order of preference
-    val candidates = Seq(co, vat, paye)
-
-    // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
+    val candidates = Seq(appendTag(co, "ch"), appendTag(vat, "vat"), appendTag(paye, "paye"))
+    val adminSource = candidates.foldLeft[Option[String]](None)(_ orElse _)
+    adminSource match {
+      case Some("ch") => br.company.flatMap{_.address1}
+      case Some("vat") => br.vat.flatMap { ps => ps.headOption }.flatMap {_.address1}
+      case Some("paye") => br.paye.flatMap { ps => ps.headOption }.flatMap {_.address1}
+      case _ => None
+    }
   }
 
   def getAddress(br: Business): Seq[Option[String]] = {
