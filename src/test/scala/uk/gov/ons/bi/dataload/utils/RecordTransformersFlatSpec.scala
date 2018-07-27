@@ -468,11 +468,12 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       .withColumnRenamed("TurnoverBand", "Turnover")
       .withColumnRenamed("EmploymentBand","EmploymentBands")
 
-    withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
-      "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
+    //withCol.select("TradingStyle").show
 
-    val results = withCol.select("Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").collect().map(_.toString())
-    val expected =  Array("[VatAddress,add2,add3,null,null,trading as Paye]")
+    //withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs", "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
+
+    val results = withCol.select("TradingStyle").collect().map(_.toString())
+    val expected =  Array("[trading as Paye]")
 
     results shouldBe expected
   }
