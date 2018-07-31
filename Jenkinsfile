@@ -1,6 +1,7 @@
 #!groovy
 @Library('jenkins-pipeline-shared@master') _
 
+
 pipeline {
     environment {
         OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
