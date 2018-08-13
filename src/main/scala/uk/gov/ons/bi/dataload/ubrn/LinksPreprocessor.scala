@@ -54,7 +54,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //val prevDir = appDataConfig.prevDir
     //val prevLinksFileParquetPath = s"$prevDir/$linksFile"
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
-    val testPath = s"$workingDir/test"
+    val testPath = s"$workingDir/test.parquet"
 
     // Get previous links
     //val previousLinkStore = new PreviousLinkStore(ctxMgr)
