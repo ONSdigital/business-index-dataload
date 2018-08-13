@@ -10,7 +10,7 @@ import scala.util.{Success, Try}
   */
 object UbrnManager {
 
-  val defaultBaseUbrn = 100000000000L
+  val defaultBaseUbrn = 1000000000000000L
   val defaultUbrnColName = "UBRN"
 
   def getMaxUbrn(df: DataFrame, ubrnColName: String = defaultUbrnColName): Option[Long] = {
