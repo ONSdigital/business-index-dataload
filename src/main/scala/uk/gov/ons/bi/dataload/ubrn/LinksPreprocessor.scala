@@ -51,9 +51,10 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val linksFile = appDataConfig.links
 
     // Previous and current Links file  have same name but diff location
-    val prevDir = appDataConfig.prevDir
-    val prevLinksFileParquetPath = s"$prevDir/$linksFile"
+    //val prevDir = appDataConfig.prevDir
+    //val prevLinksFileParquetPath = s"$prevDir/$linksFile"
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
+    val testPath = s"$workingDir/test"
 
     // Get previous links
     //val previousLinkStore = new PreviousLinkStore(ctxMgr)
@@ -86,6 +87,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
     jsonReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+    jsonReader.writeParquet(jsonLinks, testPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
