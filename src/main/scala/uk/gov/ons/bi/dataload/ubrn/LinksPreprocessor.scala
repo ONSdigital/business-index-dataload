@@ -21,7 +21,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def getNewLinksDataFromJson(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
+  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
     // get source/target directories
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
@@ -37,7 +37,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Lot of caching needed here, so we cache to disk and memory
     // Load the new Links from JSON
     val parquetReader = new LinksParquetReader(ctxMgr)
-    val parquetLinks = getNewLinksDataFromJson(parquetReader, appConfig)
+    val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig)
 
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
