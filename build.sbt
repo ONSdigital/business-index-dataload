@@ -1,6 +1,6 @@
 name := """business-index-dataload"""
 
-version := "1.5"
+version := "1.6"
 
 // Building with Scala 2.10 because Cloudera Spark 1.6.0 is still on Scala 2.10
 //Now updating to Scala 2.11 as updating to Spark 2.1.0
