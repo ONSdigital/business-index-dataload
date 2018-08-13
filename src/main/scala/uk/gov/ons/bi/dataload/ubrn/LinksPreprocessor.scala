@@ -22,14 +22,18 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
+
+    val parquetPath = appConfig.OnsDataConfig.linksDataConfig.parquet
+    reader.readFromSourceFile(parquetPath)
+
     // get source/target directories
-    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-    val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.parquet
-    val parquetFilePath = s"$dataDir/$parquetFile"
+    //val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
+    //val dataDir = linksDataConfig.dir
+    //val parquetFile = linksDataConfig.parquet
+    //val parquetFilePath = s"$dataDir/$parquetFile"
 
     // Load the JSON links data
-    reader.readFromSourceFile(parquetFilePath)
+    //reader.readFromSourceFile(parquetFilePath)
   }
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
@@ -38,7 +42,15 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Load the new Links from JSON
     val parquetReader = new LinksParquetReader(ctxMgr)
     val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig)
+    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
 
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val linksFile = appDataConfig.links
+    val newLinksFileParquetPath = s"$workingDir/$linksFile"
+
+    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+    withNewUbrn.unpersist()
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
     // so we need to PERSIST this data once we've added GID to fix it in place.
@@ -46,14 +58,14 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //newLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Parquet file locations from configuration (or runtime params)
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
-    val linksFile = appDataConfig.links
+    //val appDataConfig = appConfig.AppDataConfig
+    //val workingDir = appDataConfig.workingDir
+    //val linksFile = appDataConfig.links
 
     // Previous and current Links file  have same name but diff location
     //val prevDir = appDataConfig.prevDir
     //val prevLinksFileParquetPath = s"$prevDir/$linksFile"
-    val newLinksFileParquetPath = s"$workingDir/$linksFile"
+    //val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     // Get previous links
     //val previousLinkStore = new PreviousLinkStore(ctxMgr)
@@ -72,7 +84,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
     //val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
-    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
+    //val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
 
     // Finally, reconstruct full set of Links so we can save them all to Parquet
     //val linksToSave = matcher.combineLinksToSave(withOldUbrn, jsonLinks)
@@ -85,7 +97,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //newLinks.unpersist()
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
-    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+    //parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
@@ -95,7 +107,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //previousLinkStore.writeAsPrevLinks(appConfig, withNewUbrn, true)
 
     // Clear cached data we no longer need
-    withNewUbrn.unpersist()
+    //withNewUbrn.unpersist()
   }
 
 }
