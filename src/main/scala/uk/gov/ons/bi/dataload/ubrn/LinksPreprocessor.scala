@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.google.inject.Singleton
 import org.apache.spark.sql.DataFrame
-import uk.gov.ons.bi.dataload.reader.{LinkJsonReader, PreviousLinkStore}
+import uk.gov.ons.bi.dataload.reader.{LinksParquetReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.storage.StorageLevel
@@ -21,23 +21,23 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def getNewLinksDataFromJson(reader: LinkJsonReader, appConfig: AppConfig): DataFrame = {
+  def getNewLinksDataFromJson(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
     // get source/target directories
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
-    val jsonfile = linksDataConfig.json
-    val jsonFilePath = s"$dataDir/$jsonfile"
+    val parquetFile = linksDataConfig.parquet
+    val parquetFilePath = s"$dataDir/$parquetFile"
 
     // Load the JSON links data
-    reader.readFromSourceFile(jsonFilePath)
+    reader.readFromSourceFile(parquetFilePath)
   }
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
     // Lot of caching needed here, so we cache to disk and memory
     // Load the new Links from JSON
-    val jsonReader = new LinkJsonReader(ctxMgr)
-    val jsonLinks = getNewLinksDataFromJson(jsonReader, appConfig)
+    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetLinks = getNewLinksDataFromJson(parquetReader, appConfig)
 
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
@@ -73,7 +73,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
     //val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
-    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(jsonLinks)
+    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
 
     // Finally, reconstruct full set of Links so we can save them all to Parquet
     //val linksToSave = matcher.combineLinksToSave(withOldUbrn, jsonLinks)
@@ -86,8 +86,8 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //newLinks.unpersist()
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
-    jsonReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
-    jsonReader.writeParquet(jsonLinks, testPath)
+    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+    parquetReader.writeParquet(parquetLinks, testPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
