@@ -44,7 +44,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val workingDir = appDataConfig.workingDir
     val linksFile = appDataConfig.links
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
-    val testPath = s"$workingDir/test.parquet"
 
     withNewUbrn.write.mode("overwrite").parquet(newLinksFileParquetPath)
   }
