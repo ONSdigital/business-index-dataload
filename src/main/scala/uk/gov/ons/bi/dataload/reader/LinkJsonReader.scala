@@ -12,7 +12,7 @@ class LinkJsonReader (ctxMgr: ContextMgr)
   val spark = ctxMgr.spark
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
-    spark.read.parquet(srcFilePath)
+    spark.read.json(srcFilePath)
   }
 
 }
