@@ -21,7 +21,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
-
     // get source/target directories
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
