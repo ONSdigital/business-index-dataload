@@ -23,7 +23,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
 
     val parquetPath = appConfig.OnsDataConfig.linksDataConfig.parquet
-    reader.readFromSourceFile(parquetPath)
+    reader.readFromSourceFile("parquetPath")
 
     // get source/target directories
     //val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
