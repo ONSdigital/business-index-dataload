@@ -44,11 +44,12 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
 
     val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
+    val workingDir = appDataConfig.work
     val linksFile = appDataConfig.links
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+    withNewUbrn.write.mode("overwrite").parquet(newLinksFileParquetPath)
     withNewUbrn.unpersist()
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
