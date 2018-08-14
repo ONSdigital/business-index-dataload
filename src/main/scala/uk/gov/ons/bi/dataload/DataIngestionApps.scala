@@ -1,9 +1,11 @@
 package uk.gov.ons.bi.dataload
 
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
+import uk.gov.ons.bi.dataload.reader.LinksParquetReader
 import uk.gov.ons.bi.dataload.ubrn._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
@@ -84,9 +86,20 @@ object LoadBiToEsApp extends DataloadApp {
 }
 
 object PreprocessLinksApp extends DataloadApp {
-  // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
-  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
-  val ctxMgr = new ContextMgr(sparkSess)
-  val lpp = new LinksPreprocessor(ctxMgr)
+  override def main(args: Array[String]) {
+    // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
+    val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+    //val ctxMgr = new ContextMgr(sparkSess)
+
+    val linksParquetPath: String = args(0)
+    val outputPath: String = args(1)
+
+    val parquetLinks = sparkSess.read.parquet(linksParquetPath)
+    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
+    //val appDataConfig = appConfig.AppDataConfig
+    val newLinksFileParquetPath = outputPath
+    withNewUbrn.write.mode("overwrite").parquet(newLinksFileParquetPath)
+    //val lpp = new LinksPreprocessor(ctxMgr)
+  }
 }
 

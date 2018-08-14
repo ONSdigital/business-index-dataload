@@ -24,7 +24,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
 
     val parquetPath = appConfig.OnsDataConfig.linksDataConfig.parquet
-    reader.readFromSourceFile("parquetPath")
+    reader.readFromSourceFile(parquetPath)
 
     // get source/target directories
     //val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
@@ -49,11 +49,9 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val linksFile = appDataConfig.links
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
+    (withNewUbrn, newLinksFileParquetPath)
+
     //parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
-    withNewUbrn.write.mode("overwrite").parquet(newLinksFileParquetPath)
-    println(newLinksFileParquetPath)
-    withNewUbrn.show(5)
-    withNewUbrn.unpersist()
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
     // so we need to PERSIST this data once we've added GID to fix it in place.
