@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.explode
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
@@ -30,11 +31,12 @@ object HmrcBiCsvExtractor {
     // Extract data from main data frame
 
     def getLegalEntities(df: DataFrame): DataFrame = {
-      // Extract the Legal Entity information from BI (excludes VAT and PAYE)
-      df.select("id","BusinessName","TradingStyle","PostCode",
-        "Address1", "Address2","Address3","Address4", "Address5",
-        "IndustryCode","LegalStatus","TradingStatus",
-        "Turnover","EmploymentBands","CompanyNo","VatRefs","PayeRefs")
+      df.withColumn("VatRef", df("VatRefs").cast(ArrayType(StringType)))
+        .withColumn("PayeRef", df("PayeRefs").cast(ArrayType(StringType)))
+        .select("id","BusinessName","TradingStyle","PostCode",
+          "Address1", "Address2","Address3","Address4", "Address5",
+          "IndustryCode","LegalStatus","TradingStatus",
+          "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
     }
 
     def getVatExploded(df: DataFrame): DataFrame = {
