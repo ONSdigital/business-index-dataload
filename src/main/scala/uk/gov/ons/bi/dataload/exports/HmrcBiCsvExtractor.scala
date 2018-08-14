@@ -34,7 +34,7 @@ object HmrcBiCsvExtractor {
       df.select("id","BusinessName","TradingStyle","PostCode",
         "Address1", "Address2","Address3","Address4", "Address5",
         "IndustryCode","LegalStatus","TradingStatus",
-        "Turnover","EmploymentBands","CompanyNo")
+        "Turnover","EmploymentBands","CompanyNo","VatRefs","PayeRefs")
     }
 
     def getVatExploded(df: DataFrame): DataFrame = {
