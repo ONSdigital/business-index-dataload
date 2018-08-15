@@ -90,8 +90,8 @@ object PreprocessLinksApp {
   def main(args: Array[String]) {
     // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
 
-    //val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
-    val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+    val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
     //val ctxMgr = new ContextMgr(sparkSess)
 
     val linksParquetPath: String = args(0)
