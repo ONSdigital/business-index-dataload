@@ -1,0 +1,3 @@
+#!/bin/bash
+
+spark2-submit --class uk.gov.ons.bi.dataload.SourceDataToParquetApp --master='yarn' --deploy-mode='cluster' --num-executors 6 --driver-memory 2G --executor-memory 4G --jars hdfs://prod1/user/bi-dev-ci/businessIndex/lib/config-1.3.2.jar --driver-java-options "-Dbi-dataload.ext-data.env=user/bi-dev-ci -Dbi-dataload.ons-data.dir=bi-dev-ci/businessIndex -Dbi-dataload.app-data.env=user -Dbi-dataload.app-data.dir=bi-dev-ci/businessIndex" hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.6.jar
