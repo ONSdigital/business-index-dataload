@@ -16,4 +16,5 @@
 /src/main/main.iml
 /src/test/test.iml
 /src/main/resources/target/
-/src/main/resources/output.parquet
+/src/main/resources/LINKS_Output.parquet
+/src/main/resources/legal_units.parquet
