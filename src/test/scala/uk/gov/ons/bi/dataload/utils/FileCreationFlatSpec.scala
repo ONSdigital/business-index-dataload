@@ -2,8 +2,11 @@ package uk.gov.ons.bi.dataload.utils
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
+
+import uk.gov.ons.bi.dataload.model._
 import java.io.File
 
+import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.UbrnManager
 
 /**
@@ -37,7 +40,81 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     result shouldBe true
   }
 
-  "SourceDataToParquetApp"
+  "Admin source files " should "read in and wrote out as a parquet file for the admin source CH" in {
+
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+
+    // output dir and path
+    val workingDir = appConfig.AppDataConfig.work
+    val parquetFile = appConfig.AppDataConfig.ch
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    new File(targetFilePath).delete()
+
+    sourceDataLoader.loadBusinessDataToParquet(CH, appConfig)
+
+    val result = new File(targetFilePath).exists
+    result shouldBe true
+  }
+
+  "Admin source files " should "read in and wrote out as a parquet file for the admin source PAYE" in {
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+
+    // output dir and path
+    val workingDir = appConfig.AppDataConfig.work
+    val parquetFile = appConfig.AppDataConfig.paye
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    new File(targetFilePath).delete()
+
+    sourceDataLoader.loadBusinessDataToParquet(PAYE, appConfig)
+
+    val result = new File(targetFilePath).exists
+    result shouldBe true
+  }
+
+  "Admin source files " should "read in and wrote out as a parquet file for the admin source VAT" in {
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+
+    // output dir and path
+    val workingDir = appConfig.AppDataConfig.work
+    val parquetFile = appConfig.AppDataConfig.vat
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    new File(targetFilePath).delete()
+
+    sourceDataLoader.loadBusinessDataToParquet(VAT, appConfig)
+
+    val result = new File(targetFilePath).exists
+    result shouldBe true
+  }
+
+  "Admin source files " should "read in and wrote out as a parquet file for the admin source TCN-lookup" in {
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+
+    // output dir and path
+    val workingDir = appConfig.AppDataConfig.work
+    val parquetFile = appConfig.AppDataConfig.tcn
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    new File(targetFilePath).delete()
+
+    sourceDataLoader.loadTcnToSicCsvLookupToParquet(appConfig)
+
+    val result = new File(targetFilePath).exists
+    result shouldBe true  }
 
   "LinkDataApp"
 
