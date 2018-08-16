@@ -17,8 +17,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
 
     val homeDir: String = "/Users/ChiuA/projects/dataload/business-index-dataload/src/main/resources"
-    val outputFilePath: String = s"$homeDir/output.parquet"
-    val inputFilePath: String  = s"$homeDir/input.parquet"
+    val outputFilePath: String = s"$homeDir/LINKS_Output.parquet"
+    val inputFilePath: String  = s"$homeDir/legal_units.parquet"
 
     // Used to create initial input parquet file
     //val jsonPath = s"$homeDir/links.json"
@@ -34,4 +34,10 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = new File(outputFilePath).exists
     result shouldBe true
   }
+
+  "SourceDataToParquetApp"
+
+  "LinkDataApp"
+
+  "LoadBiToEsApp"
 }
