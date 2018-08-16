@@ -48,7 +48,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
     // output dir and path
-    val workingDir = appConfig.AppDataConfig.work
+    val workingDir = appConfig.AppDataConfig.workingDir
     val parquetFile = appConfig.AppDataConfig.ch
     val targetFilePath = s"$workingDir/$parquetFile"
 
@@ -59,7 +59,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = new File(targetFilePath).exists
     result shouldBe true
   }
-
+  /*
   "Admin source files " should "read in and wrote out as a parquet file for the admin source PAYE" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val appConfig: AppConfig = new AppConfig
@@ -67,7 +67,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
     // output dir and path
-    val workingDir = appConfig.AppDataConfig.work
+    val workingDir = appConfig.AppDataConfig.workingDir
     val parquetFile = appConfig.AppDataConfig.paye
     val targetFilePath = s"$workingDir/$parquetFile"
 
@@ -86,7 +86,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
     // output dir and path
-    val workingDir = appConfig.AppDataConfig.work
+    val workingDir = appConfig.AppDataConfig.workingDir
     val parquetFile = appConfig.AppDataConfig.vat
     val targetFilePath = s"$workingDir/$parquetFile"
 
@@ -105,7 +105,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
     // output dir and path
-    val workingDir = appConfig.AppDataConfig.work
+    val workingDir = appConfig.AppDataConfig.workingDir
     val parquetFile = appConfig.AppDataConfig.tcn
     val targetFilePath = s"$workingDir/$parquetFile"
 
@@ -119,4 +119,5 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "LinkDataApp"
 
   "LoadBiToEsApp"
+  */
 }
