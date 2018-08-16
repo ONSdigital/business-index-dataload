@@ -21,9 +21,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val inputFilePath: String  = s"$homeDir/legal_units.parquet"
 
     // Used to create initial input parquet file
-    //val jsonPath = s"$homeDir/links.json"
+    val jsonPath = s"$homeDir/links.json"
 
     new File(outputFilePath).delete()
+
+    sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
 
     val df: DataFrame = sparkSession.read.parquet(inputFilePath)
 
