@@ -105,23 +105,23 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     result shouldBe true
   }
 
-//  "Admin source files " should "read in and wrote out as a parquet file for the admin source TCN-lookup" in {
-//    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-//    val appConfig: AppConfig = new AppConfig
-//    val ctxMgr = new ContextMgr(sparkSession)
-//    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-//
-//    // output dir and path
-//    val workingDir = appConfig.AppDataConfig.workingDir
-//    val parquetFile = appConfig.AppDataConfig.tcn
-//    val targetFilePath = s"$workingDir/$parquetFile"
-//
-//    new File(targetFilePath).delete()
-//
-//    sourceDataLoader.loadTcnToSicCsvLookupToParquet(appConfig)
-//
-//    val result = new File(targetFilePath).exists
-//    result shouldBe true  }
+  "Admin source files " should "read in and wrote out as a parquet file for the admin source TCN-lookup" in {
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+    val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+
+    // output dir and path
+    val workingDir = appConfig.AppDataConfig.workingDir
+    val parquetFile = appConfig.AppDataConfig.tcn
+    val targetFilePath = s"$workingDir/$parquetFile"
+
+    new File(targetFilePath).delete()
+
+    sourceDataLoader.loadTcnToSicCsvLookupToParquet(appConfig)
+
+    val result = new File(targetFilePath).exists
+    result shouldBe true  }
 
   "LinkDataApp"
 
