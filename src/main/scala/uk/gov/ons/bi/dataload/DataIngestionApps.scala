@@ -31,10 +31,12 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 trait DataloadApp extends App {
   val appConfig: AppConfig = new AppConfig
+  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  //val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
 }
 
 object SourceDataToParquetApp extends DataloadApp {
-  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Load business data files to Parquet").enableHiveSupport.getOrCreate
+  //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Load business data files to Parquet").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
@@ -42,7 +44,7 @@ object SourceDataToParquetApp extends DataloadApp {
 }
 
 object LinkDataApp extends DataloadApp {
-  val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Link data for Business Index").enableHiveSupport.getOrCreate
+  //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Link data for Business Index").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   // Use an object because defining builder as a class causes weird Spark errors here.
   // Pass context stuff explicitly to builder method.
@@ -67,7 +69,7 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+  val sparkSess2 = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
     .config("es.port", esConfig.port.toString)
@@ -81,7 +83,7 @@ object LoadBiToEsApp extends DataloadApp {
 
   // Now we've built the ES SparkSession, let's go to work:
   // Set up the context manager (singleton holding our SparkSession)
-  val ctxMgr = new ContextMgr(sparkSess)
+  val ctxMgr = new ContextMgr(sparkSess2)
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 
 }
@@ -89,7 +91,7 @@ object LoadBiToEsApp extends DataloadApp {
 object PreprocessLinksApp extends DataloadApp{
     // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
 
-    val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    //val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
     //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
     //val ctxMgr = new ContextMgr(sparkSess)
 
