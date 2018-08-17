@@ -6,6 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.model._
 import java.io.File
 
+import uk.gov.ons.bi.dataload.PreprocessLinksApp.appConfig
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.UbrnManager
 
@@ -18,13 +19,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // setup config
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val appConfig: AppConfig = new AppConfig
 
-    val homeDir: String = "/Users/ChiuA/projects/dataload/business-index-dataload/src/main/resources"
-    val outputFilePath: String = s"$homeDir/LINKS_Output.parquet"
-    val inputFilePath: String  = s"$homeDir/legal_units.parquet"
+    val linksDir = appConfig.OnsDataConfig.linksDataConfig.dir
+    val linksFile = appConfig.OnsDataConfig.linksDataConfig.parquet
+
+    val outputDir = appConfig.AppDataConfig.workingDir
+    val outputFile = appConfig.AppDataConfig.links
+
+    val outputFilePath: String = s"$outputDir/$outputFile"
+    val inputFilePath: String  = s"$linksDir/$linksFile"
 
     // Used to create initial input parquet file
-    val jsonPath = s"$homeDir/links.json"
+    val jsonPath = s"$linksDir/links.json"
 
     new File(outputFilePath).delete()
 
