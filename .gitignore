@@ -16,9 +16,5 @@
 /src/main/main.iml
 /src/test/test.iml
 /src/main/resources/target/
-/src/main/resources/LINKS_Output.parquet
 /src/main/resources/legal_units.parquet
-/src/main/resources/CH.parquet
-/src/main/resources/PAYE.parquet
-/src/main/resources/VAT.parquet
-/src/main/resources/TCN_TO_SIC_LOOKUP.parquet
+/src/main/resources/ons.gov/
