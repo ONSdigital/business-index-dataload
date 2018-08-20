@@ -1,0 +1,3 @@
+#!/bin/bash
+
+spark2-submit --class uk.gov.ons.bi.dataload.LoadBiToEsApp --master='yarn' --deploy-mode='cluster' --num-executors 6 --driver-memory 4G --executor-memory 3G --jars hdfs://prod1/user/bi-dev-ci/businessIndex/lib/config-1.3.2.jar,hdfs://prod1/user/bi-dev-ci/businessIndex/lib/elasticsearch-spark-20_2.11-6.0.0.jar --driver-java-options "-Dbi-dataload.es.nodes=$1 -Dbi-dataload.es.index=$2 -Dbi-dataload.app-data.env=user/bi-dev-ci -Dbi-dataload.app-data.dir=businessIndex" hdfs://prod1/user/bi-dev-ci/businessIndex/lib/business-index-dataload_2.11-1.6.jar
