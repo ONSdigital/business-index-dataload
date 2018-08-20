@@ -6,7 +6,7 @@ import java.io.File
 
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
-import uk.gov.ons.bi.dataload.ubrn.UbrnManager
+import uk.gov.ons.bi.dataload.ubrn.{LinksPreprocessor, UbrnManager}
 import uk.gov.ons.bi.dataload.model._
 
 /**
@@ -19,6 +19,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // setup config
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val appConfig: AppConfig = new AppConfig
+    val ctxMgr = new ContextMgr(sparkSession)
+
+    new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 
     val linksDir = appConfig.OnsDataConfig.linksDataConfig.dir
     val linksFile = appConfig.OnsDataConfig.linksDataConfig.parquet
@@ -35,12 +38,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     new File(outputFilePath).delete()
 
     sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
-
-    val df: DataFrame = sparkSession.read.parquet(inputFilePath)
-
-    val withNewUbrn = UbrnManager.applyNewUbrn(df)
-
-    withNewUbrn.write.mode("overwrite").parquet(outputFilePath)
 
     val result = new File(outputFilePath).exists
     result shouldBe true
