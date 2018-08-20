@@ -1,12 +1,9 @@
 package uk.gov.ons.bi.dataload
 
-
-import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.reader.LinksParquetReader
 import uk.gov.ons.bi.dataload.ubrn._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
@@ -36,7 +33,6 @@ trait DataloadApp extends App {
 }
 
 object SourceDataToParquetApp extends DataloadApp {
-  //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Load business data files to Parquet").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
@@ -44,7 +40,6 @@ object SourceDataToParquetApp extends DataloadApp {
 }
 
 object LinkDataApp extends DataloadApp {
-  //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Link data for Business Index").enableHiveSupport.getOrCreate
   val ctxMgr = new ContextMgr(sparkSess)
   // Use an object because defining builder as a class causes weird Spark errors here.
   // Pass context stuff explicitly to builder method.
@@ -90,20 +85,7 @@ object LoadBiToEsApp extends DataloadApp {
 
 object PreprocessLinksApp extends DataloadApp{
     // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
-
-    //val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
-    //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
-    //val ctxMgr = new ContextMgr(sparkSess)
-
-    val linksDir = appConfig.OnsDataConfig.linksDataConfig.dir
-    val linksFile = appConfig.OnsDataConfig.linksDataConfig.parquet
-
-    val outputDir = appConfig.AppDataConfig.workingDir
-    val outputFile = appConfig.AppDataConfig.links
-
-    val parquetLinks = sparkSess.read.parquet(s"$linksDir/$linksFile")
-    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
-    withNewUbrn.write.mode("overwrite").parquet(s"$outputDir/$outputFile")
-    //val lpp = new LinksPreprocessor(ctxMgr)
+   val ctxMgr = new ContextMgr(sparkSess)
+   val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 }
 
