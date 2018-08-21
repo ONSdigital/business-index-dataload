@@ -20,15 +20,15 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
+  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig, inputPath: String): DataFrame = {
     // get source/target directories
-    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-    val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.parquet
-    val parquetFilePath = s"$dataDir/$parquetFile"
+//    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
+//    val dataDir = linksDataConfig.dir
+//    val parquetFile = linksDataConfig.parquet
+//    val parquetFilePath = s"$dataDir/$parquetFile"
 
     // Load the JSON links data
-    reader.readFromSourceFile(parquetFilePath)
+    reader.readFromSourceFile(inputPath)
   }
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
@@ -44,8 +44,21 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val workingDir = appDataConfig.workingDir
     val linksFile = appDataConfig.links
 
+    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
+    val dataDir = linksDataConfig.dir
+    val parquetFile = linksDataConfig.parquet
+    val parquetFilePath = s"$dataDir/$parquetFile"
+    val newLinksFileParquetPath = s"$workingDir/$linksFile"
+
     val parquetReader = new LinksParquetReader(ctxMgr)
-    val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig)
+
+    readWriteParquet(appConfig, parquetReader,parquetFilePath, newLinksFileParquetPath)
+
+    //val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig, parquetFilePath)
+
+//    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
+//    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+//    withNewUbrn.unpersist()
 
     //val newLinks = parquetLinks.withColumn("GID", generateUuid())
     //newLinks.persist(StorageLevel.MEMORY_AND_DISK)
@@ -53,7 +66,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // Previous and current Links file  have same name but diff location
     //val prevDir = appDataConfig.prevDir
     //val prevLinksFileParquetPath = s"$prevDir/$linksFile"
-    val newLinksFileParquetPath = s"$workingDir/$linksFile"
 
     // Get previous links
     //val previousLinkStore = new PreviousLinkStore(ctxMgr)
@@ -72,7 +84,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
 
     //val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
-    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
+//    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
 
     // Finally, reconstruct full set of Links so we can save them all to Parquet
     //val linksToSave = matcher.combineLinksToSave(withOldUbrn, parquetLinks)
@@ -81,7 +93,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Write preprocessed Links data to a Parquet output file ready for subsequent processing
-    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
+//    parquetReader.writeParquet(withNewUbrn, newLinksFileParquetPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
@@ -91,9 +103,17 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     //previousLinkStore.writeAsPrevLinks(appConfig, withNewUbrn, true)
 
     // Clear cached data we no longer need
-    withNewUbrn.unpersist()
+    //withNewUbrn.unpersist()
 //    prevLinks.unpersist()
 //    newLinks.unpersist()
+  }
+
+  def readWriteParquet(appConfig: AppConfig, parquetReader: LinksParquetReader, inputPath: String, outputPath: String) = {
+    println(outputPath)
+    val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig, inputPath)
+    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
+    parquetReader.writeParquet(withNewUbrn, outputPath)
+    withNewUbrn.unpersist()
   }
 
 }
