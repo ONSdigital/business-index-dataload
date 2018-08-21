@@ -39,6 +39,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // so we need to PERSIST this data once we've added GID to fix it in place.
 
     // Parquet file locations from configuration (or runtime params)
+
     val appDataConfig = appConfig.AppDataConfig
     val workingDir = appDataConfig.workingDir
     val linksFile = appDataConfig.links
@@ -108,7 +109,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   }
 
   def readWriteParquet(appConfig: AppConfig, parquetReader: LinksParquetReader, inputPath: String, outputPath: String) = {
-    println(outputPath)
     val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig, inputPath)
     val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
     parquetReader.writeParquet(withNewUbrn, outputPath)
