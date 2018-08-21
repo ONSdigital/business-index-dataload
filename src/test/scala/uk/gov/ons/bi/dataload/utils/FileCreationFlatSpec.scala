@@ -4,10 +4,13 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
+import org.apache.spark.sql.types._
+
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
-import uk.gov.ons.bi.dataload.ubrn.{LinksPreprocessor, UbrnManager}
+import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.model._
+import uk.gov.ons.bi.dataload.reader.LinksParquetReader
 
 /**
   * Created by ChiuA on 15/08/2018.
@@ -22,26 +25,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    // get input path
-    val linksDir = appConfig.OnsDataConfig.linksDataConfig.dir
-    val linksFile = appConfig.OnsDataConfig.linksDataConfig.parquet
-    val inputFilePath: String  = s"$linksDir/$linksFile"
+    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
+    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
+    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
 
-    // get output path
-    val outputDir = appConfig.AppDataConfig.workingDir
-    val outputFile = appConfig.AppDataConfig.links
-    val outputFilePath: String = s"$outputDir/$outputFile"
+    // Used to create initial input parquet file
+    val jsonPath = parquetReader.readFromLocal("/links.json")
+    sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
 
     // delete and create output parquet
     new File(outputFilePath).delete()
-    new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
-
-    // Used to create initial input parquet file
-    val jsonPath = s"$linksDir/links.json"
-    sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
-
-    //val result = new File(outputFilePath).exists
+    new LinksPreprocessor(ctxMgr).readWriteParquet(appConfig, parquetReader, inputFilePath, outputFilePath)
 
     // Read in created parquet
     val results = sparkSession.read.parquet(outputFilePath).collect()

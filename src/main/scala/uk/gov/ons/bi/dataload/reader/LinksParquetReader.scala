@@ -15,4 +15,8 @@ class LinksParquetReader (ctxMgr: ContextMgr)
     spark.read.parquet(srcFilePath)
   }
 
+  def readFromLocal(srcFilePath: String): String = {
+    getClass.getResource(srcFilePath).toString
+  }
+
 }
