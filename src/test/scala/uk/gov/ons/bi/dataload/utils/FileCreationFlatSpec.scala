@@ -4,8 +4,6 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
-import org.apache.spark.sql.types._
-
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
@@ -66,7 +64,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "Admin source files " should "read in and write out as a parquet file for the admin source CH" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    import sparkSession.implicits._
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
@@ -143,7 +140,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
   "LinkDataApp " should "read in ubrn links and admin data and outputs parquet file containing fully populated Legal Units" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    import sparkSession.implicits._
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
 
@@ -158,27 +154,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val df = sparkSession.read.parquet(biFile)
     val results = df.sort("id")
 
-    val schema = StructType(Array(
-      StructField("id", LongType, true),
-      StructField("BusinessName", StringType, true),
-      StructField("TradingStyle", StringType, true),
-      StructField("UPRN", LongType, true),
-      StructField("PostCode", StringType, true),
-      StructField("IndustryCode", StringType, true),
-      StructField("LegalStatus", StringType, true),
-      StructField("TradingStatus", StringType, true),
-      StructField("Turnover", StringType, true),
-      StructField("EmploymentBands", StringType, true),
-      StructField("CompanyNo", StringType, true),
-      StructField("VatRefs", ArrayType(LongType, true)),
-      StructField("PayeRefs", ArrayType(StringType, true)),
-      StructField("Address1", StringType, true),
-      StructField("Address2", StringType, true),
-      StructField("Address3", StringType, true),
-      StructField("Address4", StringType, true),
-      StructField("Address5", StringType, true)
-    ))
-
     val data = Seq(
       Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array(), "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null),
       Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", null, "0", null, "A", null, null, Array(862764963000L), Array(), "address1", "address2", "address3", "address4", "address5"),
@@ -187,7 +162,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
       Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"), "address1", "address2", "address3", "address4", "address5")
     )
     
-    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),schema).sort("id")
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.linkSchema).sort("id")
 
     results.collect() shouldBe expected.collect
   }
