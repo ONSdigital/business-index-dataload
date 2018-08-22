@@ -1,6 +1,11 @@
 package uk.gov.ons.bi.dataload.utils
 
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.scalatest.{FlatSpec, ShouldMatchers}
+
+import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder._
 import uk.gov.ons.bi.dataload.model._
 
 
@@ -391,6 +396,17 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       company.companyNo,
       expectedVatRefs,
       expectedPayeRefs
+//      ,
+//      None,
+//      None,
+//      None,
+//      None,
+//      None
+//      Some("address1"),
+//      Some("address2"),
+//      Some("address3"),
+//      Some("address4"),
+//      Some("address5"),
     )
     results shouldBe expected
   }
@@ -418,4 +434,45 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     results shouldBe expected
   }
 
+  "dataframe" should "be generated with the added legal unit columns(address, tradingstyle, birthdate) based on priority" in {
+
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    implicit val sc: SparkContext = sparkSession.sparkContext
+    import sparkSession.implicits._
+
+    val ubrn = 100L
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = None, address1 = Some("address1"))
+
+    val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
+      sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L), address1 = Some("VatAddress"), address2 = Some("add2"), address3 = Some("add3"))
+
+    val paye1 = PayeRec(payeRef = Some("PAYE1"), nameLine1 = Some("TEST PAYE1"), postcode = Some("AB1 2CD"),
+      legalStatus = Some(3), decJobs = Some(12.0), marJobs = Some(3.0),
+      junJobs = Some(6.0), sepJobs = Some(9.0), jobsLastUpd = Some("Mar17"), address1 = Some("payeAddress"), tradingStyle = Some("trading as Paye"))
+
+    val uwdCh = UbrnWithData(ubrn, CH, company)
+    val uwdPaye = UbrnWithData(ubrn, PAYE, paye1)
+    val uwdVat = UbrnWithData(ubrn, VAT, vat1)
+
+    val uwds = List(uwdCh, uwdPaye, uwdVat)
+    val uwl = UbrnWithList(ubrn, uwds)
+
+    val rdd = sc.parallelize(Seq(Transformers.buildBusinessRecord(uwl)))
+
+    val businessIndexes: RDD[BusinessIndex] = rdd.map(Transformers.convertToBusinessIndex)
+
+    val df = businessIndexes.toDF()
+
+    val withCol = df.withColumn("id", $"ubrn")
+      .withColumnRenamed("ubrn", "UPRN")
+      .withColumnRenamed("TurnoverBand", "Turnover")
+      .withColumnRenamed("EmploymentBand","EmploymentBands")
+
+    //withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs", "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
+
+    val results = withCol.select("TradingStyle").collect().map(_.toString())
+    val expected =  Array("[trading as Paye]")
+
+    results shouldBe expected
+  }
 }

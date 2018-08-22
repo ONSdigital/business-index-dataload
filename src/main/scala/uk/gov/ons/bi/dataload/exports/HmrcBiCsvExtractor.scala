@@ -1,12 +1,13 @@
 package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.explode
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit}
+
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
-
 /**
   * Created by websc on 29/06/2017.
   */
@@ -26,13 +27,28 @@ object HmrcBiCsvExtractor {
     val legalFile = s"$extractDir/bi-legal-entities.csv"
     val vatFile = s"$extractDir/bi-vat.csv"
     val payeFile = s"$extractDir/bi-paye.csv"
+    val hmrcFile = s"$extractDir/bi-hmrc.csv"
 
     // Extract data from main data frame
 
+    def stringify(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
+
+    def getHMRCOutput(df: DataFrame): DataFrame = {
+      df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
+        .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
+        .withColumn("VatRef", stringify($"arrVar"))
+        .withColumn("PayeRef", stringify($"arrPaye"))
+        .select("id","BusinessName","TradingStyle","PostCode",
+          "Address1", "Address2","Address3","Address4", "Address5",
+          "IndustryCode","LegalStatus","TradingStatus",
+          "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+    }
+
     def getLegalEntities(df: DataFrame): DataFrame = {
-      // Extract the Legal Entity information from BI (excludes VAT and PAYE)
-      df.select("id","BusinessName","PostCode","IndustryCode","LegalStatus","TradingStatus",
-        "Turnover","EmploymentBands","CompanyNo")
+      df.select("id","BusinessName","TradingStyle","PostCode",
+          "Address1", "Address2","Address3","Address4", "Address5",
+          "IndustryCode","LegalStatus","TradingStatus",
+          "Turnover","EmploymentBands","CompanyNo")
     }
 
     def getVatExploded(df: DataFrame): DataFrame = {
@@ -73,6 +89,10 @@ object HmrcBiCsvExtractor {
     val paye =  getPayeExploded(biData)
     log.info(s"Writing ${paye.count} PAYE entries to $payeFile")
     BiCsvWriter.writeCsvOutput(paye, payeFile)
+
+    val hmrcOut = getHMRCOutput(biData)
+    log.info(s"Writing ${hmrcOut.count} hmrcOut entries to $hmrcFile")
+    BiCsvWriter.writeCsvOutput(hmrcOut, hmrcFile)
 
     // Clear cache
     biData.unpersist(false)

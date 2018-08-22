@@ -1,7 +1,9 @@
 package uk.gov.ons.bi.dataload.linker
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row}
+
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
@@ -48,7 +50,10 @@ object LinkedBusinessBuilder {
       .withColumnRenamed("EmploymentBand","EmploymentBands")
 
     // Reorder the fields into the correct order
-    val biDf3: DataFrame = biDf2.select("id", "BusinessName", "UPRN", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs" )
+    val biDf3: DataFrame = biDf2.select("id", "BusinessName","TradingStyle", "UPRN", "PostCode", "IndustryCode", "LegalStatus",
+      "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
+      "Address1", "Address2", "Address3", "Address4", "Address5")
+      //, "Address2","Address3","Address4", "Address5")
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
@@ -163,6 +168,7 @@ object LinkedBusinessBuilder {
     val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
     // write BI data to parquet file
+
     writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
 
     // clear cached UWKs

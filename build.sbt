@@ -1,6 +1,6 @@
 name := """business-index-dataload"""
 
-version := "1.5"
+version := "1.6"
 
 // Building with Scala 2.10 because Cloudera Spark 1.6.0 is still on Scala 2.10
 //Now updating to Scala 2.11 as updating to Spark 2.1.0
@@ -19,8 +19,8 @@ lazy val Versions = new {
 }
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % Versions.spark % "provided",
-  "org.apache.spark" %% "spark-sql" % Versions.sparkSql % "provided",
+  "org.apache.spark" %% "spark-core" % Versions.spark,
+  "org.apache.spark" %% "spark-sql" % Versions.sparkSql,
 // Restore this when the Cloudera bug is fixed so we can use HiveContext for UBRN rules
 //  "org.apache.spark" %% "spark-hive" % Versions.spark % "provided",
   "joda-time" % "joda-time" % Versions.joda,

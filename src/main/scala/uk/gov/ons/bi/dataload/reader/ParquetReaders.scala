@@ -58,7 +58,12 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
         | CompanyName,
         | CompanyStatus,
         | SICCodeSicText_1,
-        | RegAddressPostCode
+        | RegAddressPostCode,
+        | RegAddressAddressLine1,
+        | RegAddressAddressLine2,
+        | RegAddressPostTown,
+        | RegAddressCounty,
+        | RegAddressCountry
         |FROM temp_comp
         |WHERE CompanyNumber IS NOT NULL""".stripMargin).rdd
 
@@ -70,8 +75,13 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
       val companyStatus = if (row.isNullAt(2)) None else Option(row.getString(2))
       val sicCode1 = if (row.isNullAt(3)) None else Option(row.getString(3))
       val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
+      val address1 = if (row.isNullAt(5)) None else Option(row.getString(5))
+      val address2 = if (row.isNullAt(6)) None else Option(row.getString(6))
+      val address3 = if (row.isNullAt(7)) None else Option(row.getString(7))
+      val address4 = if (row.isNullAt(8)) None else Option(row.getString(8))
+      val address5 = if (row.isNullAt(9)) None else Option(row.getString(9))
 
-      (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode))
+      (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode, address1, address2, address3, address4, address5))
     }
   }
 }
@@ -138,7 +148,13 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
         | CAST(paye.jobs_lastupd AS STRING) AS jobs_lastupd,
         | CAST(paye.stc AS INT) AS stc,
         | CAST(sic_lookup.SIC07 AS STRING) AS SIC07,
-        | paye.deathcode
+        | paye.deathcode,
+        | address1,
+        | address2,
+        | address3,
+        | address4,
+        | address5,
+        | tradstyle1
         |FROM paye LEFT OUTER JOIN sic_lookup ON (sic_lookup.TCN = paye.stc)
         |WHERE paye.payeref IS NOT NULL""".stripMargin).rdd
 
@@ -165,8 +181,16 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 
         val deathcode = if (row.isNullAt(11)) None else Option(row.getString(11))
 
+        val address1 = if (row.isNullAt(12)) None else Option(row.getString(12))
+        val address2 = if (row.isNullAt(13)) None else Option(row.getString(13))
+        val address3 = if (row.isNullAt(14)) None else Option(row.getString(14))
+        val address4 = if (row.isNullAt(15)) None else Option(row.getString(15))
+        val address5 = if (row.isNullAt(16)) None else Option(row.getString(16))
+
+        val tradingStyle = if (row.isNullAt(17)) None else Option(row.getString(17))
+
         PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
-          jobsLastUpd, stc, sic, deathcode)
+          jobsLastUpd, stc, sic, deathcode, address1, address2, address3, address4, address5, tradingStyle)
       }
       (payeRefStr, rec)
     }
@@ -186,15 +210,21 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
     df.createOrReplaceTempView("temp_vat")
     val extracted = spark.sql(
       """
-        |SELECT CAST(vatref AS LONG) AS vatref,
-        |name1,
-        |postcode,
-        |CAST(sic92 AS STRING) AS sic92,
-        |status,
-        |CAST(turnover AS LONG) AS turnover,
-        |CAST (deathcode AS STRING) AS deathcode
-        |FROM temp_vat
-        |WHERE vatref IS NOT NULL""".stripMargin).rdd
+        | SELECT CAST(vatref AS LONG) AS vatref,
+        | name1,
+        | postcode,
+        | CAST(sic92 AS STRING) AS sic92,
+        | status,
+        | CAST(turnover AS LONG) AS turnover,
+        | CAST (deathcode AS STRING) AS deathcode,
+        | address1,
+        | address2,
+        | address3,
+        | address4,
+        | address5,
+        | tradstyle1
+        | FROM temp_vat
+        | WHERE vatref IS NOT NULL""".stripMargin).rdd
 
     // Need to be careful of NULLs vs blanks in data, so using explicit null-check here.
     extracted.map { row =>
@@ -208,8 +238,15 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
         val legalStatus = if (row.isNullAt(4)) None else Option(row.getInt(4))
         val turnover = if (row.isNullAt(5)) None else Option(row.getLong(5))
         val deathcode = if (row.isNullAt(6)) None else Option(row.getString(6))
+        val address1 = if (row.isNullAt(7)) None else Option(row.getString(7))
+        val address2 = if (row.isNullAt(8)) None else Option(row.getString(8))
+        val address3 = if (row.isNullAt(9)) None else Option(row.getString(9))
+        val address4 = if (row.isNullAt(10)) None else Option(row.getString(10))
+        val address5 = if (row.isNullAt(11)) None else Option(row.getString(11))
+        val tradingStyle = if (row.isNullAt(12)) None else Option(row.getString(12))
 
-        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode)
+        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode,
+        address1, address2, address3, address4, address5, tradingStyle)
       }
       (vatRefStr, rec)
     }
