@@ -28,8 +28,11 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 trait DataloadApp extends App {
   val appConfig: AppConfig = new AppConfig
-  //val sparkSess = SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
-  val sparkSess = SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+  val env = appConfig.AppDataConfig.cluster
+  val sparkSess = env match {
+    case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  }
 }
 
 object SourceDataToParquetApp extends DataloadApp {

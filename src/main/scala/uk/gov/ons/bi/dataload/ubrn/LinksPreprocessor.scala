@@ -46,7 +46,6 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // read links from parquet
     val parquetReader = new LinksParquetReader(ctxMgr)
     val parquetLinks  =  getNewLinksDataFromParquet(parquetReader, appConfig, inputPath)
-    //readWriteParquet(appConfig, parquetReader,inputPath, outputPath)
 
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)

@@ -112,6 +112,8 @@ class AppConfig {
     // directories under the main app data directory.
     lazy val env = getConfigStr("env", localConfig)
 
+    lazy val cluster = getConfigStr("cluster", localConfig)
+
     // directories
 
     lazy val dir = getConfigStr("dir", localConfig)
