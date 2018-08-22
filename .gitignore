@@ -16,5 +16,5 @@
 /src/main/main.iml
 /src/test/test.iml
 /src/main/resources/target/
-/src/main/resources/legal_units.parquet
-/src/main/resources/ons.gov/businessIndex/WORKINGDATA
+/src/test/resources/legal_units.parquet
+/src/test/resources/ons.gov/businessIndex/WORKINGDATA

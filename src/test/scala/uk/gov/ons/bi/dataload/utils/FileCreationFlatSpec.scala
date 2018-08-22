@@ -27,9 +27,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val ctxMgr = new ContextMgr(sparkSession)
     val parquetReader = new LinksParquetReader(ctxMgr)
 
-    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
-    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
-    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    val linksFile = appDataConfig.links
+
+    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
+    val dataDir = linksDataConfig.dir
+    val parquetFile = linksDataConfig.parquet
+    val inputFilePath = s"$dataDir/$parquetFile"
+    val outputFilePath = s"$workingDir/$linksFile"
+
+//    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
+//    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
+//    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
 
     // Used to create initial input parquet file
     val jsonPath = parquetReader.readFromLocal("/links.json")
@@ -43,8 +53,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val results = sparkSession.read.parquet(outputFilePath).collect()
 
     val expected = Seq(
-      (Array("ch1"), Array("065H7Z31732"), Array("868500288000"), 1000000000000001L), 
-      (Array("08209948"), Array(""), Array(""), 1000000000000002L), 
+      (Array("ch1"), Array("065H7Z31732"), Array(""), 1000000000000001L),
+      (Array("08209948"), Array(""), Array("312764963000"), 1000000000000002L),
       (Array(""), Array("035H7A22627"), Array("868504062000"), 1000000000000003L), 
       (Array("ch3"), Array(""), Array("862764963000"), 1000000000000004L), 
       (Array("ch4"), Array("125H7A71620"), Array("123764963000"), 1000000000000005L)
@@ -146,7 +156,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
     val df = sparkSession.read.parquet(biFile)
-    val results = df.collect()
+    val results = df.sort("id")
 
     val schema = StructType(Array(
       StructField("id", LongType, true),
@@ -170,22 +180,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     ))
 
     val data = Seq(
-      Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", "null", "0", "null", "A", "null", "null", Array(862764963000L), Array(""), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000003L, "NAME1", "tradstyle1", 1000000000000003L, "postcode", "null", "0", "null", "A", "null", "null", Array(868504062000L), Array("035H7A22627"), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000001L, "NAME1", "tradstyle1", 1000000000000001L, "postcode", "null", "0", "null", "A", "null", "null", Array(868500288000L), Array("065H7Z31732"), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", "null", "0", "null", "null", "null", "null", Array(123764963000L), Array("125H7A71620"), "address1", "address2", "address3", "address4", "address5")
+      Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array(), "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null),
+      Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", null, "0", null, "A", null, null, Array(862764963000L), Array(), "address1", "address2", "address3", "address4", "address5"),
+      Row(1000000000000003L, "NAME1", "tradstyle1", 1000000000000003L, "postcode", null, "0", null, "A", null, null, Array(868504062000L), Array("035H7A22627"), "address1", "address2", "address3", "address4", "address5"),
+      Row(1000000000000001L, "NAME1", "tradstyle1", 1000000000000001L, "postcode", null, "0", null, null, null, null, Array(), Array("065H7Z31732"), "address1", "address2", "address3", "address4", "address5"),
+      Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"), "address1", "address2", "address3", "address4", "address5")
     )
+    
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),schema).sort("id")
 
-    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),schema)
-    //.collect()
-
-    df.printSchema()
-    expected.printSchema()
-
-    df.show
-    expected.show
-
-    results shouldBe expected.collect
+    results.collect() shouldBe expected.collect
   }
 
   "LoadBiToEsApp " should "populate elasticsearch with the populated legal units "in {

@@ -33,13 +33,8 @@ object LinkedBusinessBuilder {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
-    //Seems to be fixed in Spark 2.x, can now use toDF to convert directly from RDD[BusinessIndex] to DataFrame however previous method no longer works
-
-    //val biRows: RDD[Row] = biRdd.map(BiSparkDataFrames.biRowMapper)
-
     val spark = ctxMgr.spark
     import spark.implicits._
-    //val biDf: DataFrame = sqc.createDataFrame(biRows, BiSparkDataFrames.biSchema)
 
     val biDf: DataFrame = biRdd.toDF
 
@@ -53,7 +48,6 @@ object LinkedBusinessBuilder {
     val biDf3: DataFrame = biDf2.select("id", "BusinessName","TradingStyle", "UPRN", "PostCode", "IndustryCode", "LegalStatus",
       "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs",
       "Address1", "Address2", "Address3", "Address4", "Address5")
-      //, "Address2","Address3","Address4", "Address5")
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
 
