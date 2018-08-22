@@ -2,8 +2,9 @@ package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{explode, concat_ws}
+import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit}
+
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
@@ -30,11 +31,13 @@ object HmrcBiCsvExtractor {
 
     // Extract data from main data frame
 
+    def stringify(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
+
     def getHMRCOutput(df: DataFrame): DataFrame = {
       df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
         .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
-        .withColumn("VatRef", concat_ws(", ", $"arrVar"))
-        .withColumn("PayeRef", concat_ws(", ", $"arrPaye"))
+        .withColumn("VatRef", stringify($"arrVar"))
+        .withColumn("PayeRef", stringify($"arrPaye"))
         .select("id","BusinessName","TradingStyle","PostCode",
           "Address1", "Address2","Address3","Address4", "Address5",
           "IndustryCode","LegalStatus","TradingStatus",
