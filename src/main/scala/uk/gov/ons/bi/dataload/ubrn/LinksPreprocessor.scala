@@ -20,13 +20,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig, inputPath: String): DataFrame = {
-    // get source/target directories
-//    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-//    val dataDir = linksDataConfig.dir
-//    val parquetFile = linksDataConfig.parquet
-//    val parquetFilePath = s"$dataDir/$parquetFile"
-
-    // Load the JSON links data
+    // Load the Parquet links data
     reader.readFromSourceFile(inputPath)
   }
 

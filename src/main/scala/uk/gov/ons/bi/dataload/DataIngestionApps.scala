@@ -84,7 +84,7 @@ object LoadBiToEsApp extends DataloadApp {
 }
 
 object PreprocessLinksApp extends DataloadApp{
-    // Load Links JSON, preprocess data (apply UBRN etc), write to Parquet.
+    // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
    val ctxMgr = new ContextMgr(sparkSess)
    val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 }
