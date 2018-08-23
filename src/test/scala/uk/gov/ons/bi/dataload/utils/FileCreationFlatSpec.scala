@@ -26,19 +26,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val ctxMgr = new ContextMgr(sparkSession)
     val parquetReader = new LinksParquetReader(ctxMgr)
 
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
-    val linksFile = appDataConfig.links
-
-    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-    val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.parquet
-    val inputFilePath = s"$dataDir/$parquetFile"
-    val outputFilePath = s"$workingDir/$linksFile"
-
-//    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
-//    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
-//    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
+    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
+    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
+    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
 
     // Used to create initial input parquet file
     val jsonPath = parquetReader.readFromLocal("/links.json")
@@ -61,81 +51,78 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     results shouldBe expected
   }
-
+/*
   "Admin source files " should "read in and write out as a parquet file for the admin source CH" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    // output dir and path
-    val workingDir = appConfig.AppDataConfig.workingDir
-    val parquetFile = appConfig.AppDataConfig.ch
-    val targetFilePath = s"$workingDir/$parquetFile"
+    val homeDir = parquetReader.readFromLocal("/")
+    val inputPath = parquetReader.readFromLocal("/external/companiesHouse/CH.csv")
+    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/CH.parquet"
 
-    new File(targetFilePath).delete()
+    new File(outputPath).delete()
 
-    sourceDataLoader.loadBusinessDataToParquet(CH, appConfig)
+    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_ch", CH)
 
-    val result = new File(targetFilePath).exists
+    val result = new File(outputPath).exists
     result shouldBe true
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source PAYE" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    // output dir and path
-    val workingDir = appConfig.AppDataConfig.workingDir
-    val parquetFile = appConfig.AppDataConfig.paye
-    val targetFilePath = s"$workingDir/$parquetFile"
+    val homeDir = parquetReader.readFromLocal("/")
+    val inputPath = parquetReader.readFromLocal("/external/hmrc/paye/PAYE.csv")
 
-    new File(targetFilePath).delete()
+    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
 
-    sourceDataLoader.loadBusinessDataToParquet(PAYE, appConfig)
+    new File(outputPath).delete()
 
-    val result = new File(targetFilePath).exists
+    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_paye", PAYE)
+
+    val result = new File(outputPath).exists
     result shouldBe true
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source VAT" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    // output dir and path
-    val workingDir = appConfig.AppDataConfig.workingDir
-    val parquetFile = appConfig.AppDataConfig.vat
-    val targetFilePath = s"$workingDir/$parquetFile"
+    val homeDir = parquetReader.readFromLocal("/")
+    val inputPath = parquetReader.readFromLocal("/external/hmrc/vat/VAT.csv")
+    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
 
-    new File(targetFilePath).delete()
+    new File(outputPath).delete()
 
-    sourceDataLoader.loadBusinessDataToParquet(VAT, appConfig)
+    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_vat", VAT)
 
-    val result = new File(targetFilePath).exists
+    val result = new File(outputPath).exists
     result shouldBe true
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source TCN-lookup" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    // output dir and path
-    val workingDir = appConfig.AppDataConfig.workingDir
-    val parquetFile = appConfig.AppDataConfig.tcn
-    val targetFilePath = s"$workingDir/$parquetFile"
+    val homeDir = parquetReader.readFromLocal("/")
+    val inputPath = parquetReader.readFromLocal("/ons.gov/businessIndex/lookups/tcn-to-sic-mapping.csv")
+    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
 
-    new File(targetFilePath).delete
+    new File(outputPath).delete()
 
-    sourceDataLoader.loadTcnToSicCsvLookupToParquet(appConfig)
+    sourceDataLoader.writeTCN(inputPath, outputPath)
 
-    val result = new File(targetFilePath).exists
+    val result = new File(outputPath).exists
     result shouldBe true
   }
 
@@ -143,11 +130,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
-    val appDataConfig = appConfig.AppDataConfig
-    val workDir = appDataConfig.workingDir
-    val parquetBiFile = appDataConfig.bi
-    val biFile = s"$workDir/$parquetBiFile"
+    // admin outputs
+    val homeDir = parquetReader.readFromLocal("/")
+    val tcn = homeDir+"/ons.gov/businessIndex/WORKINGDATA/TSC_TO_SIC_LOOKUP.parquet"
+    val ch  = homeDir+"/ons.gov/businessIndex/WORKINGDATA/CH.parquet"
+    val vat = homeDir+"/ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
+    val paye= homeDir+"/ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
+
+    val biFile  = homeDir+"/ons.gov/businessIndex/WORKINGDATA/BI_Output.parquet"
 
     new File(biFile).delete
 
@@ -171,6 +163,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - HMRC" should "output Hmrc combined file containing legal units with admin data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
     val appConfig: AppConfig = new AppConfig
     val workingDir = appConfig.AppDataConfig.workingDir
@@ -207,6 +201,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - LEU" should "output Hmrc combined file containing legal units" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
 
     val appConfig: AppConfig = new AppConfig
     val workingDir = appConfig.AppDataConfig.workingDir
@@ -243,6 +239,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - VAT" should "output Hmrc combined file containing VAT data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
@@ -278,6 +276,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - PAYE" should "output Hmrc combined file containing PAYE data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    val ctxMgr = new ContextMgr(sparkSession)
+    val parquetReader = new LinksParquetReader(ctxMgr)
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
@@ -312,4 +312,5 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "LoadBiToEsApp " should "populate elasticsearch with the populated legal units "in {
 
   }
+  */
 }
