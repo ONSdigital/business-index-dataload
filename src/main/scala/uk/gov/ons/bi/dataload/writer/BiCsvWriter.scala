@@ -19,8 +19,6 @@ object BiCsvWriter {
 
     outputDf.write.mode("overwrite")
         .option("header", "true")
-        .option("quote","\"")
-        //.option("quoteMode","ALL")
         .option("quoteAll", "true")
         .option("nullValue","")
         .csv(outputFile)
