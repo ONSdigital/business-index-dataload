@@ -40,7 +40,7 @@ object HmrcBiCsvExtractor {
         .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
         .withColumn("VatRef", stringifyArr($"arrVar"))
         .withColumn("PayeRef", stringifyArr($"arrPaye"))
-      .drop("VatRefs","PayeRefs")
+        .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
 
       newDF.select(newDF.columns.map(c => stringify(col(c)).alias(c)): _*)
         .select("id","BusinessName","TradingStyle",
