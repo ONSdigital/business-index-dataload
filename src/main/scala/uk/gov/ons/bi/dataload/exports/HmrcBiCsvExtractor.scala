@@ -2,9 +2,8 @@ package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
-
+import org.apache.spark.sql.{DataFrame, Column}
+import org.apache.spark.sql.functions.{explode, concat_ws, concat, lit}
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
@@ -82,6 +81,9 @@ object HmrcBiCsvExtractor {
     log.info(s"BI index file contains ${biData.count} records.")
 
     // Extract the different sets of data we want, and write to output files
+
+    getHMRCOutput(biData, hmrcFile)
+
     val legalEntities = getLegalEntities(biData)
     log.info(s"Writing ${legalEntities.count} Legal Entities to $legalFile")
     BiCsvWriter.writeCsvOutput(legalEntities, legalFile)
@@ -100,6 +102,21 @@ object HmrcBiCsvExtractor {
 
     // Clear cache
     biData.unpersist(false)
+  }
+
+  def stringify(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
+
+  def getHMRCOutput(df: DataFrame, outputPath: String): DataFrame = {
+    val hmrcOutput = df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
+      .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
+      .withColumn("VatRef", stringify(df("arrVar")))
+      .withColumn("PayeRef", stringify(df("arrPaye")))
+      .select("id","BusinessName","TradingStyle","PostCode",
+        "Address1", "Address2","Address3","Address4", "Address5",
+        "IndustryCode","LegalStatus","TradingStatus",
+        "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+    BiCsvWriter.writeCsvOutput(hmrcOutput, outputPath)
+    hmrcOutput
   }
 
 }
