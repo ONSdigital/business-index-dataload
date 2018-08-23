@@ -26,12 +26,14 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val ctxMgr = new ContextMgr(sparkSession)
     val parquetReader = new LinksParquetReader(ctxMgr)
 
-    val inputFilePath: String  = parquetReader.readFromLocal("/"+appConfig.OnsDataConfig.linksDataConfig.parquet)
-    val outputDir: String = parquetReader.readFromLocal(s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}")
-    val outputFilePath: String = s"$outputDir/${appConfig.AppDataConfig.links}"
+    val homeDir = parquetReader.readFromLocal("/")
+
+    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.parquet}"
+    val outputDir: String = homeDir+s"/${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}"
+    val outputFilePath: String = homeDir+s"$outputDir/${appConfig.AppDataConfig.links}"
 
     // Used to create initial input parquet file
-    val jsonPath = parquetReader.readFromLocal("/links.json")
+    val jsonPath = homeDir+"/links.json"
     sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
 
     // delete and create output parquet
