@@ -189,10 +189,17 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // generate hmrc csv and read as dataframe
     HmrcBiCsvExtractor.getHMRCOutput(biData, hmrcFile)
-    val df = sparkSession.read.option("header", true).csv(hmrcFile)
+    val df = sparkSession.read.option("header", true).csv(hmrcFile).sort("id")
 
     // expected data
-    val expected = Seq(("")).toDF
+    val data = Seq(
+      Row("1000000000000002", "! LTD", "tradstyle1", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "LS10 2RU", "99999", "1", "A", "A", null, "08209948", "[312764963000]", "[]"),
+      Row("1000000000000004", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[862764963000]", "[]"),
+      Row("1000000000000003", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[868504062000]", "[035H7A22627]"),
+      Row("1000000000000001", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, null, null, null, "[]", "[065H7Z31732]"),
+      Row("1000000000000005", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
+    )
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.hmrcSchema).sort("id")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
