@@ -78,10 +78,10 @@ object HmrcBiCsvExtractor {
   }
 
   def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
-    val legalEntities = df.select("id","BusinessName","TradingStyle","PostCode",
+    val legalEntities = df.select("id","BusinessName","TradingStyle",
       "Address1", "Address2","Address3","Address4", "Address5",
-      "IndustryCode","LegalStatus","TradingStatus",
-      "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+      "PostCode","IndustryCode","LegalStatus","TradingStatus",
+      "Turnover","EmploymentBands","CompanyNo")
     BiCsvWriter.writeCsvOutput(legalEntities, outputPath)
     legalEntities
   }

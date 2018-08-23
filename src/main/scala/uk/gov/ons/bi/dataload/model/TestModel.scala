@@ -47,4 +47,22 @@ object TestModel {
     StructField("VatRef", StringType, true),
     StructField("PayeRef", StringType, true)
   ))
+
+  val leuSchema = StructType(Array(
+    StructField("id", StringType, true),
+    StructField("BusinessName", StringType, true),
+    StructField("TradingStyle", StringType, true),
+    StructField("Address1", StringType, true),
+    StructField("Address2", StringType, true),
+    StructField("Address3", StringType, true),
+    StructField("Address4", StringType, true),
+    StructField("Address5", StringType, true),
+    StructField("PostCode", StringType, true),
+    StructField("IndustryCode", StringType, true),
+    StructField("LegalStatus", StringType, true),
+    StructField("TradingStatus", StringType, true),
+    StructField("Turnover", StringType, true),
+    StructField("EmploymentBands", StringType, true),
+    StructField("CompanyNo", StringType, true)
+  ))
 }
