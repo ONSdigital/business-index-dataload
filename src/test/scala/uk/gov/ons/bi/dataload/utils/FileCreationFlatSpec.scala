@@ -9,6 +9,7 @@ import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.LinksParquetReader
+import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 
 /**
   * Created by ChiuA on 15/08/2018.
@@ -165,6 +166,36 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.linkSchema).sort("id")
 
     results.collect() shouldBe expected.collect
+  }
+
+  "HmrcBiExportApp " should "output Hmrc combined file containing legal units with admin data" in {
+    // read in config - pathing for link data appp output
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
+
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.AppDataConfig.workingDir
+
+    //get hmrc output filepath
+    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
+    val hmrcFile = s"$extractDir/bi-hmrc.csv"
+
+    //get bi data filepath
+    val parquetBiFile = appConfig.AppDataConfig.bi
+    val biFile = s"$workingDir/$parquetBiFile"
+
+    // read in parquet file from path
+    val biData = sparkSession.read.parquet(biFile)
+
+    // generate hmrc csv and read as dataframe
+    HmrcBiCsvExtractor.getHMRCOutput(biData, hmrcFile)
+    val df = sparkSession.read.option("header", true).csv(hmrcFile)
+
+    // expected data
+    val expected = Seq(("")).toDF
+
+    // test expected against results
+    df.collect() shouldBe expected.collect()
   }
 
   "LoadBiToEsApp " should "populate elasticsearch with the populated legal units "in {
