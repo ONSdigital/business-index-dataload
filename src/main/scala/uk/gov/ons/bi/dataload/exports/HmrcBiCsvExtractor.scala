@@ -3,7 +3,7 @@ package uk.gov.ons.bi.dataload.exports
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
 
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
@@ -31,13 +31,17 @@ object HmrcBiCsvExtractor {
 
     // Extract data from main data frame
 
-    def stringify(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
+    def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
+
+    def stringify(string: Column) = concat(lit("\""), string, lit("\""))
 
     def getHMRCOutput(df: DataFrame): DataFrame = {
-      df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
+      val newDF = df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
         .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
-        .withColumn("VatRef", stringify($"arrVar"))
-        .withColumn("PayeRef", stringify($"arrPaye"))
+        .withColumn("VatRef", stringifyArr($"arrVar"))
+        .withColumn("PayeRef", stringifyArr($"arrPaye"))
+
+      newDF.select(newDF.columns.map(c => stringify(col(c)).alias(c)): _*)
         .select("id","BusinessName","TradingStyle","PostCode",
           "Address1", "Address2","Address3","Address4", "Address5",
           "IndustryCode","LegalStatus","TradingStatus",
