@@ -33,8 +33,6 @@ object HmrcBiCsvExtractor {
 
     def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
 
-    def stringify(string: Column) = concat(lit("\""), string, lit("\""))
-
     def getHMRCOutput(df: DataFrame): DataFrame = {
         val arrDF = df
           .withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
@@ -45,7 +43,7 @@ object HmrcBiCsvExtractor {
           .withColumn("PayeRef", stringifyArr(arrDF("arrPaye")))
           .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
 
-        dropDF.select(dropDF.columns.map(c => stringify(col(c)).alias(c)): _*)
+        dropDF
           .select("id","BusinessName","TradingStyle",
             "Address1", "Address2","Address3","Address4", "Address5",
             "PostCode", "IndustryCode","LegalStatus","TradingStatus",
