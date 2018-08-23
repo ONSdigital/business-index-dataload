@@ -40,11 +40,12 @@ object HmrcBiCsvExtractor {
         .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
         .withColumn("VatRef", stringifyArr($"arrVar"))
         .withColumn("PayeRef", stringifyArr($"arrPaye"))
+      .drop("VatRefs","PayeRefs")
 
       newDF.select(newDF.columns.map(c => stringify(col(c)).alias(c)): _*)
-        .select("id","BusinessName","TradingStyle","PostCode",
+        .select("id","BusinessName","TradingStyle",
           "Address1", "Address2","Address3","Address4", "Address5",
-          "IndustryCode","LegalStatus","TradingStatus",
+          "PostCode", "IndustryCode","LegalStatus","TradingStatus",
           "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
     }
 
