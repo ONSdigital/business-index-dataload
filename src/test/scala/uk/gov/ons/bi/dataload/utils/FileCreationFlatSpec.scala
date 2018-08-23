@@ -168,17 +168,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     results.collect() shouldBe expected.collect
   }
 
-  "HmrcBiExportApp " should "output Hmrc combined file containing legal units with admin data" in {
+  "HmrcBiExportApp - HMRC" should "output Hmrc combined file containing legal units with admin data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
     val workingDir = appConfig.AppDataConfig.workingDir
 
     //get hmrc output filepath
     val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
-    val hmrcFile = s"$extractDir/bi-hmrc.csv"
+    val inputCSV = s"$extractDir/bi-hmrc.csv"
 
     //get bi data filepath
     val parquetBiFile = appConfig.AppDataConfig.bi
@@ -188,8 +187,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getHMRCOutput(biData, hmrcFile)
-    val df = sparkSession.read.option("header", true).csv(hmrcFile).sort("id")
+    HmrcBiCsvExtractor.getHMRCOutput(biData, inputCSV)
+    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
     val data = Seq(
@@ -200,6 +199,111 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
       Row("1000000000000005", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.hmrcSchema).sort("id")
+
+    // test expected against results
+    df.collect() shouldBe expected.collect()
+  }
+
+  "HmrcBiExportApp - LEU" should "output Hmrc combined file containing legal units" in {
+    // read in config - pathing for link data appp output
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.AppDataConfig.workingDir
+
+    //get hmrc output filepath
+    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
+    val inputCSV = s"$extractDir/bi-legal-entities.csv"
+
+    //get bi data filepath
+    val parquetBiFile = appConfig.AppDataConfig.bi
+    val biFile = s"$workingDir/$parquetBiFile"
+
+    // read in parquet file from path
+    val biData = sparkSession.read.parquet(biFile)
+
+    // generate hmrc csv and read as dataframe
+    HmrcBiCsvExtractor.getLegalEntities(biData, inputCSV)
+    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+
+    // expected data
+    val data = Seq(
+      Row("1000000000000002", "! LTD", "tradstyle1", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "LS10 2RU", "99999", "1", "A", "A", null, "08209948"),
+      Row("1000000000000004", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null),
+      Row("1000000000000003", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null),
+      Row("1000000000000001", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, null, null, null),
+      Row("1000000000000005", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null)
+    )
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.leuSchema).sort("id")
+
+    // test expected against results
+    df.collect() shouldBe expected.collect()
+  }
+
+  "HmrcBiExportApp - VAT" should "output Hmrc combined file containing VAT data" in {
+    // read in config - pathing for link data appp output
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
+
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.AppDataConfig.workingDir
+
+    //get hmrc output filepath
+    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
+    val inputCSV = s"$extractDir/bi-vat.csv"
+
+    //get bi data filepath
+    val parquetBiFile = appConfig.AppDataConfig.bi
+    val biFile = s"$workingDir/$parquetBiFile"
+
+    // read in parquet file from path
+    val biData = sparkSession.read.parquet(biFile)
+
+    // generate hmrc csv and read as dataframe
+    HmrcBiCsvExtractor.getVatExploded(biData, inputCSV)
+    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+
+    // expected data
+    val expected = Seq(
+      ("1000000000000002","312764963000"),
+        ("1000000000000003","868504062000"),
+          ("1000000000000004","862764963000"),
+          ("1000000000000005","123764963000")
+    ).toDF("id","VatRef").sort("id")
+
+    // test expected against results
+    df.collect() shouldBe expected.collect()
+  }
+
+  "HmrcBiExportApp - PAYE" should "output Hmrc combined file containing PAYE data" in {
+    // read in config - pathing for link data appp output
+    val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
+
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.AppDataConfig.workingDir
+
+    //get hmrc output filepath
+    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
+    val inputCSV = s"$extractDir/bi-paye.csv"
+
+    //get bi data filepath
+    val parquetBiFile = appConfig.AppDataConfig.bi
+    val biFile = s"$workingDir/$parquetBiFile"
+
+    // read in parquet file from path
+    val biData = sparkSession.read.parquet(biFile)
+
+    // generate hmrc csv and read as dataframe
+    HmrcBiCsvExtractor.getPayeExploded(biData, inputCSV)
+    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+
+    // expected data
+    val expected = Seq(
+      ("1000000000000001","065H7Z31732"),
+      ("1000000000000003","035H7A22627"),
+      ("1000000000000005","125H7A71620")
+    ).toDF("id","PayeRef")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
