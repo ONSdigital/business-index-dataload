@@ -36,17 +36,20 @@ object HmrcBiCsvExtractor {
     def stringify(string: Column) = concat(lit("\""), string, lit("\""))
 
     def getHMRCOutput(df: DataFrame): DataFrame = {
-      val newDF = df.withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
-        .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
-        .withColumn("VatRef", stringifyArr($"arrVar"))
-        .withColumn("PayeRef", stringifyArr($"arrPaye"))
-        .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
+        val arrDF = df
+          .withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
+          .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
 
-      newDF.select(newDF.columns.map(c => stringify(col(c)).alias(c)): _*)
-        .select("id","BusinessName","TradingStyle",
-          "Address1", "Address2","Address3","Address4", "Address5",
-          "PostCode", "IndustryCode","LegalStatus","TradingStatus",
-          "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+        val dropDF = arrDF
+          .withColumn("VatRef", stringifyArr(arrDF("arrVar")))
+          .withColumn("PayeRef", stringifyArr(arrDF("arrPaye")))
+          .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
+
+        dropDF.select(dropDF.columns.map(c => stringify(col(c)).alias(c)): _*)
+          .select("id","BusinessName","TradingStyle",
+            "Address1", "Address2","Address3","Address4", "Address5",
+            "PostCode", "IndustryCode","LegalStatus","TradingStatus",
+            "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
     }
 
     def getLegalEntities(df: DataFrame): DataFrame = {
