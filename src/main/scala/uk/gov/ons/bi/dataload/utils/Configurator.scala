@@ -27,7 +27,14 @@ class AppConfig {
 
     private val localConfig = root.getConfig("ext-data")
 
-    lazy val env = getConfigStr("env", localConfig)
+    lazy val cluster = getConfigStr("cluster", root.getConfig("app-data"))
+
+    lazy val env = cluster  match {
+      case "local" => getClass.getResource("/").toString
+      case "cluster" => getConfigStr("env", localConfig)
+    }
+
+    //lazy val env = getConfigStr("env", localConfig)
 
     lazy val dir = getConfigStr("dir", localConfig)
 
@@ -67,11 +74,17 @@ class AppConfig {
 
       private val linksConfig = onsDataConfig.getConfig("links")
 
+      lazy val cluster = getConfigStr("cluster", root.getConfig("app-data"))
+
       // Links dir is below ONS data dir
-      private val localDir = getConfigStr("dir", linksConfig)
+      private val localDir = cluster match {
+        case "local"   => getClass.getResource("/")
+        case "cluster" => getConfigStr("dir", linksConfig)
+      }
+
       // We provide the full path
       //val dir = s"/$baseDir/$localDir" This is the original version but we are substituting it so that we can use the /user/bi-dev-ci directory
-      val dir = s"/$localDir" // Incorrect value, replace with version above once /dev/ons.gov/businessIndex/links exists
+      val dir = s"$localDir" // Incorrect value, replace with version above once /dev/ons.gov/businessIndex/links exists
 
       val parquet = getConfigStr("parquet", linksConfig)
 
@@ -89,7 +102,7 @@ class AppConfig {
       // Lookups dir is below ONS data dir
       private val localDir = getConfigStr("dir", lookupsConfig)
       // We provide the full path
-      val dir = s"/$baseDir/$localDir"
+      val dir = s"$baseDir/$localDir"
 
       val tcnToSic = getConfigStr("tcn-to-sic", lookupsConfig)
 
@@ -110,11 +123,15 @@ class AppConfig {
 
     // Apparently we are supposed to be able to write to dev/test/beta
     // directories under the main app data directory.
-    lazy val env = getConfigStr("env", localConfig)
 
     lazy val cluster = getConfigStr("cluster", localConfig)
 
     // directories
+
+    lazy val env = cluster match {
+      case "local" => getClass.getResource("/").toString
+      case "cluster" => getConfigStr("env", localConfig)
+    }
 
     lazy val dir = getConfigStr("dir", localConfig)
 
@@ -142,7 +159,7 @@ class AppConfig {
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.
     lazy val (workingDir, prevDir) =
-    if (env != "") (s"/$env/$dir/$work", s"/$env/$dir/$prev")
+    if (env != "") (s"$env/$dir/$work", s"$env/$dir/$prev")
     else (s"$dir/$work", s"$dir/$prev")
 
     override def toString: String = {

@@ -87,11 +87,4 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     newLinks.unpersist()
     withNewUbrn.unpersist()
   }
-
-  def readWriteParquet(appConfig: AppConfig, parquetReader: LinksParquetReader, inputPath: String, outputPath: String) = {
-    val parquetLinks = getNewLinksDataFromParquet(parquetReader, appConfig, inputPath)
-    val withNewUbrn: DataFrame = UbrnManager.applyNewUbrn(parquetLinks)
-    parquetReader.writeParquet(withNewUbrn, outputPath)
-    withNewUbrn.unpersist()
-  }
 }
