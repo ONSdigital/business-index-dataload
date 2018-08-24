@@ -34,7 +34,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
           case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
         }
 
-    val inputPath = s"/$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
+    val inputPath = s"$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
     val outputPath = s"$workingDir/$parquetFile"
     writeAdminParquet(inputPath, outputPath, tempTable, biSource)
   }

@@ -4,6 +4,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
+import uk.gov.ons.bi.dataload.PreprocessLinksApp.appConfig
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
@@ -37,7 +38,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // delete and create output parquet
     new File(outputFilePath).delete()
-    new LinksPreprocessor(ctxMgr).readWriteParquet(appConfig, parquetReader, inputFilePath, outputFilePath)
+
+    new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 
     // Read in created parquet
     val results = sparkSession.read.parquet(outputFilePath).collect()
@@ -52,7 +54,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     results shouldBe expected
   }
-/*
+
   "Admin source files " should "read in and write out as a parquet file for the admin source CH" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
@@ -62,14 +64,14 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/companiesHouse/CH.csv")
-    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/CH.parquet"
+    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/CH.parquet"
 
     new File(outputPath).delete()
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_ch", CH)
 
-    val result = new File(outputPath).exists
-    result shouldBe true
+    val result = sparkSession.read.parquet(outputPath).count()
+    result shouldBe 1
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source PAYE" in {
@@ -81,14 +83,14 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/paye/PAYE.csv")
 
-    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
+    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
 
     new File(outputPath).delete()
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_paye", PAYE)
 
-    val result = new File(outputPath).exists
-    result shouldBe true
+    val result = sparkSession.read.parquet(outputPath).count()
+    result shouldBe 3
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source VAT" in {
@@ -99,14 +101,14 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/vat/VAT.csv")
-    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
+    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
 
     new File(outputPath).delete()
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_vat", VAT)
 
-    val result = new File(outputPath).exists
-    result shouldBe true
+    val result = sparkSession.read.parquet(outputPath).count()
+    result shouldBe 5
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source TCN-lookup" in {
@@ -117,14 +119,14 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/ons.gov/businessIndex/lookups/tcn-to-sic-mapping.csv")
-    val outputPath = homeDir+"/ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
+    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
 
     new File(outputPath).delete()
 
     sourceDataLoader.writeTCN(inputPath, outputPath)
 
-    val result = new File(outputPath).exists
-    result shouldBe true
+    val result = sparkSession.read.parquet(outputPath).count()
+    result shouldBe 609
   }
 
   "LinkDataApp " should "read in ubrn links and admin data and outputs parquet file containing fully populated Legal Units" in {
@@ -135,11 +137,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // admin outputs
     val homeDir = parquetReader.readFromLocal("/")
-    val tcn = homeDir+"/ons.gov/businessIndex/WORKINGDATA/TSC_TO_SIC_LOOKUP.parquet"
-    val ch  = homeDir+"/ons.gov/businessIndex/WORKINGDATA/CH.parquet"
-    val vat = homeDir+"/ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
-    val paye= homeDir+"/ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
-
     val biFile  = homeDir+"/ons.gov/businessIndex/WORKINGDATA/BI_Output.parquet"
 
     new File(biFile).delete
@@ -309,9 +306,4 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // test expected against results
     df.collect() shouldBe expected.collect()
   }
-
-  "LoadBiToEsApp " should "populate elasticsearch with the populated legal units "in {
-
-  }
-  */
 }
