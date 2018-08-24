@@ -155,6 +155,13 @@ DEPLOY'''
                 }
             }
         }
+        // stage ('Package and Push Artifact') {
+        //     agent any
+        //     steps {
+        //         sh "sbt package"
+        //         copyToEdgeNode()
+        //     }
+        // }
     }
     post {
         success {
