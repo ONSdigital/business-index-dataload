@@ -147,7 +147,7 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
   ))
 
   val tcnSchema = StructType(Array(
-    StructField("TCN", IntegerType, true),
+    StructField("TCN", StringType, true),
     StructField("SIC07", StringType, true)
   ))
 
@@ -187,6 +187,7 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String)
       case CH =>  spark.read.option("header","true").schema(companySchema).csv(srcFilePath)
       case PAYE =>  spark.read.option("header","true").schema(payeSchema).csv(srcFilePath)
       case VAT =>  spark.read.option("header","true").schema(vatSchema).csv(srcFilePath)
+      case TCN => spark.read.option("header", "true").schema(tcnSchema).csv(srcFilePath)
     }
 
     if (BiSparkDataFrames.isDfEmpty(df))

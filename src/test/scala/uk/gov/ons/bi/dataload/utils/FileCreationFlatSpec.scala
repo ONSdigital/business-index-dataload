@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.utils
 
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.types._
 import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
@@ -89,12 +90,13 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_paye", PAYE)
 
-    val result = sparkSession.read.parquet(outputPath).count()
+    val result = sparkSession.read.parquet(outputPath).columns
     result shouldBe 3
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source VAT" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
     val parquetReader = new LinksParquetReader(ctxMgr)
@@ -107,12 +109,13 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_vat", VAT)
 
-    val result = sparkSession.read.parquet(outputPath).count()
+    val result = sparkSession.read.parquet(outputPath).columns
     result shouldBe 5
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source TCN-lookup" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
     val parquetReader = new LinksParquetReader(ctxMgr)
@@ -123,10 +126,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(outputPath).delete()
 
-    sourceDataLoader.writeTCN(inputPath, outputPath)
+    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_TCN", TCN)
 
-    val result = sparkSession.read.parquet(outputPath).count()
-    result shouldBe 609
+    val result = sparkSession.read.parquet(outputPath).take(5)
+
+    val expected = Seq(
+      ("0100","01500"),
+      ("0101","01420"),
+      ("0102","01110"),
+      ("0103","01420"),
+      ("0104","01500")
+    ).toDF("TCN","SIC07").collect()
+
+    result shouldBe expected
   }
 
   "LinkDataApp " should "read in ubrn links and admin data and outputs parquet file containing fully populated Legal Units" in {

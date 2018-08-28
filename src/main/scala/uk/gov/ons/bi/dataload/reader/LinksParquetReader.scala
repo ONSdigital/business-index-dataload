@@ -18,5 +18,4 @@ class LinksParquetReader (ctxMgr: ContextMgr)
   def readFromLocal(srcFilePath: String): String = {
     getClass.getResource(srcFilePath).toString
   }
-
 }
