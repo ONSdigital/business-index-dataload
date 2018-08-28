@@ -59,6 +59,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "Admin source files " should "read in and write out as a parquet file for the admin source CH" in {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
     val parquetReader = new LinksParquetReader(ctxMgr)
@@ -71,12 +72,18 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_ch", CH)
 
-    val result = sparkSession.read.parquet(outputPath).count()
-    result shouldBe 1
+    val result = sparkSession.read.parquet(outputPath).select("CompanyName", "CompanyNumber").collect()
+
+    val expected = Seq(
+      ("! LTD","08209948")
+    ).toDF("CompanyName", "CompanyNumber").collect()
+
+    result shouldBe expected
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source PAYE" in {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
+    import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
     val parquetReader = new LinksParquetReader(ctxMgr)
@@ -90,8 +97,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_paye", PAYE)
 
-    val result = sparkSession.read.parquet(outputPath).columns
-    result shouldBe 3
+    val result = sparkSession.read.parquet(outputPath).select("entref", "payeref").collect()
+
+    val expected = Seq(
+      ("123","065H7Z31732"),
+      ("234","035H7A22627"),
+      ("345","125H7A71620")
+    ).toDF("entref", "payeref").collect()
+
+    result shouldBe expected
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source VAT" in {
@@ -109,8 +123,17 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_vat", VAT)
 
-    val result = sparkSession.read.parquet(outputPath).columns
-    result shouldBe 5
+    val result = sparkSession.read.parquet(outputPath).select("entref", "vatref").collect()
+
+    val expected = Seq(
+      ("123",868500288000L),
+      ("234",868504062000L),
+      ("345",862764963000L),
+      ("678",123764963000L),
+      ("890",312764963000L)
+    ).toDF("entref","payeref").collect()
+
+    result shouldBe expected
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source TCN-lookup" in {
