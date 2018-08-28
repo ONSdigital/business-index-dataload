@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.loader
 
 import com.google.inject.Singleton
+
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
@@ -52,20 +53,6 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     reader.writeParquet(data, outputPath)
   }
 
-  def writeTCN(inputPath: String, outputPath: String) = {
-    log.info(s"Reading TCN-SIC lookup from: $inputPath")
-    // Get CSV reader for this data source
-    val reader: BIDataReader = new CsvReader(ctxMgr, "temp_tcn")
-
-    // Process the data
-    val data = reader.readFromSourceFile(inputPath)
-
-    log.info(s"Writing TCN-SIC lookup to: $outputPath")
-
-    reader.writeParquet(data, outputPath)
-  }
-
-
   def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig) = {
 
     // Get source/target directories
@@ -85,7 +72,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     val extSrcFilePath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
     val targetFilePath = s"$workingDir/$parquetFile"
 
-    writeTCN(extSrcFilePath, targetFilePath)
+    writeAdminParquet(extSrcFilePath, targetFilePath, "temp_tcn", TCN)
   }
 
   def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
