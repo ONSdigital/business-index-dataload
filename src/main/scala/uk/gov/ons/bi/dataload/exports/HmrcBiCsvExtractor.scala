@@ -64,9 +64,9 @@ object HmrcBiCsvExtractor {
       .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
 
     val hmrcOutput = dropDF
-      .select("id","BusinessName","TradingStyle",
+      .select("id","BusinessName","TradingStyle", "PostCode",
         "Address1", "Address2","Address3","Address4", "Address5",
-        "PostCode", "IndustryCode","LegalStatus","TradingStatus",
+        "IndustryCode","LegalStatus","TradingStatus",
         "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
     BiCsvWriter.writeCsvOutput(hmrcOutput, outputPath)
     hmrcOutput
@@ -74,8 +74,8 @@ object HmrcBiCsvExtractor {
 
   def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
     val legalEntities = df.select("id","BusinessName","TradingStyle",
-      "Address1", "Address2","Address3","Address4", "Address5",
-      "PostCode","IndustryCode","LegalStatus","TradingStatus",
+      "PostCode", "Address1", "Address2","Address3","Address4", "Address5",
+      "IndustryCode","LegalStatus","TradingStatus",
       "Turnover","EmploymentBands","CompanyNo")
     BiCsvWriter.writeCsvOutput(legalEntities, outputPath)
     legalEntities
