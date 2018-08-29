@@ -179,13 +179,13 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val results = df.sort("id")
 
     val data = Seq(
-      Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array(), "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null),
-      Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", null, "0", null, "A", null, null, Array(862764963000L), Array(), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000003L, "NAME1", "tradstyle1", 1000000000000003L, "postcode", null, "0", null, "A", null, null, Array(868504062000L), Array("035H7A22627"), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000001L, "NAME1", "tradstyle1", 1000000000000001L, "postcode", null, "0", null, null, null, null, Array(), Array("065H7Z31732"), "address1", "address2", "address3", "address4", "address5"),
-      Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"), "address1", "address2", "address3", "address4", "address5")
+      Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array()),
+      Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(862764963000L), Array()),
+      Row(1000000000000003L, "NAME1", "tradstyle1", 1000000000000003L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(868504062000L), Array("035H7A22627")),
+      Row(1000000000000001L, "NAME1", "tradstyle1", 1000000000000001L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null, Array(), Array("065H7Z31732")),
+      Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"))
     )
-    
+
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.linkSchema).sort("id")
 
     results.collect() shouldBe expected.collect
@@ -194,8 +194,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - HMRC" should "output Hmrc combined file containing legal units with admin data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
 
     val appConfig: AppConfig = new AppConfig
     val workingDir = appConfig.AppDataConfig.workingDir
@@ -217,11 +215,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // expected data
     val data = Seq(
-      Row("1000000000000002", "! LTD", "tradstyle1", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "LS10 2RU", "99999", "1", "A", "A", null, "08209948", "[312764963000]", "[]"),
-      Row("1000000000000004", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[862764963000]", "[]"),
-      Row("1000000000000003", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[868504062000]", "[035H7A22627]"),
-      Row("1000000000000001", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, null, null, null, "[]", "[065H7Z31732]"),
-      Row("1000000000000005", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
+      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", "[312764963000]", "[]"),
+      Row("1000000000000004", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[862764963000]", "[]"),
+      Row("1000000000000003", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[868504062000]", "[035H7A22627]"),
+      Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null, "[]", "[065H7Z31732]"),
+      Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.hmrcSchema).sort("id")
 
@@ -232,8 +230,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - LEU" should "output Hmrc combined file containing legal units" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
 
     val appConfig: AppConfig = new AppConfig
     val workingDir = appConfig.AppDataConfig.workingDir
@@ -255,11 +251,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // expected data
     val data = Seq(
-      Row("1000000000000002", "! LTD", "tradstyle1", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "LS10 2RU", "99999", "1", "A", "A", null, "08209948"),
-      Row("1000000000000004", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null),
-      Row("1000000000000003", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null),
-      Row("1000000000000001", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, null, null, null),
-      Row("1000000000000005", "NAME1", "tradstyle1", "address1", "address2", "address3", "address4", "address5", "postcode", null, "0", null, "A", null, null)
+      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU","METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948"),
+      Row("1000000000000004", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
+      Row("1000000000000003", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
+      Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null),
+      Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null)
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.leuSchema).sort("id")
 
@@ -271,7 +267,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
