@@ -4,10 +4,9 @@ import java.util.UUID
 
 import com.google.inject.Singleton
 import org.apache.spark.sql.DataFrame
-import uk.gov.ons.bi.dataload.reader.{LinksParquetReader, PreviousLinkStore}
+import uk.gov.ons.bi.dataload.reader.LinksParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import org.apache.spark.sql.functions.udf
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.expressions.UserDefinedFunction
 
 /**
@@ -45,6 +44,8 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val workingDir = appDataConfig.work
     val linksFile = appDataConfig.links
     val newLinksFileParquetPath = s"$workingDir/$linksFile"
+
+    println(newLinksFileParquetPath)
 
     withNewUbrn.write.mode("overwrite").parquet(newLinksFileParquetPath)
   }
