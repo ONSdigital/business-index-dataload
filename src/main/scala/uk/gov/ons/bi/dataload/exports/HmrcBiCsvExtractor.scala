@@ -3,7 +3,7 @@ package uk.gov.ons.bi.dataload.exports
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit}
 
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
