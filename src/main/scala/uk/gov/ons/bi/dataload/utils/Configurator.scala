@@ -86,10 +86,10 @@ class AppConfig {
       //val dir = s"/$baseDir/$localDir" This is the original version but we are substituting it so that we can use the /user/bi-dev-ci directory
       val dir = s"$localDir" // Incorrect value, replace with version above once /dev/ons.gov/businessIndex/links exists
 
-      val linksFile = getConfigStr("linksFile", linksConfig)
+      val file = getConfigStr("file", linksConfig)
 
       override def toString: String = {
-        s"""[linksFile = $linksFile,
+        s"""[file = $file,
            | dir = $dir
            | ]
       """.stripMargin

@@ -28,7 +28,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
 
-    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.linksFile}"
+    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.file}"
     val outputFilePath: String = homeDir+s"${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}/${appConfig.AppDataConfig.links}"
 
     // Used to create initial input parquet file
