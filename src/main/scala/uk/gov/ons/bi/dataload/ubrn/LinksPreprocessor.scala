@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.google.inject.Singleton
 
-import uk.gov.ons.bi.dataload.reader.{LinksParquetReader, PreviousLinkStore}
+import uk.gov.ons.bi.dataload.reader.{LinksFileReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 import org.apache.spark.sql.functions.udf
@@ -22,12 +22,12 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
+  def getNewLinksDataFromParquet(reader: LinksFileReader , appConfig: AppConfig): DataFrame = {
 
     // get source/target directories
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.parquet
+    val parquetFile = linksDataConfig.linksFile
     val parquetFilePath = s"$dataDir/$parquetFile"
 
     // Load the JSON links data
@@ -50,8 +50,8 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val prevLinksFileParquetPath = s"$prevDir/$linksFile"
 
     // read links from parquet
-    val parquetReader = new LinksParquetReader(ctxMgr)
-    val parquetLinks  =  getNewLinksDataFromParquet(parquetReader, appConfig)
+    val LinksReader = new LinksFileReader(ctxMgr)
+    val parquetLinks  =  getNewLinksDataFromParquet(LinksReader, appConfig)
 
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)
@@ -80,7 +80,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
 
     //write output to hdfs
-    parquetReader.writeParquet(withNewUbrn, outputPath)
+    LinksReader.writeParquet(withNewUbrn, outputPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time

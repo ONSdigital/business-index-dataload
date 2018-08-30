@@ -30,8 +30,8 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
      //Get directories and file names etc for specified data source
         val (extSrcFile, extDataDir, parquetFile, tempTable) = biSource match {
-          case VAT => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat, "temp_vat")
-          case CH => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch, "temp_ch")
+          case VAT  => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat, "temp_vat")
+          case CH   => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch, "temp_ch")
           case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
         }
 
