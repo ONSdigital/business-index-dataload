@@ -39,7 +39,7 @@ object SourceDataToParquetApp extends DataloadApp {
   val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
-  sourceDataLoader.loadSourceBusinessDataToParquet(appConfig)
+  sourceDataLoader.writeSourceBusinessDataToParquet(appConfig)
 }
 
 object LinkDataApp extends DataloadApp {

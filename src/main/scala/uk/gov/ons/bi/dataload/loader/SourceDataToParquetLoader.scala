@@ -15,7 +15,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
   val log = ctxMgr.log
 
-  def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig) = {
+  def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig): (String, String) = {
 
     // Get source/target directories
 
@@ -37,7 +37,8 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     val inputPath = s"$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
     val outputPath = s"$workingDir/$parquetFile"
-    writeAdminParquet(inputPath, outputPath, tempTable, biSource)
+
+    (inputPath, outputPath)
   }
 
   def writeAdminParquet(inputPath: String, outputPath: String, tempTable: String, biSource: BusinessDataSource) = {
@@ -53,7 +54,7 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     reader.writeParquet(data, outputPath)
   }
 
-  def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig) = {
+  def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig): (String, String) = {
 
     // Get source/target directories
 
@@ -69,21 +70,25 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     val parquetFile = appDataConfig.tcn
 
-    val extSrcFilePath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
-    val targetFilePath = s"$workingDir/$parquetFile"
+    val inputPath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
+    val outputPath = s"$workingDir/$parquetFile"
 
-    writeAdminParquet(extSrcFilePath, targetFilePath, "temp_tcn", TCN)
+    (inputPath, outputPath)
   }
 
-  def loadSourceBusinessDataToParquet(appConfig: AppConfig) = {
+  def writeSourceBusinessDataToParquet(appConfig: AppConfig) = {
 
-    loadBusinessDataToParquet(CH, appConfig)
+    val (chInput, chOutput) = loadBusinessDataToParquet(CH, appConfig)
+    writeAdminParquet(chInput, chOutput, "temp_ch", CH)
 
-    loadBusinessDataToParquet(VAT, appConfig)
+    val (vatInput, vatOutput) = loadBusinessDataToParquet(VAT, appConfig)
+    writeAdminParquet(vatInput, vatOutput, "temp_vat", VAT)
 
-    loadBusinessDataToParquet(PAYE, appConfig)
+    val (payeInput, payeOutput) = loadBusinessDataToParquet(PAYE, appConfig)
+    writeAdminParquet(payeInput, payeOutput, "temp_paye", PAYE)
 
-    loadTcnToSicCsvLookupToParquet(appConfig)
+    val (tcnInput, tcnOutput) = loadTcnToSicCsvLookupToParquet(appConfig)
+    writeAdminParquet(tcnInput,tcnOutput, "temp_TCN", TCN)
   }
 
 }
