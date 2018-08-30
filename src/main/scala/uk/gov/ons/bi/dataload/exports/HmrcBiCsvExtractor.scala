@@ -3,11 +3,12 @@ package uk.gov.ons.bi.dataload.exports
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
 
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
+import uk.gov.ons.bi.dataload.model.DataFrameColumn
 /**
   * Created by websc on 29/06/2017.
   */
@@ -17,9 +18,6 @@ object HmrcBiCsvExtractor {
 
     val log = ctxMgr.log
     log.setLevel(Level.INFO)
-    val sc = ctxMgr.sc
-    val spark = ctxMgr.spark
-    import spark.implicits._
 
     val workingDir = appConfig.AppDataConfig.workingDir
     val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
@@ -35,13 +33,13 @@ object HmrcBiCsvExtractor {
 
     def getHMRCOutput(df: DataFrame): DataFrame = {
         val arrDF = df
-          .withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
-          .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
+          .withColumn(DataFrameColumn.VatStringArr, df(DataFrameColumn.VatID).cast(ArrayType(StringType)))
+          .withColumn(DataFrameColumn.PayeStringArr, df(DataFrameColumn.PayeID).cast(ArrayType(StringType)))
 
         val dropDF = arrDF
-          .withColumn("VatRef", stringifyArr(arrDF("arrVar")))
-          .withColumn("PayeRef", stringifyArr(arrDF("arrPaye")))
-          .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
+          .withColumn(DataFrameColumn.VatString, stringifyArr(arrDF(DataFrameColumn.VatStringArr)))
+          .withColumn(DataFrameColumn.PayeString, stringifyArr(arrDF(DataFrameColumn.PayeStringArr)))
+          .drop(DataFrameColumn.VatID,DataFrameColumn.PayeID,DataFrameColumn.VatStringArr, DataFrameColumn.PayeStringArr)
 
         dropDF
           .select("id","BusinessName","TradingStyle",
@@ -59,18 +57,18 @@ object HmrcBiCsvExtractor {
 
     def getVatExploded(df: DataFrame): DataFrame = {
       // Flatten (ID,List(VAT Refs)) records to (ID,VAT Ref) pairs
-      df.select("id","VatRefs")
-        .where($"VatRefs".isNotNull)
-        .withColumn("VatRef", explode($"VatRefs"))
-        .drop($"VatRefs")
+      df.select(DataFrameColumn.ID,DataFrameColumn.VatID)
+        .where(col(DataFrameColumn.VatID).isNotNull)
+        .withColumn(DataFrameColumn.VatString, explode(col(DataFrameColumn.VatID)))
+        .drop(col(DataFrameColumn.VatID))
     }
 
     def getPayeExploded(df: DataFrame): DataFrame = {
       // Flatten (ID,List(PAYE Refs)) records to (ID,PAYE Ref) pairs
-      df.select("id","PayeRefs")
-        .where($"PayeRefs".isNotNull)
-        .withColumn("PayeRef", explode($"PayeRefs"))
-        .drop($"PayeRefs")
+      df.select(DataFrameColumn.ID,DataFrameColumn.PayeID)
+        .where(col(DataFrameColumn.PayeID).isNotNull)
+        .withColumn(DataFrameColumn.PayeString, explode(col(DataFrameColumn.PayeID)))
+        .drop(col(DataFrameColumn.PayeID))
     }
 
     // MAIN PROCESSING:
