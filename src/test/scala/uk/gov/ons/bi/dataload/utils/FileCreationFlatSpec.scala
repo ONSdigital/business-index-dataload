@@ -222,7 +222,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
       Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.hmrcSchema).sort("id")
-    
+
     // test expected against results
     df.collect() shouldBe expected.collect()
   }
