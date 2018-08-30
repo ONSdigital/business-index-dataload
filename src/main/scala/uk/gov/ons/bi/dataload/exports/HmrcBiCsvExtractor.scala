@@ -36,8 +36,8 @@ object HmrcBiCsvExtractor {
 
     // Extract the different sets of data we want, and write to output files
 
-    val hmrcOutput = getHMRCOutput(biData, hmrcFile)
-    log.info(s"Writing ${hmrcOutput.count} Legal Entities to $hmrcFile")
+    val adminEntities = getAdminEntities(biData, hmrcFile)
+    log.info(s"Writing ${adminEntities.count} Legal Entities to $hmrcFile")
 
     val legalEntities = getLegalEntities(biData, legalFile)
     log.info(s"Writing ${legalEntities.count} Legal Entities to $legalFile")
@@ -58,30 +58,58 @@ object HmrcBiCsvExtractor {
 
   def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
 
-  def getHMRCOutput(df: DataFrame, outputPath: String): DataFrame = {
-    val arrDF = df
-      .withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
-      .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
+  def getAdminEntities(df: DataFrame, outputPath: String): DataFrame = {
 
-    val dropDF = arrDF
-      .withColumn("VatRef", stringifyArr(arrDF("arrVar")))
-      .withColumn("PayeRef", stringifyArr(arrDF("arrPaye")))
-      .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
+    val vatAndPaye = df
+      .withColumn(DataFrameColumn.VatStringArr, df(DataFrameColumn.VatID).cast(ArrayType(StringType)))
+      .withColumn(DataFrameColumn.PayeStringArr, df(DataFrameColumn.PayeID).cast(ArrayType(StringType)))
 
-    val hmrcOutput = dropDF
-      .select("id","BusinessName","TradingStyle", "PostCode",
-        "Address1", "Address2","Address3","Address4", "Address5",
-        "IndustryCode","LegalStatus","TradingStatus",
-        "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+    val stringifyVatAndPaye = vatAndPaye
+      .withColumn(DataFrameColumn.VatString, stringifyArr(vatAndPaye(DataFrameColumn.VatStringArr)))
+      .withColumn(DataFrameColumn.PayeString, stringifyArr(vatAndPaye(DataFrameColumn.PayeStringArr)))
+      .drop(DataFrameColumn.VatID,DataFrameColumn.PayeID,DataFrameColumn.VatStringArr, DataFrameColumn.PayeStringArr)
+
+    val hmrcOutput = stringifyVatAndPaye
+      .select("id",
+        "BusinessName",
+        "TradingStyle",
+        "PostCode",
+        "Address1",
+        "Address2",
+        "Address3",
+        "Address4",
+        "Address5",
+        "IndustryCode",
+        "LegalStatus",
+        "TradingStatus",
+        "Turnover",
+        "EmploymentBands",
+        "CompanyNo",
+        "VatRef",
+        "PayeRef")
+
     BiCsvWriter.writeCsvOutput(hmrcOutput, outputPath)
     hmrcOutput
   }
 
   def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
-    val legalEntities = df.select("id","BusinessName","TradingStyle",
-      "PostCode", "Address1", "Address2","Address3","Address4", "Address5",
-      "IndustryCode","LegalStatus","TradingStatus",
-      "Turnover","EmploymentBands","CompanyNo")
+
+    val legalEntities = df.select("id",
+      "BusinessName",
+      "TradingStyle",
+      "PostCode",
+      "Address1",
+      "Address2",
+      "Address3",
+      "Address4",
+      "Address5",
+      "IndustryCode",
+      "LegalStatus",
+      "TradingStatus",
+      "Turnover",
+      "EmploymentBands",
+      "CompanyNo")
+
     BiCsvWriter.writeCsvOutput(legalEntities, outputPath)
     legalEntities
   }

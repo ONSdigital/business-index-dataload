@@ -8,7 +8,7 @@ import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.reader.LinksParquetReader
+import uk.gov.ons.bi.dataload.reader.LinksFileReader
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 
 /**
@@ -24,11 +24,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     val homeDir = parquetReader.readFromLocal("/")
 
-    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.parquet}"
+    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.linksFile}"
     val outputFilePath: String = homeDir+s"${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}/${appConfig.AppDataConfig.links}"
 
     // Used to create initial input parquet file
@@ -60,7 +60,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/companiesHouse/CH.csv")
@@ -84,7 +84,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/paye/PAYE.csv")
@@ -111,7 +111,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/vat/VAT.csv")
@@ -139,7 +139,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/ons.gov/businessIndex/lookups/tcn-to-sic-mapping.csv")
@@ -166,7 +166,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
+    val parquetReader = new LinksFileReader(ctxMgr)
 
     // admin outputs
     val homeDir = parquetReader.readFromLocal("/")
@@ -210,7 +210,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getHMRCOutput(biData, inputCSV)
+    HmrcBiCsvExtractor.getAdminEntities(biData, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
@@ -266,7 +266,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - VAT" should "output Hmrc combined file containing VAT data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val ctxMgr = new ContextMgr(sparkSession)
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
@@ -302,8 +301,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   "HmrcBiExportApp - PAYE" should "output Hmrc combined file containing PAYE data" in {
     // read in config - pathing for link data appp output
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-    val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksParquetReader(ctxMgr)
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
