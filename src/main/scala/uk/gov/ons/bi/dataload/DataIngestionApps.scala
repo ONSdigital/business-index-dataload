@@ -1,10 +1,9 @@
 package uk.gov.ons.bi.dataload
 
 import org.apache.spark.sql.SparkSession
-
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.ubrn._
+import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 
@@ -86,9 +85,9 @@ object LoadBiToEsApp extends DataloadApp {
 
 }
 
-object PreprocessLinksApp extends DataloadApp{
-    // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
-   val ctxMgr = new ContextMgr(sparkSess)
-   val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
+object PreprocessLinksApp extends DataloadApp {
+  // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
+  val ctxMgr = new ContextMgr(sparkSess)
+  val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 }
 

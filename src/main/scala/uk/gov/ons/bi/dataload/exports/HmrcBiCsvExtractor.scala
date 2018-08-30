@@ -2,11 +2,15 @@ package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Column}
-import org.apache.spark.sql.functions.{explode, concat_ws, concat, lit, col}
+
+import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
+
 import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
+import uk.gov.ons.bi.dataload.model.DataFrameColumn
+
 /**
   * Created by websc on 29/06/2017.
   */
@@ -25,6 +29,7 @@ object HmrcBiCsvExtractor {
     val payeFile = s"$extractDir/bi-paye.csv"
     val hmrcFile = s"$extractDir/bi-hmrc.csv"
 
+    // MAIN PROCESSING:
     // Read BI data
     val pqReader = new BIEntriesParquetReader(ctxMgr)
     val biData = pqReader.loadFromParquet(appConfig)
@@ -54,49 +59,55 @@ object HmrcBiCsvExtractor {
   def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
 
   def getHMRCOutput(df: DataFrame, outputPath: String): DataFrame = {
+
     val arrDF = df
-      .withColumn("arrVar", df("VatRefs").cast(ArrayType(StringType)))
-      .withColumn("arrPaye", df("PayeRefs").cast(ArrayType(StringType)))
+      .withColumn(DataFrameColumn.VatStringArr, df(DataFrameColumn.VatID).cast(ArrayType(StringType)))
+      .withColumn(DataFrameColumn.PayeStringArr, df(DataFrameColumn.PayeID).cast(ArrayType(StringType)))
 
     val dropDF = arrDF
-      .withColumn("VatRef", stringifyArr(arrDF("arrVar")))
-      .withColumn("PayeRef", stringifyArr(arrDF("arrPaye")))
-      .drop("VatRefs","PayeRefs","arrVar", "arrPaye")
+      .withColumn(DataFrameColumn.VatString, stringifyArr(arrDF(DataFrameColumn.VatStringArr)))
+      .withColumn(DataFrameColumn.PayeString, stringifyArr(arrDF(DataFrameColumn.PayeStringArr)))
+      .drop(DataFrameColumn.VatID,DataFrameColumn.PayeID,DataFrameColumn.VatStringArr, DataFrameColumn.PayeStringArr)
 
     val hmrcOutput = dropDF
-      .select("id","BusinessName","TradingStyle", "PostCode",
-        "Address1", "Address2","Address3","Address4", "Address5",
+      .select("id","BusinessName","TradingStyle","PostCode",
+        "Address1", "Address2","Address3","Address4","Address5",
         "IndustryCode","LegalStatus","TradingStatus",
         "Turnover","EmploymentBands","CompanyNo","VatRef","PayeRef")
+
     BiCsvWriter.writeCsvOutput(hmrcOutput, outputPath)
     hmrcOutput
   }
 
   def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
-    val legalEntities = df.select("id","BusinessName","TradingStyle",
-      "PostCode", "Address1", "Address2","Address3","Address4", "Address5",
+
+    val legalEntities = df.select("id","BusinessName","TradingStyle","PostCode",
+      "Address1", "Address2","Address3","Address4", "Address5",
       "IndustryCode","LegalStatus","TradingStatus",
       "Turnover","EmploymentBands","CompanyNo")
+
     BiCsvWriter.writeCsvOutput(legalEntities, outputPath)
     legalEntities
   }
 
   def getVatExploded(df: DataFrame, outputPath: String): DataFrame = {
     // Flatten (ID,List(VAT Refs)) records to (ID,VAT Ref) pairs
-    val vat = df.select("id","VatRefs")
-      .where(df("VatRefs").isNotNull)
-      .withColumn("VatRef", explode(df("VatRefs")))
-      .drop(df("VatRefs"))
+    val vat = df.select(DataFrameColumn.ID,DataFrameColumn.VatID)
+      .where(col(DataFrameColumn.VatID).isNotNull)
+      .withColumn(DataFrameColumn.VatString, explode(col(DataFrameColumn.VatID)))
+      .drop(col(DataFrameColumn.VatID))
     BiCsvWriter.writeCsvOutput(vat, outputPath)
     vat
   }
 
   def getPayeExploded(df: DataFrame, outputPath: String): DataFrame = {
+
     // Flatten (ID,List(PAYE Refs)) records to (ID,PAYE Ref) pairs
-    val paye = df.select("id","PayeRefs")
-      .where(df("PayeRefs").isNotNull)
-      .withColumn("PayeRef", explode(df("PayeRefs")))
-      .drop(df("PayeRefs"))
+    val paye = df.select(DataFrameColumn.ID,DataFrameColumn.PayeID)
+      .where(col(DataFrameColumn.PayeID).isNotNull)
+      .withColumn(DataFrameColumn.PayeString, explode(col(DataFrameColumn.PayeID)))
+      .drop(col(DataFrameColumn.PayeID))
+
     BiCsvWriter.writeCsvOutput(paye, outputPath)
     paye
   }

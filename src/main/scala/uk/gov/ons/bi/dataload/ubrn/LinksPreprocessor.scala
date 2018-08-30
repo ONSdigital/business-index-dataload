@@ -3,12 +3,14 @@ package uk.gov.ons.bi.dataload.ubrn
 import java.util.UUID
 
 import com.google.inject.Singleton
-import org.apache.spark.sql.DataFrame
+
 import uk.gov.ons.bi.dataload.reader.{LinksParquetReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+
 import org.apache.spark.sql.functions.udf
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.storage.StorageLevel
 
 /**
   * Created by websc on 03/03/2017.
@@ -20,13 +22,22 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig, inputPath: String): DataFrame = {
-    // Load the Parquet links data
-    reader.readFromSourceFile(inputPath)
+  def getNewLinksDataFromParquet(reader: LinksParquetReader , appConfig: AppConfig): DataFrame = {
+
+    // get source/target directories
+    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
+    val dataDir = linksDataConfig.dir
+    val parquetFile = linksDataConfig.parquet
+    val parquetFilePath = s"$dataDir/$parquetFile"
+
+    // Load the JSON links data
+    reader.readFromSourceFile(parquetFilePath)
   }
 
   def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
+    // Lot of caching needed here, so we cache to disk and memory
+    // Load the new Links from JSON
     val appDataConfig = appConfig.AppDataConfig
 
     // get directory
@@ -34,18 +45,13 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     val linksFile = appDataConfig.links
     val prevDir = appDataConfig.prevDir
 
-    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-    val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.parquet
-
     //concatenate strings to create path
-    val inputPath = s"$dataDir/$parquetFile"
     val outputPath = s"$workingDir/$linksFile"
     val prevLinksFileParquetPath = s"$prevDir/$linksFile"
 
     // read links from parquet
     val parquetReader = new LinksParquetReader(ctxMgr)
-    val parquetLinks  =  getNewLinksDataFromParquet(parquetReader, appConfig, inputPath)
+    val parquetLinks  =  getNewLinksDataFromParquet(parquetReader, appConfig)
 
     // Get previous links
     val previousLinkStore = new PreviousLinkStore(ctxMgr)
