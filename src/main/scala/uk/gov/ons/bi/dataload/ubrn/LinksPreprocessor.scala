@@ -27,7 +27,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) {
     // get source/target directories
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
-    val parquetFile = linksDataConfig.linksFile
+    val parquetFile = linksDataConfig.file
     val parquetFilePath = s"$dataDir/$parquetFile"
 
     // Load the JSON links data
