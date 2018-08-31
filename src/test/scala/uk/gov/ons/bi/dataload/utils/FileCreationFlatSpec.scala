@@ -210,7 +210,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getAdminEntities(biData, inputCSV)
+    HmrcBiCsvExtractor.getLeuWithAdminData(biData, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
