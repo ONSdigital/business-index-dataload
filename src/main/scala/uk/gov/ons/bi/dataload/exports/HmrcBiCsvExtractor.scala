@@ -40,7 +40,7 @@ object HmrcBiCsvExtractor {
 
     // Extract the different sets of data we want, and write to output files
 
-    val adminEntities = getAdminEntities(biData, hmrcFile)
+    val adminEntities = getLeuWithAdminData(biData, hmrcFile)
     log.info(s"Writing ${adminEntities.count} Legal Entities to $hmrcFile")
 
     val legalEntities = getLegalEntities(biData, legalFile)
@@ -58,7 +58,7 @@ object HmrcBiCsvExtractor {
 
   def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
 
-  def getAdminEntities(df: DataFrame, outputPath: String): DataFrame = {
+  def getLeuWithAdminData(df: DataFrame, outputPath: String): DataFrame = {
 
     val vatAndPaye = df
       .withColumn(DataFrameColumn.VatStringArr, df(DataFrameColumn.VatID).cast(ArrayType(StringType)))
@@ -69,7 +69,7 @@ object HmrcBiCsvExtractor {
       .withColumn(DataFrameColumn.PayeString, stringifyArr(vatAndPaye(DataFrameColumn.PayeStringArr)))
       .drop(DataFrameColumn.VatID,DataFrameColumn.PayeID,DataFrameColumn.VatStringArr, DataFrameColumn.PayeStringArr)
 
-    val hmrcOutput = stringifyVatAndPaye
+    val LeuWithAdminData = stringifyVatAndPaye
       .select("id",
         "BusinessName",
         "TradingStyle",
@@ -88,8 +88,8 @@ object HmrcBiCsvExtractor {
         "VatRef",
         "PayeRef")
 
-    BiCsvWriter.writeCsvOutput(hmrcOutput, outputPath)
-    hmrcOutput
+    BiCsvWriter.writeCsvOutput(LeuWithAdminData, outputPath)
+    LeuWithAdminData
   }
 
   def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
