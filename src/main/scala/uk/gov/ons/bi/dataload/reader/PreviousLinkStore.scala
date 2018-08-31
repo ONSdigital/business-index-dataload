@@ -11,8 +11,7 @@ import scala.util.{Success, Try}
 /**
   * Created by websc on 08/03/2017.
   */
-class PreviousLinkStore(ctxMgr: ContextMgr)
-  extends BIDataReader {
+class PreviousLinkStore(ctxMgr: ContextMgr) extends BIDataReader {
 
   val sc = ctxMgr.sc
   val spark = ctxMgr.spark

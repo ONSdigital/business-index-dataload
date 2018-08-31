@@ -32,18 +32,16 @@ trait DataloadApp extends App {
     case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
     case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   }
+  val ctxMgr = new ContextMgr(sparkSess)
 }
 
 object SourceDataToParquetApp extends DataloadApp {
-  val ctxMgr = new ContextMgr(sparkSess)
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
   sourceDataLoader.writeSourceBusinessDataToParquet(appConfig)
 }
 
 object LinkDataApp extends DataloadApp {
-  val ctxMgr = new ContextMgr(sparkSess)
-  // Use an object because defining builder as a class causes weird Spark errors here.
   // Pass context stuff explicitly to builder method.
   LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
 }
@@ -66,7 +64,7 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  val sparkSess2 = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+  override val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
     .config("es.port", esConfig.port.toString)
@@ -75,19 +73,19 @@ object LoadBiToEsApp extends DataloadApp {
     .config("es.index.auto.create", esConfig.autocreate)
     .getOrCreate
 
+  override val ctxMgr = new ContextMgr(sparkSess)
+
   // this line decides either if ES index should be created manually or not
   // config("es.index.auto.create", esConfig.autocreate)
 
   // Now we've built the ES SparkSession, let's go to work:
   // Set up the context manager (singleton holding our SparkSession)
-  val ctxMgr = new ContextMgr(sparkSess2)
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 
 }
 
 object PreprocessLinksApp extends DataloadApp {
   // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
-  val ctxMgr = new ContextMgr(sparkSess)
   val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
 }
 
