@@ -16,46 +16,53 @@ import org.apache.spark.storage.StorageLevel
   */
 
 @Singleton
-class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader{
+class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader {
 
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
-  def readNewLinks(appConfig: AppConfig): DataFrame = {
+  def getWorkingDir(appConfig: AppConfig): String = {
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = appDataConfig.workingDir
+    workingDir
+  }
 
-    // get source/target directories
+  def getPrevDir(appConfig: AppConfig): String = {
+    val appDataConfig = appConfig.AppDataConfig
+    val prevDir = appDataConfig.prevDir
+    prevDir
+  }
+
+  def getLinksFilePath(appConfig: AppConfig): String = {
+    val appDataConfig = appConfig.AppDataConfig
+    val linksFile = appDataConfig.links
+    linksFile
+  }
+
+  def getNewLinksPath(appConfig: AppConfig): String = {
     val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
     val dataDir = linksDataConfig.dir
     val linksFile = linksDataConfig.file
     val linksFilePath = s"$dataDir/$linksFile"
+    linksFilePath
+  }
 
+  def readNewLinks(linksFilePath: String): DataFrame = {
     // Load the JSON links data
     readFromSourceFile(linksFilePath)
   }
-  
-  def loadAndPreprocessLinks(appConfig: AppConfig) = {
 
-    val appDataConfig = appConfig.AppDataConfig
+  def readPrevLinks(prevDir: String, linksFile: String): DataFrame = {
+    val prevLinksFile = s"$prevDir/$linksFile"
+    readFromSourceFile(prevLinksFile)
+  }
 
-    // get directory
-    val workingDir = appDataConfig.workingDir
-    val prevDir = appDataConfig.prevDir
-    val linksFile = appDataConfig.links
-
-    //concatenate strings to create path
-    val outputPath = s"$workingDir/$linksFile"
-    val prevLinksFileParquetPath = s"$prevDir/$linksFile"
-
-    // read links from parquet
-    val parquetLinks = readNewLinks(appConfig)
-
-    // Get previous links
-    val prevLinks = readFromSourceFile(prevLinksFileParquetPath)
+  def preProcessLinks(newLinksDF: DataFrame, prevLinks: DataFrame) = {
 
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
     // so we need to PERSIST this data once we've added GID to fix it in place.
-    val newLinks = parquetLinks.withColumn("GID", generateUuid())
+    val newLinks = newLinksDF.withColumn("GID", generateUuid())
     newLinks.persist(StorageLevel.MEMORY_AND_DISK)
 
     // Initialise LinkMatcher
@@ -73,18 +80,20 @@ class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) wi
     val linksToSave = matcher.combineLinksToSave(withOldUbrn, withNewUbrn)
     // Cache the results because we want to write them to multiple files
     linksToSave.persist(StorageLevel.MEMORY_AND_DISK)
+  }
 
+  def writeToParquet(prevDir: String, workingDir: String, linksFile: String, linksToSave: DataFrame) = {
+
+    val outputPath = s"$workingDir/$linksFile"
+
+    // Parquet file locations from configuration (or runtime params)
     writeParquet(linksToSave, outputPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
-    writeAsPrevLinks(appConfig, linksToSave)
+    writeAsPrevLinks(prevDir, linksFile, linksToSave)
 
     // 2. As e.g. 201703081145/LINKS_Output.parquet so it does not get over-written later
-    writeAsPrevLinks(appConfig, linksToSave, true)
-
-    linksToSave.unpersist()
-    newLinks.unpersist()
-    withNewUbrn.unpersist()
+    writeAsPrevLinks(prevDir, linksFile, linksToSave, true)
   }
 }
