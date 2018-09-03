@@ -28,17 +28,30 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
 
-    val inputFilePath: String  = homeDir+s"${appConfig.OnsDataConfig.linksDataConfig.file}"
-    val outputFilePath: String = homeDir+s"${appConfig.AppDataConfig.dir}/${appConfig.AppDataConfig.work}/${appConfig.AppDataConfig.links}"
+    val lpp = new LinksPreprocessor(ctxMgr)
+    val inputPath = lpp.getNewLinksPath(appConfig)
+    val workingDir = lpp.getWorkingDir(appConfig)
+    val prevDir = lpp.getPrevDir(appConfig)
+    val linksFile = lpp.getLinksFilePath(appConfig)
+    val outputFilePath = s"$workingDir/$linksFile"
 
     // Used to create initial input parquet file
     val jsonPath = homeDir+"/links.json"
-    sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputFilePath)
+    sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputPath)
 
     // delete and create output parquet
     new File(outputFilePath).delete()
 
-    new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
+    // load links File
+    val newLinks = lpp.readNewLinks(inputPath)
+    val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
+
+    // pre-process data
+    val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+    linksToSave.show()
+
+    //write to parquet
+    lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
 
     // Read in created parquet
     val results = sparkSession.read.parquet(outputFilePath).collect()

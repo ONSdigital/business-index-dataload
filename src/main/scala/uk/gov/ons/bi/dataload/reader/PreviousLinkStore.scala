@@ -27,7 +27,8 @@ class PreviousLinkStore(ctxMgr: ContextMgr) extends BIDataReader {
     }
   }
 
-  def writeAsPrevLinks(appConfig: AppConfig, df: DataFrame, timestamped: Boolean = false) = {
+  def writeAsPrevLinks(prevDir: String, linksFile: String, df: DataFrame, timestamped: Boolean = false) = {
+
     // Use timestamp as YYYYMMDD
     val ts = if (timestamped) {
       val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
@@ -37,10 +38,6 @@ class PreviousLinkStore(ctxMgr: ContextMgr) extends BIDataReader {
     }
     else ""
 
-    // Parquet file locations from configuration (or runtime params)
-    val appDataConfig = appConfig.AppDataConfig
-    val linksFile = appDataConfig.links
-    val prevDir = appDataConfig.prevDir
     val prevLinksFile = s"$prevDir/$ts/$linksFile"
 
     // We will also write a copy of the preprocessed Links data to the "previous" dir
