@@ -19,45 +19,29 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
 
     // Get source/target directories
 
-    // External data (HMRC)
+    // External data (HMRC - CH, VAT, PAYE)
     val extDataConfig = appConfig.ExtDataConfig
-    val extBaseDir = extDataConfig.dir
     val extEnv = extDataConfig.env
+    val extBaseDir = extDataConfig.dir
 
     // Application working directory
     val appDataConfig = appConfig.AppDataConfig
-    //val workingDir = appDataConfig.workingDir
 
+    // Lookups source directory (TCN)
+    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
+
+    // output directory
     val workingDir = getWorkingDir(appConfig)
 
      //Get directories and file names etc for specified data source
-        val (extSrcFile, extDataDir, parquetFile) = biSource match {
-          case VAT  => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
-          case CH   => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
-          case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
-        }
+    val (baseDir, extSrcFile, extDataDir, parquetFile) = biSource match {
+      case VAT  => (s"$extEnv/$extBaseDir", extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
+      case CH   => (s"$extEnv/$extBaseDir", extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
+      case PAYE => (s"$extEnv/$extBaseDir", extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
+      case TCN  => (appDataConfig.env, lookupsConfig.tcnToSic,lookupsConfig.dir, appDataConfig.tcn)
+    }
 
-    val inputPath = s"$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
-    val outputPath = s"$workingDir/$parquetFile"
-
-    (inputPath, outputPath)
-  }
-
-  def getTcnDataPath(appConfig: AppConfig): (String, String) = {
-
-    // Lookups source directory
-    val lookupsEnv = appConfig.AppDataConfig.env
-    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
-    val lookupsDir = lookupsConfig.dir
-    val tcnToSicFile = lookupsConfig.tcnToSic
-
-    // Application working directory
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = getWorkingDir(appConfig)
-
-    val parquetFile = appDataConfig.tcn
-
-    val inputPath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
+    val inputPath = s"$baseDir/$extDataDir/$extSrcFile"
     val outputPath = s"$workingDir/$parquetFile"
 
     (inputPath, outputPath)
