@@ -16,7 +16,7 @@ import org.apache.spark.SparkContext
   * Created by websc on 28/04/2017.
   */
 @Singleton
-class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSupport.getOrCreate) extends Serializable{
+class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSupport.getOrCreate) extends Serializable {
 
   // Get logger for this app to use:
   // This still logs to Spark Log4j default appenders (console or file), as
@@ -24,7 +24,6 @@ class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSup
   // But the log name allows us to filter these entries from the main log.
   @transient lazy val log = org.apache.log4j.LogManager.getLogger("BI-DATALOAD")
   log.setLevel(Level.WARN)
-
   // Suppress logging from outside the app
   org.apache.log4j.LogManager.getRootLogger.setLevel(Level.WARN)
 

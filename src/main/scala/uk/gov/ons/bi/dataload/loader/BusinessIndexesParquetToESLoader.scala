@@ -21,9 +21,9 @@ object BusinessIndexesParquetToESLoader {
 
      // read BI entries
 
-    val pqReader = new BIEntriesParquetReader(ctxMgr)
+    val pqReader = new BIEntriesParquetReader(appConfig, ctxMgr)
 
-    val biDf = pqReader.loadFromParquet(appConfig)
+    val biDf = pqReader.loadFromParquet()
 
     println(s"BI index file contained ${biDf.count} records.")
 

@@ -27,8 +27,8 @@ object HmrcBiCsvExtractor {
     val hmrcFile = s"$extractDir/bi-hmrc.csv"
 
     // Read BI data
-    val pqReader = new BIEntriesParquetReader(ctxMgr)
-    val biData = pqReader.loadFromParquet(appConfig)
+    val pqReader = new BIEntriesParquetReader(appConfig, ctxMgr)
+    val biData = pqReader.loadFromParquet()
 
     // Cache to avoid re-loading data for each output
     //biData.persist()
