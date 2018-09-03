@@ -44,12 +44,12 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val results = sparkSession.read.parquet(outputFilePath).collect()
 
     val expected = Seq(
-      (Array("ch1"), Array("065H7Z31732"), Array(""), 1000000000000001L),
-      (Array("08209948"), Array(""), Array("312764963000"), 1000000000000002L),
-      (Array(""), Array("035H7A22627"), Array("868504062000"), 1000000000000003L), 
-      (Array("ch3"), Array(""), Array("862764963000"), 1000000000000004L), 
-      (Array("ch4"), Array("125H7A71620"), Array("123764963000"), 1000000000000005L)
-    ).toDF("CH", "PAYE", "VAT", "UBRN").collect()
+      (1000000000000001L, Array("ch1"), Array(""), Array("065H7Z31732")),
+      (1000000000000002L, Array("08209948"), Array("312764963000"), Array("")),
+      (1000000000000003L, Array(""), Array("868504062000"), Array("035H7A22627")),
+      (1000000000000004L, Array("ch3"), Array("862764963000"), Array("")),
+      (1000000000000005L, Array("ch4"), Array("123764963000"), Array("125H7A71620"))
+    ).toDF("UBRN", "CH", "VAT", "PAYE").collect()
 
     results shouldBe expected
   }

@@ -87,5 +87,12 @@ object LoadBiToEsApp extends DataloadApp {
 object PreprocessLinksApp extends DataloadApp {
   // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
   val lpp = new LinksPreprocessor(ctxMgr).loadAndPreprocessLinks(appConfig)
+
+  // load links File
+
+  // preprocess data
+
+  //write to parquet
+
 }
 
