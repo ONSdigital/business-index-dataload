@@ -81,7 +81,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(outputPath).delete()
 
-    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_ch", CH)
+    sourceDataLoader.writeAdminToParquet(inputPath, outputPath, "temp_ch", CH)
 
     val result = sparkSession.read.parquet(outputPath).select("CompanyName", "CompanyNumber").collect()
 
@@ -93,6 +93,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source PAYE" in {
+
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
@@ -106,7 +107,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(outputPath).delete()
 
-    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_paye", PAYE)
+    sourceDataLoader.writeAdminToParquet(inputPath, outputPath, "temp_paye", PAYE)
 
     val result = sparkSession.read.parquet(outputPath).select("entref", "payeref").collect()
 
@@ -120,6 +121,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source VAT" in {
+
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
@@ -132,7 +134,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(outputPath).delete()
 
-    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_vat", VAT)
+    sourceDataLoader.writeAdminToParquet(inputPath, outputPath, "temp_vat", VAT)
 
     val result = sparkSession.read.parquet(outputPath).select("entref", "vatref").collect()
 
@@ -148,6 +150,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
   }
 
   "Admin source files " should "read in and write out as a parquet file for the admin source TCN-lookup" in {
+
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
@@ -160,7 +163,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(outputPath).delete()
 
-    sourceDataLoader.writeAdminParquet(inputPath, outputPath, "temp_TCN", TCN)
+    sourceDataLoader.writeAdminToParquet(inputPath, outputPath, "temp_TCN", TCN)
 
     val result = sparkSession.read.parquet(outputPath).take(5)
 

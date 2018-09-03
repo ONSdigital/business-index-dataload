@@ -5,7 +5,7 @@ import java.util.UUID
 import com.google.inject.Singleton
 
 import uk.gov.ons.bi.dataload.reader.{BIDataReader, PreviousLinkStore}
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.ContextMgr
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.expressions.UserDefinedFunction
 
@@ -14,36 +14,10 @@ import org.apache.spark.sql.expressions.UserDefinedFunction
   */
 
 @Singleton
-class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader {
+class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader{
 
   // Create UDF to generate a UUID
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
-
-  def getWorkingDir(appConfig: AppConfig): String = {
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
-    workingDir
-  }
-
-  def getPrevDir(appConfig: AppConfig): String = {
-    val appDataConfig = appConfig.AppDataConfig
-    val prevDir = appDataConfig.prevDir
-    prevDir
-  }
-
-  def getLinksFilePath(appConfig: AppConfig): String = {
-    val appDataConfig = appConfig.AppDataConfig
-    val linksFile = appDataConfig.links
-    linksFile
-  }
-
-  def getNewLinksPath(appConfig: AppConfig): String = {
-    val linksDataConfig = appConfig.OnsDataConfig.linksDataConfig
-    val dataDir = linksDataConfig.dir
-    val linksFile = linksDataConfig.file
-    val linksFilePath = s"$dataDir/$linksFile"
-    linksFilePath
-  }
 
   def readNewLinks(linksFilePath: String): DataFrame = {
     // Load the JSON links data

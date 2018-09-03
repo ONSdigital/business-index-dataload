@@ -11,11 +11,11 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
   */
 
 @Singleton
-class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
+class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
 
   val log = ctxMgr.log
 
-  def loadBusinessDataToParquet(biSource: BusinessDataSource, appConfig: AppConfig): (String, String) = {
+  def getAdminDataPaths(biSource: BusinessDataSource, appConfig: AppConfig): (String, String) = {
 
     // Get source/target directories
 
@@ -26,13 +26,15 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     // Application working directory
     val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
+    //val workingDir = appDataConfig.workingDir
+
+    val workingDir = getWorkingDir(appConfig)
 
      //Get directories and file names etc for specified data source
-        val (extSrcFile, extDataDir, parquetFile, tempTable) = biSource match {
-          case VAT  => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat, "temp_vat")
-          case CH   => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch, "temp_ch")
-          case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye, "temp_paye")
+        val (extSrcFile, extDataDir, parquetFile) = biSource match {
+          case VAT  => (extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
+          case CH   => (extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
+          case PAYE => (extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
         }
 
     val inputPath = s"$extEnv/$extBaseDir/$extDataDir/$extSrcFile"
@@ -41,7 +43,27 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
     (inputPath, outputPath)
   }
 
-  def writeAdminParquet(inputPath: String, outputPath: String, tempTable: String, biSource: BusinessDataSource) = {
+  def getTcnDataPath(appConfig: AppConfig): (String, String) = {
+
+    // Lookups source directory
+    val lookupsEnv = appConfig.AppDataConfig.env
+    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
+    val lookupsDir = lookupsConfig.dir
+    val tcnToSicFile = lookupsConfig.tcnToSic
+
+    // Application working directory
+    val appDataConfig = appConfig.AppDataConfig
+    val workingDir = getWorkingDir(appConfig)
+
+    val parquetFile = appDataConfig.tcn
+
+    val inputPath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
+    val outputPath = s"$workingDir/$parquetFile"
+
+    (inputPath, outputPath)
+  }
+
+  def writeAdminToParquet(inputPath: String, outputPath: String, tempTable: String, biSource: BusinessDataSource) = {
     log.info(s"Reading $biSource data from: $inputPath")
 
     // Get corresponding reader based on BIDataSource
@@ -53,42 +75,4 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) {
 
     reader.writeParquet(data, outputPath)
   }
-
-  def loadTcnToSicCsvLookupToParquet(appConfig: AppConfig): (String, String) = {
-
-    // Get source/target directories
-
-    // Lookups source directory
-    val lookupsEnv = appConfig.AppDataConfig.env
-    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
-    val lookupsDir = lookupsConfig.dir
-    val tcnToSicFile = lookupsConfig.tcnToSic
-
-    // Application working directory
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
-
-    val parquetFile = appDataConfig.tcn
-
-    val inputPath = s"/$lookupsEnv/$lookupsDir/$tcnToSicFile"
-    val outputPath = s"$workingDir/$parquetFile"
-
-    (inputPath, outputPath)
-  }
-
-  def writeSourceBusinessDataToParquet(appConfig: AppConfig) = {
-
-    val (chInput, chOutput) = loadBusinessDataToParquet(CH, appConfig)
-    writeAdminParquet(chInput, chOutput, "temp_ch", CH)
-
-    val (vatInput, vatOutput) = loadBusinessDataToParquet(VAT, appConfig)
-    writeAdminParquet(vatInput, vatOutput, "temp_vat", VAT)
-
-    val (payeInput, payeOutput) = loadBusinessDataToParquet(PAYE, appConfig)
-    writeAdminParquet(payeInput, payeOutput, "temp_paye", PAYE)
-
-    val (tcnInput, tcnOutput) = loadTcnToSicCsvLookupToParquet(appConfig)
-    writeAdminParquet(tcnInput,tcnOutput, "temp_TCN", TCN)
-  }
-
 }
