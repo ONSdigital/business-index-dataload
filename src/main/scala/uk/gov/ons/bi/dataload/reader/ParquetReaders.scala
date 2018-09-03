@@ -14,7 +14,7 @@ class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
 
   val spark =  ctxMgr.spark
 
-  override def readFromSourceFile(srcFilePath: String): DataFrame = {
+  def readFromSourceFile(srcFilePath: String): DataFrame = {
     spark.read.parquet(srcFilePath)
   }
 

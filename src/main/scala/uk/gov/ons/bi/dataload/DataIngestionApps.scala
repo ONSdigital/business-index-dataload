@@ -1,8 +1,11 @@
 package uk.gov.ons.bi.dataload
 
 import org.apache.spark.sql.SparkSession
+
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
+import uk.gov.ons.bi.dataload.model.{CH, PAYE, TCN, VAT}
+import uk.gov.ons.bi.dataload.reader.BIDataReader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
@@ -35,10 +38,42 @@ trait DataloadApp extends App {
   val ctxMgr = new ContextMgr(sparkSess)
 }
 
+object PreprocessLinksApp extends DataloadApp with BIDataReader {
+
+  // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
+  val lpp = new LinksPreprocessor(ctxMgr)
+
+  // getFilePaths
+  val inputPath = getNewLinksPath(appConfig)
+  val workingDir = getWorkingDir(appConfig)
+  val prevDir = getPrevDir(appConfig)
+  val linksFile = getLinksFilePath(appConfig)
+
+  // load links File
+  val newLinks = lpp.readNewLinks(inputPath)
+  val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
+
+  // pre-process data
+  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+
+  //write to parquet
+  lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
+}
+
 object SourceDataToParquetApp extends DataloadApp {
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
-  sourceDataLoader.writeSourceBusinessDataToParquet(appConfig)
+  // get input and output paths for admin sources
+  val (chInput, chOutput) = sourceDataLoader.getAdminDataPaths(CH, appConfig)
+  val (vatInput, vatOutput) = sourceDataLoader.getAdminDataPaths(VAT, appConfig)
+  val (payeInput, payeOutput) = sourceDataLoader.getAdminDataPaths(PAYE, appConfig)
+  val (tcnInput, tcnOutput) = sourceDataLoader.getTcnDataPath(appConfig)
+
+  // Write admin sources to parquet
+  sourceDataLoader.writeAdminToParquet(chInput, chOutput, "temp_ch", CH)
+  sourceDataLoader.writeAdminToParquet(vatInput, vatOutput, "temp_vat", VAT)
+  sourceDataLoader.writeAdminToParquet(payeInput, payeOutput, "temp_paye", PAYE)
+  sourceDataLoader.writeAdminToParquet(tcnInput,tcnOutput, "temp_TCN", TCN)
 }
 
 object LinkDataApp extends DataloadApp {
@@ -81,28 +116,6 @@ object LoadBiToEsApp extends DataloadApp {
   // Now we've built the ES SparkSession, let's go to work:
   // Set up the context manager (singleton holding our SparkSession)
   BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
-
-}
-
-object PreprocessLinksApp extends DataloadApp {
-  // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
-  val lpp = new LinksPreprocessor(ctxMgr)
-
-  // getFilePaths
-  val inputPath = lpp.getNewLinksPath(appConfig)
-  val workingDir = lpp.getWorkingDir(appConfig)
-  val prevDir = lpp.getPrevDir(appConfig)
-  val linksFile = lpp.getLinksFilePath(appConfig)
-
-  // load links File
-  val newLinks = lpp.readNewLinks(inputPath)
-  val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
-
-  // pre-process data
-  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
-
-  //write to parquet
-  lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
 
 }
 
