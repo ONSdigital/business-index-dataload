@@ -10,7 +10,7 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
   * Created by websc on 16/02/2017.
   */
 @Singleton
-class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
+class ParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataReader {
 
   val spark =  ctxMgr.spark
 
@@ -18,7 +18,7 @@ class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
     spark.read.parquet(srcFilePath)
   }
 
-  def getDataFrameFromParquet(appConfig: AppConfig, src: BIDataSource): DataFrame = {
+  def getDataFrameFromParquet(src: BIDataSource): DataFrame = {
     // Get data directories:
     // our business data Parquet files are stored under a working directory.
     val appDataConfig = appConfig.AppDataConfig
@@ -38,13 +38,13 @@ class ParquetReader(ctxMgr: ContextMgr) extends BIDataReader {
 }
 
 @Singleton
-class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class CompanyRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
 
-  def loadFromParquet(appConfig: AppConfig): RDD[(String, CompanyRec)] = {
+  def loadFromParquet(): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
 
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
-    val df = getDataFrameFromParquet(appConfig, CH)
+    val df = getDataFrameFromParquet(CH)
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     //df.registerTempTable("temp_comp")
     df.createOrReplaceTempView("temp_comp")
@@ -87,14 +87,14 @@ class CompanyRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr:
 }
 
 @Singleton
-class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class ProcessedLinksParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
 
   // Need these for DF/SQL ops
   import spark.implicits._
 
-  def loadFromParquet(appConfig: AppConfig): RDD[LinkRec] = {
+  def loadFromParquet(): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
-    val df = getDataFrameFromParquet(appConfig, LINKS)
+    val df = getDataFrameFromParquet(LINKS)
 
     // NB: This is a nested data structure where CH/PAYE/VAT are lists, and only UBRN is mandatory
     df.select(
@@ -115,16 +115,16 @@ class ProcessedLinksParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxM
 }
 
 @Singleton
-class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class PayeRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
 
-  def loadFromParquet(appConfig: AppConfig): RDD[(String, PayeRec)] = {
+  def loadFromParquet(): RDD[(String, PayeRec)] = {
 
     // Yields RDD of (PAYE Ref, PAYE record)
 
-    val payeDf = getDataFrameFromParquet(appConfig, PAYE)
+    val payeDf = getDataFrameFromParquet(PAYE)
 
     // Need to join to lookup table TCN-->SIC
-    val lookupDf = getDataFrameFromParquet(appConfig, TCN_SIC_LOOKUP)
+    val lookupDf = getDataFrameFromParquet(TCN_SIC_LOOKUP)
 
     // Only interested in a subset of columns
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
@@ -198,13 +198,13 @@ class PayeRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Co
 }
 
 @Singleton
-class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class VatRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
 
-  def loadFromParquet(appConfig: AppConfig): RDD[(String, VatRec)] = {
+  def loadFromParquet(): RDD[(String, VatRec)] = {
 
     // Yields RDD of (VAT Ref, VAT record)
 
-    val df = getDataFrameFromParquet(appConfig, VAT)
+    val df = getDataFrameFromParquet(VAT)
 
     // Only interested in a subset of columns. SQL is easier to maintain here.
     df.createOrReplaceTempView("temp_vat")
@@ -255,9 +255,9 @@ class VatRecsParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: Con
 }
 
 @Singleton
-class BIEntriesParquetReader(ctxMgr: ContextMgr) extends ParquetReader(ctxMgr: ContextMgr) {
+class BIEntriesParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
 
-  def loadFromParquet(appConfig: AppConfig): DataFrame = {
+  def loadFromParquet(): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
