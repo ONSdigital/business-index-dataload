@@ -67,7 +67,7 @@ object SourceDataToParquetApp extends DataloadApp {
   val (chInput, chOutput) = sourceDataLoader.getAdminDataPaths(CH, appConfig)
   val (vatInput, vatOutput) = sourceDataLoader.getAdminDataPaths(VAT, appConfig)
   val (payeInput, payeOutput) = sourceDataLoader.getAdminDataPaths(PAYE, appConfig)
-  val (tcnInput, tcnOutput) = sourceDataLoader.getTcnDataPath(appConfig)
+  val (tcnInput, tcnOutput) = sourceDataLoader.getAdminDataPaths(TCN, appConfig)
 
   // Write admin sources to parquet
   sourceDataLoader.writeAdminToParquet(chInput, chOutput, "temp_ch", CH)
