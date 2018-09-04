@@ -6,9 +6,6 @@ import org.apache.spark.sql.DataFrame
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
-/**
-  * Created by websc on 16/02/2017.
-  */
 class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataReader {
 
   val spark = ctxMgr.spark
@@ -21,14 +18,13 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
   def getDataFrameFromParquet(src: BIDataSource): DataFrame = {
     // Get data directories:
     // our business data Parquet files are stored under a working directory.
-    val appDataConfig = appConfig.AppDataConfig
     val workingDir = getAppDataConfig(appConfig, "working")
     val parquetData = src match {
-      case LINKS => appDataConfig.links
-      case CH => appDataConfig.ch
-      case VAT => appDataConfig.vat
-      case PAYE => appDataConfig.paye
-      case TCN_SIC_LOOKUP => appDataConfig.tcn
+      case LINKS => getAppDataConfig(appConfig, "links")
+      case CH => getAppDataConfig(appConfig, "ch")
+      case VAT => getAppDataConfig(appConfig, "vat")
+      case PAYE => getAppDataConfig(appConfig, "paye")
+      case TCN_SIC_LOOKUP => getAppDataConfig(appConfig, "tcn")
     }
     val dataFile = s"$workingDir/$parquetData"
 

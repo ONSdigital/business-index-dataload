@@ -1,12 +1,5 @@
 package uk.gov.ons.bi.dataload.utils
 
-import uk.gov.ons.bi.dataload.utils.BandMappings.TradingStatus
-
-/**
-  * Created by websc on 22/02/2017.
-  */
-
-
 object BandMappings {
 
   def employmentBand(z: Option[Int]): Option[String] =

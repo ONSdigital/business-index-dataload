@@ -12,6 +12,7 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
 import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 
 trait DataloadApp extends App {
+
   val appConfig: AppConfig = new AppConfig
   val env = appConfig.AppDataConfig.cluster
   val sparkSess = env match {
@@ -97,17 +98,6 @@ object LinkDataApp extends DataloadApp with BIDataReader {
 }
 
 object LoadBiToEsApp extends DataloadApp {
-
-  /*
-
-    Need to specify ES host node IP address and index name at runtime e.g.:
-
-    spark-submit --class uk.gov.ons.bi.dataload.LoadBiToEsApp
-    --driver-memory 2G --executor-memory 2G
-    --driver-java-options "-Xms1g -Xmx4g -Dbi-dataload.es.index=bi-dev -Dbi-dataload.es.nodes=127.0.0.1"
-    --jars ./lib/elasticsearch-spark_2.10-2.4.4.jar
-    target/scala-2.10/business-index-dataload_2.10-1.0.jar
-  */
 
   // Need to configure ES interface on SparkSession, so need to build SparkSession here.
 

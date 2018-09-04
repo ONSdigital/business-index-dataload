@@ -2,17 +2,13 @@ package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
-
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
+import org.apache.spark.sql.functions.{col, concat, concat_ws, explode, lit}
 
 import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
 import uk.gov.ons.bi.dataload.model.DataFrameColumn
-/**
-  * Created by websc on 29/06/2017.
-  */
 object HmrcBiCsvExtractor {
 
   def extractBiToCsv(ctxMgr: ContextMgr, appConfig: AppConfig) = {
@@ -33,12 +29,12 @@ object HmrcBiCsvExtractor {
     val biData = pqReader.biParquetReader()
 
     // Cache to avoid re-loading data for each output
-    //biData.persist()
+    biData.persist()
     log.info(s"BI index file contains ${biData.count} records.")
 
     // Extract the different sets of data we want, and write to output files
 
-    val adminEntities = getLeuWithAdminData(biData, hmrcFile)
+    val adminEntities = getModifiedLegalEntities(modifyLegalEntities(biData), hmrcFile)
     log.info(s"Writing ${adminEntities.count} Legal Entities to $hmrcFile")
 
     val legalEntities = getLegalEntities(biData, legalFile)
@@ -60,18 +56,20 @@ object HmrcBiCsvExtractor {
 
   def stringifyArr(stringArr: Column) = concat(lit("["), concat_ws(",", stringArr), lit("]"))
 
-  def getLeuWithAdminData(df: DataFrame, outputPath: String): DataFrame = {
+  def modifyLegalEntities(df: DataFrame): DataFrame = {
 
-    val vatAndPaye = df
+    val castedDf = df
       .withColumn(DataFrameColumn.VatStringArr, df(DataFrameColumn.VatID).cast(ArrayType(StringType)))
       .withColumn(DataFrameColumn.PayeStringArr, df(DataFrameColumn.PayeID).cast(ArrayType(StringType)))
 
-    val stringifyVatAndPaye = vatAndPaye
-      .withColumn(DataFrameColumn.VatString, stringifyArr(vatAndPaye(DataFrameColumn.VatStringArr)))
-      .withColumn(DataFrameColumn.PayeString, stringifyArr(vatAndPaye(DataFrameColumn.PayeStringArr)))
-      .drop(DataFrameColumn.VatID,DataFrameColumn.PayeID,DataFrameColumn.VatStringArr, DataFrameColumn.PayeStringArr)
+    castedDf
+      .withColumn(DataFrameColumn.VatString, stringifyArr(castedDf(DataFrameColumn.VatStringArr)))
+      .withColumn(DataFrameColumn.PayeString, stringifyArr(castedDf(DataFrameColumn.PayeStringArr)))
+  }
 
-    val LeuWithAdminData = stringifyVatAndPaye
+  def getModifiedLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
+
+    val LeuWithAdminData = df
       .select("id",
         "BusinessName",
         "TradingStyle",

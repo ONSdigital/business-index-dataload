@@ -10,10 +10,6 @@ import uk.gov.ons.bi.dataload.utils.ContextMgr
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.expressions.UserDefinedFunction
 
-/**
-  * Created by websc on 03/03/2017.
-  */
-
 @Singleton
 class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader {
 

@@ -13,10 +13,6 @@ import uk.gov.ons.bi.dataload.reader.{LinksFileReader, ParquetReaders}
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 
-/**
-  * Created by ChiuA on 15/08/2018.
-  */
-
 class FileCreationFlatSpec extends FlatSpec with Matchers {
 
   "A Links File " should "be read in from a parquet file and return a dataframe containing links with UBRNS" in {
@@ -256,7 +252,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getLeuWithAdminData(biData, inputCSV)
+    HmrcBiCsvExtractor.getModifiedLegalEntities(HmrcBiCsvExtractor.modifyLegalEntities(biData), inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data

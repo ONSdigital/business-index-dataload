@@ -1,9 +1,5 @@
 package uk.gov.ons.bi.dataload.utils
 
-/**
-  * Created by websc on 17/05/2017.
-  */
-
 // HiveContext is needed for UBRN allocation rules. As we are now using Spark 2.x the SparkSession has the required functionality
 
 import com.google.inject.Singleton
@@ -11,10 +7,6 @@ import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.SparkContext
 
-
-/**
-  * Created by websc on 28/04/2017.
-  */
 @Singleton
 class ContextMgr(sparkSession: SparkSession = SparkSession.builder.enableHiveSupport.getOrCreate) extends Serializable {
 

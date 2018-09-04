@@ -4,13 +4,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 
 import uk.gov.ons.bi.dataload.model.BusinessIndex
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.ContextMgr
 
 object BiParquetWriter {
 
   def writeBiRddToParquet(ctxMgr: ContextMgr, biOutputFile: String, biRdd: RDD[BusinessIndex]) = {
-    // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
-    // This effectively defines the format of the final BI record in ElasticSearch.
 
     val spark = ctxMgr.spark
     import spark.implicits._

@@ -8,9 +8,6 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 import scala.util.{Success, Try}
 
-/**
-  * Created by websc on 08/03/2017.
-  */
 class PreviousLinkStore(ctxMgr: ContextMgr) {
 
   val sc = ctxMgr.sc
