@@ -86,9 +86,9 @@ object LinkDataApp extends DataloadApp {
 
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
-  val CHReader = parquetReader.chParquetReader()
-  val VATReader = parquetReader.vatParquetReader()
-  val PAYEReader = parquetReader.payeParquetReader()
+  val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader()
+  val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader()
+  val PAYEReader: RDD[(String, PayeRec)] = parquetReader.payeParquetReader()
 
   val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 
