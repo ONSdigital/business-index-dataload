@@ -194,9 +194,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val parquetReaders = new ParquetReaders(appConfig, ctxMgr)
     val linkRecsReader: RDD[LinkRec] = parquetReaders.linksParquetReader()
-    val CHReader = parquetReaders.chParquetReader()
-    val VATReader = parquetReaders.vatParquetReader()
-    val PAYEReader = parquetReaders.payeParquetReader()
+    val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader()
+    val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader()
+    val PAYEReader: RDD[(String, PayeRec)] = parquetReaders.payeParquetReader()
 
     val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 
