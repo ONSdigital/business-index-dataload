@@ -4,9 +4,6 @@ import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils._
 import org.elasticsearch.spark.sql._
 
-/**
-  * Created by websc on 22/02/2017.
-  */
 object BusinessIndexesParquetToESLoader {
 
   def loadBIEntriesToES(ctxMgr: ContextMgr, appConfig: AppConfig) = {

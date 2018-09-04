@@ -5,6 +5,7 @@ import java.util.UUID
 import com.google.inject.Singleton
 
 import uk.gov.ons.bi.dataload.reader.{BIDataReader, PreviousLinkStore}
+import uk.gov.ons.bi.dataload.writer.{BiParquetWriter, PreviousLinksWriter}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.expressions.UserDefinedFunction
@@ -59,13 +60,13 @@ class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) wi
     val outputPath = s"$workingDir/$linksFile"
 
     // Parquet file locations from configuration (or runtime params)
-    writeParquet(linksToSave, outputPath)
+    BiParquetWriter.writeParquet(linksToSave, outputPath)
 
     // We will also write a copy of the new preprocessed Links data to the "previous" dir:
     // 1. As e.g. LINKS_Output.parquet so we can easily pick it up next time
-    writeAsPrevLinks(prevDir, linksFile, linksToSave)
+    PreviousLinksWriter.writeAsPrevLinks(prevDir, linksFile, linksToSave)
 
     // 2. As e.g. 201703081145/LINKS_Output.parquet so it does not get over-written later
-    writeAsPrevLinks(prevDir, linksFile, linksToSave, true)
+    PreviousLinksWriter.writeAsPrevLinks(prevDir, linksFile, linksToSave, true)
   }
 }

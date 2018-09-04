@@ -22,7 +22,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     // Get data directories:
     // our business data Parquet files are stored under a working directory.
     val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
+    val workingDir = getAppDataConfig(appConfig, "working")
     val parquetData = src match {
       case LINKS => appDataConfig.links
       case CH => appDataConfig.ch
@@ -235,7 +235,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
 
     // Get data directories
     val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
+    val workingDir = getAppDataConfig(appConfig, "working")
     val biData = appDataConfig.bi
 
     val dataFile = s"$workingDir/$biData"

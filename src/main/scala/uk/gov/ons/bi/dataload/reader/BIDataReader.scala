@@ -1,34 +1,39 @@
 package uk.gov.ons.bi.dataload.reader
 
-import org.apache.spark.sql.DataFrame
-
 import uk.gov.ons.bi.dataload.utils.AppConfig
 
-/**
-  * Created by websc on 10/02/2017.
-  */
 trait BIDataReader {
 
-  def writeParquet(df: DataFrame, targetFilePath: String):Unit = {
-    df.write.mode("overwrite").parquet(targetFilePath)
+  def getBiOutput(appConfig: AppConfig): String = {
+    val workDir = getAppDataConfig(appConfig, "working")
+    val parquetBiFile = getAppDataConfig(appConfig, "bi")
+    val biFile = s"$workDir/$parquetBiFile"
+    biFile
   }
 
-  def getWorkingDir(appConfig: AppConfig): String = {
+  def getAppDataConfig(appConfig: AppConfig, configParam: String): String = {
     val appDataConfig = appConfig.AppDataConfig
-    val workingDir = appDataConfig.workingDir
-    workingDir
+
+    val config = configParam match {
+      case "tcn"     => appDataConfig.tcn
+      case "paye"    => appDataConfig.paye
+      case "vat"     => appDataConfig.vat
+      case "links"   => appDataConfig.links
+      case "bi"      => appDataConfig.bi
+      case "working" => appDataConfig.workingDir
+      case "ch"      => appDataConfig.ch
+      case "env"     => appDataConfig.env
+      case "prev"    => appDataConfig.prevDir
+    }
+    config
   }
 
-  def getPrevDir(appConfig: AppConfig): String = {
-    val appDataConfig = appConfig.AppDataConfig
-    val prevDir = appDataConfig.prevDir
-    prevDir
-  }
-
-  def getLinksFilePath(appConfig: AppConfig): String = {
-    val appDataConfig = appConfig.AppDataConfig
-    val linksFile = appDataConfig.links
-    linksFile
+  def getExtDir(appConfig: AppConfig): String = {
+    val extDataConfig = appConfig.ExtDataConfig
+    val extEnv = extDataConfig.env
+    val extBaseDir = extDataConfig.dir
+    val extDir = s"$extEnv/$extBaseDir"
+    extDir
   }
 
   def getNewLinksPath(appConfig: AppConfig): String = {
