@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.utils
 
 import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.rdd.RDD
 import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
@@ -8,8 +9,9 @@ import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.reader.LinksFileReader
+import uk.gov.ons.bi.dataload.reader.{LinksFileReader, ParquetReaders}
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
+import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 
 /**
   * Created by ChiuA on 15/08/2018.
@@ -48,7 +50,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // pre-process data
     val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
-    linksToSave.show()
+    linksToSave.show(1)
 
     //write to parquet
     lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
@@ -190,7 +192,35 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(biFile).delete
 
-    LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
+    val parquetReaders = new ParquetReaders(appConfig, ctxMgr)
+    val linkRecsReader: RDD[LinkRec] = parquetReaders.linksParquetReader()
+    val CHReader = parquetReaders.chParquetReader()
+    val VATReader = parquetReaders.vatParquetReader()
+    val PAYEReader = parquetReaders.payeParquetReader()
+
+    val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
+
+    // Cache this data as we will be doing different things to it below
+    uwks.cache()
+
+    // Join Links to corresponding company/VAT/PAYE data
+    val companyData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedCompanyData(uwks, CHReader)
+    val vatData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedVatData(uwks, VATReader)
+    val payeData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedPayeData(uwks, PAYEReader)
+
+    // Get Ubrn with admin data
+    val ubrnWithData: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
+    uwks.unpersist()
+
+    // Now we can group data for same UBRN back together to make Business records
+    val businessRecords: RDD[Business] = LinkedBusinessBuilder.convertUwdsToBusinessRecords(ubrnWithData)
+
+    // Now we can convert Business records to Business Index entries
+    val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
+
+    // write BI data to parquet file
+    BiParquetWriter.writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
+
     val df = sparkSession.read.parquet(biFile)
     val results = df.sort("id")
 

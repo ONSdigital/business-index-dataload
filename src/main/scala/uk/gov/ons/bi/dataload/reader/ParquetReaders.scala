@@ -1,18 +1,18 @@
 package uk.gov.ons.bi.dataload.reader
 
-import com.google.inject.Singleton
 import org.apache.spark.rdd._
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
+import org.apache.spark.sql.DataFrame
+
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 /**
   * Created by websc on 16/02/2017.
   */
-@Singleton
-class ParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataReader {
+class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataReader {
 
-  val spark =  ctxMgr.spark
+  val spark = ctxMgr.spark
+  import spark.implicits._
 
   def readFromSourceFile(srcFilePath: String): DataFrame = {
     spark.read.parquet(srcFilePath)
@@ -35,12 +35,7 @@ class ParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRead
     readFromSourceFile(dataFile)
   }
 
-}
-
-@Singleton
-class CompanyRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
-
-  def loadFromParquet(): RDD[(String, CompanyRec)] = {
+  def chParquetReader(): RDD[(String, CompanyRec)] = {
     // Yields RDD of (Company No, company record)
 
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
@@ -84,18 +79,10 @@ class CompanyRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends
       (companyNoStr, CompanyRec(companyNo, companyName, companyStatus, sicCode1, postcode, address1, address2, address3, address4, address5))
     }
   }
-}
 
-@Singleton
-class ProcessedLinksParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
-
-  // Need these for DF/SQL ops
-  import spark.implicits._
-
-  def loadFromParquet(): RDD[LinkRec] = {
+  def linksParquetReader(): RDD[LinkRec] = {
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc
     val df = getDataFrameFromParquet(LINKS)
-
     // NB: This is a nested data structure where CH/PAYE/VAT are lists, and only UBRN is mandatory
     df.select(
       $"UBRN",
@@ -112,12 +99,8 @@ class ProcessedLinksParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) exte
       LinkRec(ubrn, ch, vat, paye)
     }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
   }
-}
 
-@Singleton
-class PayeRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
-
-  def loadFromParquet(): RDD[(String, PayeRec)] = {
+  def payeParquetReader(): RDD[(String, PayeRec)] = {
 
     // Yields RDD of (PAYE Ref, PAYE record)
 
@@ -194,12 +177,8 @@ class PayeRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends Pa
       (payeRefStr, rec)
     }
   }
-}
 
-@Singleton
-class VatRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
-
-  def loadFromParquet(): RDD[(String, VatRec)] = {
+  def vatParquetReader(): RDD[(String, VatRec)] = {
 
     // Yields RDD of (VAT Ref, VAT record)
 
@@ -245,18 +224,13 @@ class VatRecsParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends Par
         val tradingStyle = if (row.isNullAt(12)) None else Option(row.getString(12))
 
         VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode,
-        address1, address2, address3, address4, address5, tradingStyle)
+          address1, address2, address3, address4, address5, tradingStyle)
       }
       (vatRefStr, rec)
     }
   }
 
-}
-
-@Singleton
-class BIEntriesParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends ParquetReader(appConfig, ctxMgr: ContextMgr) {
-
-  def loadFromParquet(): DataFrame = {
+  def biParquetReader(): DataFrame = {
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
@@ -269,4 +243,5 @@ class BIEntriesParquetReader(appConfig: AppConfig, ctxMgr: ContextMgr) extends P
     spark.read.parquet(dataFile)
   }
 }
+
 

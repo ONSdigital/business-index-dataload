@@ -24,4 +24,6 @@ object BiCsvWriter {
         .csv(outputFile)
 
   }
+
+
 }

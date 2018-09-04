@@ -2,9 +2,11 @@ package uk.gov.ons.bi.dataload.exports
 
 import org.apache.log4j.Level
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Column}
-import org.apache.spark.sql.functions.{explode, concat_ws, concat, lit, col}
-import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
+
+import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
+
+import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
 import uk.gov.ons.bi.dataload.model.DataFrameColumn
@@ -27,8 +29,8 @@ object HmrcBiCsvExtractor {
     val hmrcFile = s"$extractDir/bi-hmrc.csv"
 
     // Read BI data
-    val pqReader = new BIEntriesParquetReader(appConfig, ctxMgr)
-    val biData = pqReader.loadFromParquet()
+    val pqReader = new ParquetReaders(appConfig, ctxMgr)
+    val biData = pqReader.biParquetReader()
 
     // Cache to avoid re-loading data for each output
     //biData.persist()
