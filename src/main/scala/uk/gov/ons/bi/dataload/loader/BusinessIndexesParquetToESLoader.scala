@@ -1,6 +1,6 @@
 package uk.gov.ons.bi.dataload.loader
 
-import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
+import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils._
 import org.elasticsearch.spark.sql._
 
@@ -21,9 +21,9 @@ object BusinessIndexesParquetToESLoader {
 
      // read BI entries
 
-    val pqReader = new BIEntriesParquetReader(appConfig, ctxMgr)
+    val pqReader = new ParquetReaders(appConfig, ctxMgr)
 
-    val biDf = pqReader.loadFromParquet()
+    val biDf = pqReader.biParquetReader()
 
     println(s"BI index file contained ${biDf.count} records.")
 

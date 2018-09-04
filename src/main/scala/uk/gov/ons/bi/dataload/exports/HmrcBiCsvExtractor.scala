@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions.{concat, concat_ws, explode, lit, col}
 
-import uk.gov.ons.bi.dataload.reader.BIEntriesParquetReader
+import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
 import uk.gov.ons.bi.dataload.model.DataFrameColumn
@@ -31,8 +31,8 @@ object HmrcBiCsvExtractor {
 
     // MAIN PROCESSING:
     // Read BI data
-    val pqReader = new BIEntriesParquetReader(appConfig, ctxMgr)
-    val biData = pqReader.loadFromParquet()
+    val pqReader = new ParquetReaders(appConfig, ctxMgr)
+    val biData = pqReader.biParquetReader()
 
     // Cache to avoid re-loading data for each output
     //biData.persist()

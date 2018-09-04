@@ -1,13 +1,15 @@
 package uk.gov.ons.bi.dataload
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.rdd.RDD
 
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
-import uk.gov.ons.bi.dataload.model.{CH, PAYE, TCN, VAT}
-import uk.gov.ons.bi.dataload.reader.BIDataReader
+import uk.gov.ons.bi.dataload.model._
+import uk.gov.ons.bi.dataload.reader.{BIDataReader, ParquetReaders}
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
+import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 
 
 /**
@@ -69,16 +71,47 @@ object SourceDataToParquetApp extends DataloadApp {
   val (payeInput, payeOutput) = sourceDataLoader.getAdminDataPaths(PAYE, appConfig)
   val (tcnInput, tcnOutput) = sourceDataLoader.getAdminDataPaths(TCN, appConfig)
 
+  val listOfAdminSources: Seq[(String, String, String, BusinessDataSource)] = Seq(
+    (chInput, chOutput, "temp_ch", CH),
+    (vatInput, vatOutput, "temp_vat", VAT),
+    (payeInput, payeOutput, "temp_paye", PAYE),
+    (tcnInput,tcnOutput, "temp_TCN", TCN)
+  )
+
   // Write admin sources to parquet
-  sourceDataLoader.writeAdminToParquet(chInput, chOutput, "temp_ch", CH)
-  sourceDataLoader.writeAdminToParquet(vatInput, vatOutput, "temp_vat", VAT)
-  sourceDataLoader.writeAdminToParquet(payeInput, payeOutput, "temp_paye", PAYE)
-  sourceDataLoader.writeAdminToParquet(tcnInput,tcnOutput, "temp_TCN", TCN)
+  listOfAdminSources.foreach(x => sourceDataLoader.writeAdminToParquet(x._1, x._2, x._3, x._4))
 }
 
 object LinkDataApp extends DataloadApp {
-  // Pass context stuff explicitly to builder method.
-  LinkedBusinessBuilder.buildLinkedBusinessIndexRecords(ctxMgr, appConfig)
+
+  val parquetReader = new ParquetReaders(appConfig, ctxMgr)
+  val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
+  val CHReader = parquetReader.chParquetReader()
+  val VATReader = parquetReader.vatParquetReader()
+  val PAYEReader = parquetReader.payeParquetReader()
+
+  val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
+
+  // Cache this data as we will be doing different things to it below
+  uwks.cache()
+
+  // Join Links to corresponding company/VAT/PAYE data
+  val companyData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedCompanyData(uwks, CHReader)
+  val vatData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedVatData(uwks, VATReader)
+  val payeData: RDD[UbrnWithData] = LinkedBusinessBuilder.getLinkedPayeData(uwks, PAYEReader)
+
+  // Get Ubrn with admin data
+  val ubrnWithData: RDD[UbrnWithData] = companyData ++ vatData ++ payeData
+  uwks.unpersist()
+
+  // Now we can group data for same UBRN back together to make Business records
+  val businessRecords: RDD[Business] = LinkedBusinessBuilder.convertUwdsToBusinessRecords(ubrnWithData)
+
+  // Now we can convert Business records to Business Index entries
+  val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
+
+  // write BI data to parquet file
+  BiParquetWriter.writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
 }
 
 object LoadBiToEsApp extends DataloadApp {
