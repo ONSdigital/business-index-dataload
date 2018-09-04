@@ -11,25 +11,6 @@ import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
 import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 
-
-/**
-  * Created by websc on 02/02/2017.
-  *
-  * Dev local run command e.g. for SourceDataToParquetApp:
-  *
-  * Memory options may need to be tweaked but not sure how.
-  * Jars are for spark-csv package, which cannot be loaded via SBT for some reason.
-  * This will be fixed in Spark 2.0, which includes spark-csv by default.
-  *
-  * spark-submit --class uk.gov.ons.bi.dataload.SourceDataToParquetApp
-  * --master local[*]
-  * --driver-memory 2G --executor-memory 4G --num-executors 8
-  * --driver-java-options "-Xms1g -Xmx5g"
-  * --jars ./lib/spark-csv_2.10-1.5.0.jar,./lib/univocity-parsers-1.5.1.jar,./lib/commons-csv-1.1.jar
-  * target/scala-2.10/business-index-dataload_2.10-1.0.jar
-  *
-  */
-
 trait DataloadApp extends App {
   val appConfig: AppConfig = new AppConfig
   val env = appConfig.AppDataConfig.cluster
@@ -47,9 +28,9 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
 
   // getFilePaths
   val inputPath = getNewLinksPath(appConfig)
-  val workingDir = getWorkingDir(appConfig)
-  val prevDir = getPrevDir(appConfig)
-  val linksFile = getLinksFilePath(appConfig)
+  val workingDir = getAppDataConfig(appConfig, "working")
+  val prevDir = getAppDataConfig(appConfig, "prev")
+  val linksFile = getAppDataConfig(appConfig, "links")
 
   // load links File
   val newLinks = lpp.readNewLinks(inputPath)
@@ -82,7 +63,7 @@ object SourceDataToParquetApp extends DataloadApp {
   listOfAdminSources.foreach(x => sourceDataLoader.writeAdminToParquet(x._1, x._2, x._3, x._4))
 }
 
-object LinkDataApp extends DataloadApp {
+object LinkDataApp extends DataloadApp with BIDataReader {
 
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
@@ -111,7 +92,8 @@ object LinkDataApp extends DataloadApp {
   val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
   // write BI data to parquet file
-  BiParquetWriter.writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
+  val biFile = getBiOutput(appConfig)
+  BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
 }
 
 object LoadBiToEsApp extends DataloadApp {

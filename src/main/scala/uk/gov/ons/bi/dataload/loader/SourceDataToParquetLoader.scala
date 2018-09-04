@@ -4,11 +4,8 @@ import com.google.inject.Singleton
 
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader._
+import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
-
-/**
-  * Created by websc on 14/02/2017.
-  */
 
 @Singleton
 class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
@@ -21,24 +18,20 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
 
     // External data (HMRC - CH, VAT, PAYE)
     val extDataConfig = appConfig.ExtDataConfig
-    val extEnv = extDataConfig.env
-    val extBaseDir = extDataConfig.dir
-
-    // Application working directory
-    val appDataConfig = appConfig.AppDataConfig
+    val extDir = getExtDir(appConfig)
 
     // Lookups source directory (TCN)
     val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
 
     // output directory
-    val workingDir = getWorkingDir(appConfig)
+    val workingDir = getAppDataConfig(appConfig, "working")
 
      //Get directories and file names etc for specified data source
     val (baseDir, extSrcFile, extDataDir, parquetFile) = biSource match {
-      case VAT  => (s"$extEnv/$extBaseDir", extDataConfig.vat, extDataConfig.vatDir, appDataConfig.vat)
-      case CH   => (s"$extEnv/$extBaseDir", extDataConfig.ch, extDataConfig.chDir, appDataConfig.ch)
-      case PAYE => (s"$extEnv/$extBaseDir", extDataConfig.paye, extDataConfig.payeDir, appDataConfig.paye)
-      case TCN  => (appDataConfig.env, lookupsConfig.tcnToSic,lookupsConfig.dir, appDataConfig.tcn)
+      case VAT  => (extDir, extDataConfig.vat, extDataConfig.vatDir, getAppDataConfig(appConfig, "vat"))
+      case CH   => (extDir, extDataConfig.ch, extDataConfig.chDir, getAppDataConfig(appConfig, "ch"))
+      case PAYE => (extDir, extDataConfig.paye, extDataConfig.payeDir, getAppDataConfig(appConfig, "paye"))
+      case TCN  => (getAppDataConfig(appConfig, "env"), lookupsConfig.tcnToSic,lookupsConfig.dir, getAppDataConfig(appConfig, "tcn"))
     }
 
     val inputPath = s"$baseDir/$extDataDir/$extSrcFile"
@@ -57,6 +50,6 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
     val data = reader.readFromAdminSourceFile(inputPath, biSource)
     log.info(s"Writing $biSource data to: $outputPath")
 
-    reader.writeParquet(data, outputPath)
+    BiParquetWriter.writeParquet(data, outputPath)
   }
 }

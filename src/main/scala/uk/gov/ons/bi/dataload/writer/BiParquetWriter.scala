@@ -8,7 +8,7 @@ import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 
 object BiParquetWriter {
 
-  def writeBiRddToParquet(ctxMgr: ContextMgr, appConfig: AppConfig, biRdd: RDD[BusinessIndex]) = {
+  def writeBiRddToParquet(ctxMgr: ContextMgr, biOutputFile: String, biRdd: RDD[BusinessIndex]) = {
     // Need some voodoo here to convert RDD[BusinessIndex] back to DataFrame.
     // This effectively defines the format of the final BI record in ElasticSearch.
 
@@ -44,12 +44,10 @@ object BiParquetWriter {
       "PayeRefs")
 
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
+    biDf3.write.mode("overwrite").parquet(biOutputFile)
+  }
 
-    val appDataConfig = appConfig.AppDataConfig
-    val workDir = appDataConfig.workingDir
-    val parquetBiFile = appDataConfig.bi
-    val biFile = s"$workDir/$parquetBiFile"
-
-    biDf3.write.mode("overwrite").parquet(biFile)
+  def writeParquet(df: DataFrame, targetFilePath: String):Unit = {
+    df.write.mode("overwrite").parquet(targetFilePath)
   }
 }

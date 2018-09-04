@@ -32,9 +32,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val lpp = new LinksPreprocessor(ctxMgr)
     val inputPath = lpp.getNewLinksPath(appConfig)
-    val workingDir = lpp.getWorkingDir(appConfig)
-    val prevDir = lpp.getPrevDir(appConfig)
-    val linksFile = lpp.getLinksFilePath(appConfig)
+    val workingDir = lpp.getAppDataConfig(appConfig, "working")
+    val prevDir = lpp.getAppDataConfig(appConfig, "prev")
+    val linksFile = lpp.getAppDataConfig(appConfig, "links")
     val outputFilePath = s"$workingDir/$linksFile"
 
     // Used to create initial input parquet file
@@ -50,7 +50,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // pre-process data
     val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
-    linksToSave.show(1)
+    linksToSave.show()
 
     //write to parquet
     lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
@@ -219,7 +219,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val businessIndexes: RDD[BusinessIndex] = businessRecords.map(Transformers.convertToBusinessIndex)
 
     // write BI data to parquet file
-    BiParquetWriter.writeBiRddToParquet(ctxMgr, appConfig, businessIndexes)
+    BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
 
     val df = sparkSession.read.parquet(biFile)
     val results = df.sort("id")

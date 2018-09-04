@@ -5,10 +5,6 @@ import org.apache.spark.rdd.RDD
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.Transformers
 
-
-/**
-  * Created by websc on 16/02/2017.
-  */
 object LinkedBusinessBuilder {
   // NOTE:
   // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
