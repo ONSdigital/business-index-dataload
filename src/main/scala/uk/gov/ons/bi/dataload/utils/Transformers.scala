@@ -7,9 +7,6 @@ import uk.gov.ons.bi.dataload.model._
 import scala.util.matching.Regex
 import scala.util.{Success, Try}
 
-/**
-  * Created by websc on 24/02/2017.
-  */
 object Transformers {
 
   // Convert the grouped UBRN + Lists into Business records

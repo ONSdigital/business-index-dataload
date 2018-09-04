@@ -4,10 +4,6 @@ import org.joda.time.DateTime
 import org.scalatest._
 import uk.gov.ons.bi.dataload.model.{Business, CompanyRec, PayeRec, VatRec}
 
-/**
-  * Created by websc on 27/02/2017.
-  */
-
 class FieldTransformersFlatSpec extends FlatSpec with Matchers {
 
   val fullCompanyRec = CompanyRec(Some("Company1"), Some("CompanyOne"),

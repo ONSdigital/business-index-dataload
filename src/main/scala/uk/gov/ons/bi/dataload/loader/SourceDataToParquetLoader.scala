@@ -14,8 +14,6 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
 
   def getAdminDataPaths(biSource: BusinessDataSource, appConfig: AppConfig): (String, String) = {
 
-    // Get source/target directories
-
     // External data (HMRC - CH, VAT, PAYE)
     val extDataConfig = appConfig.ExtDataConfig
     val extDir = getExtDir(appConfig)

@@ -3,9 +3,6 @@ package uk.gov.ons.bi.dataload.utils
 import com.google.inject.Singleton
 import com.typesafe.config.{Config, ConfigFactory}
 
-/**
-  * Created by websc on 03/02/2017.
-  */
 @Singleton
 class AppConfig {
 

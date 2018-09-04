@@ -6,10 +6,6 @@ import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.utils.Transformers
 
 object LinkedBusinessBuilder {
-  // NOTE:
-  // This needs to be an object, not a Singleton, because we get weird Spark "Task not serializable"
-  // errors when there is a lot of nested RDD processing around here. Might be better in Spark 2.x?
-
 
   // This object contains Spark-specific code for processing RDDs and DataFrames.
   // Non-Spark transformations are in the separate Transformers object.

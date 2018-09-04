@@ -12,10 +12,6 @@ import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 
-/**
-  * Created by websc on 03/03/2017.
-  */
-
 @Singleton
 class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) with BIDataReader {
 

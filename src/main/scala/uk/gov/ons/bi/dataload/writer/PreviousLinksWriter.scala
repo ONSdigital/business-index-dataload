@@ -4,9 +4,6 @@ import org.apache.spark.sql.DataFrame
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
-/**
-  * Created by ChiuA on 04/09/2018.
-  */
 object PreviousLinksWriter {
 
   def writeAsPrevLinks(prevDir: String, linksFile: String, df: DataFrame, timestamped: Boolean = false) = {

@@ -3,6 +3,7 @@ package uk.gov.ons.bi.dataload.model
 import org.apache.spark.sql.types._
 
 object AdminDataSchema {
+
   val companySchema = StructType(Array(
     StructField("CompanyName", StringType, true),
     StructField("CompanyNumber", StringType, true),
