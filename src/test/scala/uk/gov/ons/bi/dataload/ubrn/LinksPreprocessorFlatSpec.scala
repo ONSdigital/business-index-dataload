@@ -3,11 +3,11 @@ package uk.gov.ons.bi.dataload.ubrn
 import org.scalatest.{FlatSpec, Matchers}
 
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
-import uk.gov.ons.bi.dataload.SparkCreator
+import uk.gov.ons.bi.dataload.SparkSessionSpec
 import uk.gov.ons.bi.dataload.helper.DataframeAsserter
 import org.apache.spark.sql.Row
 
-class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator with DataframeAsserter {
+class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with DataframeAsserter {
 
   import spark.implicits._
 

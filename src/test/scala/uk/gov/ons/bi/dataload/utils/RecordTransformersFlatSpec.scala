@@ -4,8 +4,8 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{FlatSpec, Matchers}
-
 import uk.gov.ons.bi.dataload.model._
+
 
 class RecordTransformersFlatSpec extends FlatSpec with Matchers {
 
@@ -384,8 +384,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
     val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some("123"),
-      Some("1"),  // default legal status for Company
-      Some("A"),  // trading status
+      Some("1"), // default legal status for Company
+      Some("A"), // trading status
       Some("H"),
       Some("C"),
       company.companyNo,
@@ -412,7 +412,7 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     val business: Business = Transformers.buildBusinessRecord(uwl)
 
     // Run conversion
-    val results  = Transformers.convertToBusinessIndex(business).legalStatus
+    val results = Transformers.convertToBusinessIndex(business).legalStatus
     val expected = Some("1") // legalStatus
 
     results shouldBe expected
@@ -450,10 +450,10 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     val withCol = df.withColumn("id", $"ubrn")
       .withColumnRenamed("ubrn", "UPRN")
       .withColumnRenamed("TurnoverBand", "Turnover")
-      .withColumnRenamed("EmploymentBand","EmploymentBands")
+      .withColumnRenamed("EmploymentBand", "EmploymentBands")
 
     val results = withCol.select("TradingStyle").collect().map(_.toString())
-    val expected =  Array("[trading as Paye]")
+    val expected = Array("[trading as Paye]")
 
     results shouldBe expected
   }

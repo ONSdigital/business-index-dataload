@@ -1,17 +1,17 @@
 package uk.gov.ons.bi.dataload.utils
 
-import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.rdd.RDD
-import org.scalatest.{FlatSpec, Matchers}
 import java.io.File
 
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Row, SparkSession}
+import org.scalatest.{FlatSpec, Matchers}
+import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
-import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.{LinksFileReader, ParquetReaders}
-import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
-import uk.gov.ons.bi.dataload.writer.BiParquetWriter
+import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
+import uk.gov.ons.bi.dataload.writer.{BiCsvWriter, BiParquetWriter}
 
 class FileCreationFlatSpec extends FlatSpec with Matchers {
 
@@ -34,7 +34,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val outputFilePath = s"$workingDir/$linksFile"
 
     // Used to create initial input parquet file
-    val jsonPath = homeDir+"/links.json"
+    val jsonPath = homeDir + "/links.json"
     sparkSession.read.json(jsonPath).write.mode("overwrite").parquet(inputPath)
 
     // delete and create output parquet
@@ -75,7 +75,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/companiesHouse/CH.csv")
-    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/CH.parquet"
+    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/CH.parquet"
 
     new File(outputPath).delete()
 
@@ -84,7 +84,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = sparkSession.read.parquet(outputPath).select("CompanyName", "CompanyNumber").collect()
 
     val expected = Seq(
-      ("! LTD","08209948")
+      ("! LTD", "08209948")
     ).toDF("CompanyName", "CompanyNumber").collect()
 
     result shouldBe expected
@@ -101,7 +101,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/paye/PAYE.csv")
 
-    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
+    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
 
     new File(outputPath).delete()
 
@@ -110,9 +110,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = sparkSession.read.parquet(outputPath).select("entref", "payeref").collect()
 
     val expected = Seq(
-      ("123","065H7Z31732"),
-      ("234","035H7A22627"),
-      ("345","125H7A71620")
+      ("123", "065H7Z31732"),
+      ("234", "035H7A22627"),
+      ("345", "125H7A71620")
     ).toDF("entref", "payeref").collect()
 
     result shouldBe expected
@@ -128,7 +128,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/external/hmrc/vat/VAT.csv")
-    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
+    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
 
     new File(outputPath).delete()
 
@@ -137,12 +137,12 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = sparkSession.read.parquet(outputPath).select("entref", "vatref").collect()
 
     val expected = Seq(
-      ("123",868500288000L),
-      ("234",868504062000L),
-      ("345",862764963000L),
-      ("678",123764963000L),
-      ("890",312764963000L)
-    ).toDF("entref","payeref").collect()
+      ("123", 868500288000L),
+      ("234", 868504062000L),
+      ("345", 862764963000L),
+      ("678", 123764963000L),
+      ("890", 312764963000L)
+    ).toDF("entref", "payeref").collect()
 
     result shouldBe expected
   }
@@ -157,7 +157,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val homeDir = parquetReader.readFromLocal("/")
     val inputPath = parquetReader.readFromLocal("/ons.gov/businessIndex/lookups/tcn-to-sic-mapping.csv")
-    val outputPath = homeDir+"ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
+    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
 
     new File(outputPath).delete()
 
@@ -166,12 +166,12 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = sparkSession.read.parquet(outputPath).take(5)
 
     val expected = Seq(
-      ("0100","01500"),
-      ("0101","01420"),
-      ("0102","01110"),
-      ("0103","01420"),
-      ("0104","01500")
-    ).toDF("TCN","SIC07").collect()
+      ("0100", "01500"),
+      ("0101", "01420"),
+      ("0102", "01110"),
+      ("0103", "01420"),
+      ("0104", "01500")
+    ).toDF("TCN", "SIC07").collect()
 
     result shouldBe expected
   }
@@ -184,7 +184,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // admin outputs
     val homeDir = parquetReader.readFromLocal("/")
-    val biFile  = homeDir+"/ons.gov/businessIndex/WORKINGDATA/BI_Output.parquet"
+    val biFile = homeDir + "/ons.gov/businessIndex/WORKINGDATA/BI_Output.parquet"
 
     new File(biFile).delete
 
@@ -228,7 +228,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
       Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"))
     )
 
-    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.linkSchema).sort("id")
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.linkSchema).sort("id")
 
     results.collect() shouldBe expected.collect
   }
@@ -252,7 +252,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getModifiedLegalEntities(HmrcBiCsvExtractor.modifyLegalEntities(biData), inputCSV)
+    val modLeu = HmrcBiCsvExtractor.modifyLegalEntities(biData)
+    val adminEntities = HmrcBiCsvExtractor.getModifiedLegalEntities(modLeu)
+    BiCsvWriter.writeCsvOutput(adminEntities, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
@@ -263,7 +265,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
       Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null, "[]", "[065H7Z31732]"),
       Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
     )
-    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.hmrcSchema).sort("id")
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.hmrcSchema).sort("id")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
@@ -288,18 +290,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getLegalEntities(biData, inputCSV)
+    val legalEntities = HmrcBiCsvExtractor.getLegalEntities(biData)
+    BiCsvWriter.writeCsvOutput(legalEntities, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
     val data = Seq(
-      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU","METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948"),
+      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948"),
       Row("1000000000000004", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
       Row("1000000000000003", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
       Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null),
       Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null)
     )
-    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data),TestModel.leuSchema).sort("id")
+    val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.leuSchema).sort("id")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
@@ -325,16 +328,17 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getVatExploded(biData, inputCSV)
+    val vat = HmrcBiCsvExtractor.getVatExploded(biData)
+    BiCsvWriter.writeCsvOutput(vat, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
     val expected = Seq(
-      ("1000000000000002","312764963000"),
-        ("1000000000000003","868504062000"),
-          ("1000000000000004","862764963000"),
-          ("1000000000000005","123764963000")
-    ).toDF("id","VatRef").sort("id")
+      ("1000000000000002", "312764963000"),
+      ("1000000000000003", "868504062000"),
+      ("1000000000000004", "862764963000"),
+      ("1000000000000005", "123764963000")
+    ).toDF("id", "VatRef").sort("id")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
@@ -360,15 +364,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val biData = sparkSession.read.parquet(biFile)
 
     // generate hmrc csv and read as dataframe
-    HmrcBiCsvExtractor.getPayeExploded(biData, inputCSV)
+    val paye = HmrcBiCsvExtractor.getPayeExploded(biData)
+    BiCsvWriter.writeCsvOutput(paye, inputCSV)
     val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
 
     // expected data
     val expected = Seq(
-      ("1000000000000001","065H7Z31732"),
-      ("1000000000000003","035H7A22627"),
-      ("1000000000000005","125H7A71620")
-    ).toDF("id","PayeRef")
+      ("1000000000000001", "065H7Z31732"),
+      ("1000000000000003", "035H7A22627"),
+      ("1000000000000005", "125H7A71620")
+    ).toDF("id", "PayeRef")
 
     // test expected against results
     df.collect() shouldBe expected.collect()
