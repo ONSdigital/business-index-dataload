@@ -1,7 +1,6 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import org.scalatest.{FlatSpec, Matchers}
-
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.SparkCreator
 
@@ -10,14 +9,6 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator
   import spark.implicits._
 
   val lpp = new LinksPreprocessor(ctxMgr)
-
-  "Links Preprocessor" should "Read new Links from parquet" in {
-
-  }
-
-  "Links Preprocessor" should "Read Previous Links from paruqet" in {
-
-  }
 
   "Links Preprocessor" should "Read set previous Links to empty Dataframe if error" in {
     val emptyDF = lpp.readPrevLinks("invalidDir","invalidFile")
@@ -69,9 +60,4 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator
     actual.collect() shouldBe expected.collect()
   }
 
-  "Links Preprocessor" should "write Legal units to parquet in working data directory" in {
-
-  }
-
-  "Links Preprocessor" should "write Previous Links to parquet in previous data directory"
 }
