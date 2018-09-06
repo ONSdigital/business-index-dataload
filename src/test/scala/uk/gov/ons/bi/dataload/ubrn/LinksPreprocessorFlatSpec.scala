@@ -3,8 +3,10 @@ package uk.gov.ons.bi.dataload.ubrn
 import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.SparkCreator
+import uk.gov.ons.bi.dataload.helper.DataframeAsserter
+import org.apache.spark.sql.Row
 
-class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator {
+class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator with DataframeAsserter {
 
   import spark.implicits._
 
@@ -27,10 +29,11 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator
     val actual = lpp.preProcessLinks(data, prevData)
 
     val expected = Seq(
-      (1000000000000001L, Array("ch1"), Array(""), Array("065H7Z31732"))
-    ).toDF("UBRN","CH","VAT","PAYE")
+      Row(1000000000000001L, Array("ch1"), Array(""), Array("065H7Z31732"))
+    )
+    val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
 
-    actual.collect() shouldBe expected.collect()
+    assertSmallDataFrameEquality(actual, expectedDf)
   }
 
   "Links Preprocessor" should "apply UBRN to newly created Legal Units and Edit existing links" in {
@@ -51,13 +54,14 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator
     val actual = lpp.preProcessLinks(data, prevData)
 
     val expected = Seq(
-      (1000000000000001L, Array("ch1"), Array(""), Array("")),
-      (1000000000000010L, Array("ch2"), Array("vat1"), Array("")),
-      (1000000000000020L, Array("ch3"), Array(""), Array("paye1")),
-      (1000000000000021L, Array(""), Array(""), Array("paye2"))
-    ).toDF("UBRN","CH","VAT","PAYE")
+      Row(1000000000000001L, Array("ch1"), Array(""), Array("")),
+      Row(1000000000000010L, Array("ch2"), Array("vat1"), Array("")),
+      Row(1000000000000020L, Array("ch3"), Array(""), Array("paye1")),
+      Row(1000000000000021L, Array(""), Array(""), Array("paye2"))
+    )
+    val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
 
-    actual.collect() shouldBe expected.collect()
+    assertSmallDataFrameEquality(actual, expectedDf)
   }
 
 }
