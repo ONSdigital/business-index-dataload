@@ -15,7 +15,7 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkCreator
   "Links Preprocessor" should "Read set previous Links to empty Dataframe if error" in {
     val emptyDF = lpp.readPrevLinks("invalidDir","invalidFile")
 
-    emptyDF.take(1).isEmpty shouldBe true
+    emptyDF.collect().isEmpty shouldBe true
   }
 
   "Links Preprocessor" should "apply UBRN to Dataframe input" in {
