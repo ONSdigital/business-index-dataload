@@ -5,9 +5,6 @@ import org.apache.spark.sql.functions.{max, monotonically_increasing_id}
 
 import scala.util.{Success, Try}
 
-/**
-  * Created by websc on 16/03/2017.
-  */
 object UbrnManager {
 
   val defaultBaseUbrn = 1000000000000000L

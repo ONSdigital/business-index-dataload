@@ -5,13 +5,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{FlatSpec, ShouldMatchers}
 
-import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder._
 import uk.gov.ons.bi.dataload.model._
 
-
-/**
-  * Created by websc on 31/03/2017.
-  */
 class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
 
   behavior of "RecordTransformersFlatSpec"
@@ -467,8 +462,6 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       .withColumnRenamed("ubrn", "UPRN")
       .withColumnRenamed("TurnoverBand", "Turnover")
       .withColumnRenamed("EmploymentBand","EmploymentBands")
-
-    //withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs", "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
 
     val results = withCol.select("TradingStyle").collect().map(_.toString())
     val expected =  Array("[trading as Paye]")

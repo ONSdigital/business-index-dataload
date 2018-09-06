@@ -18,6 +18,8 @@ sealed trait BusinessDataSource extends BIDataSource
 
   case object PAYE extends BusinessDataSource
 
+  case object TCN extends  BusinessDataSource
+
 
 sealed trait OnsDataSource extends BIDataSource
 
