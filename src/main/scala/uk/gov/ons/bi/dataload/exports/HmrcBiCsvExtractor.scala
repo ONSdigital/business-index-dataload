@@ -35,17 +35,21 @@ object HmrcBiCsvExtractor {
 
     // Extract the different sets of data we want, and write to output files
 
-    val adminEntities = getModifiedLegalEntities(modifyLegalEntities(biData), hmrcFile)
+    val adminEntities = getModifiedLegalEntities(modifyLegalEntities(biData))
     log.info(s"Writing ${adminEntities.count} Legal Entities to $hmrcFile")
+    BiCsvWriter.writeCsvOutput(adminEntities, hmrcFile)
 
-    val legalEntities = getLegalEntities(biData, legalFile)
+    val legalEntities = getLegalEntities(biData)
     log.info(s"Writing ${legalEntities.count} Legal Entities to $legalFile")
+    BiCsvWriter.writeCsvOutput(legalEntities, legalFile)
 
-    val vat = getVatExploded(biData, vatFile)
+    val vat = getVatExploded(biData)
     log.info(s"Writing ${vat.count} VAT entries to $vatFile")
+    BiCsvWriter.writeCsvOutput(vat, vatFile)
 
-    val paye =  getPayeExploded(biData, payeFile)
+    val paye =  getPayeExploded(biData)
     log.info(s"Writing ${paye.count} PAYE entries to $payeFile")
+    BiCsvWriter.writeCsvOutput(paye, payeFile)
 
     // Clear cache
     biData.unpersist(false)
@@ -64,7 +68,7 @@ object HmrcBiCsvExtractor {
       .withColumn(DataFrameColumn.PayeString, stringifyArr(castedDf(DataFrameColumn.PayeStringArr)))
   }
 
-  def getModifiedLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
+  def getModifiedLegalEntities(df: DataFrame): DataFrame = {
 
     val LeuWithAdminData = df
       .select("id",
@@ -85,11 +89,10 @@ object HmrcBiCsvExtractor {
         "VatRef",
         "PayeRef")
 
-    BiCsvWriter.writeCsvOutput(LeuWithAdminData, outputPath)
     LeuWithAdminData
   }
 
-  def getLegalEntities(df: DataFrame, outputPath: String): DataFrame = {
+  def getLegalEntities(df: DataFrame): DataFrame = {
 
     val legalEntities = df.select("id",
       "BusinessName",
@@ -107,21 +110,20 @@ object HmrcBiCsvExtractor {
       "EmploymentBands",
       "CompanyNo")
 
-    BiCsvWriter.writeCsvOutput(legalEntities, outputPath)
     legalEntities
   }
 
-  def getVatExploded(df: DataFrame, outputPath: String): DataFrame = {
+  def getVatExploded(df: DataFrame): DataFrame = {
     // Flatten (ID,List(VAT Refs)) records to (ID,VAT Ref) pairs
     val vat = df.select(DataFrameColumn.ID,DataFrameColumn.VatID)
       .where(col(DataFrameColumn.VatID).isNotNull)
       .withColumn(DataFrameColumn.VatString, explode(col(DataFrameColumn.VatID)))
       .drop(col(DataFrameColumn.VatID))
-    BiCsvWriter.writeCsvOutput(vat, outputPath)
+
     vat
   }
 
-  def getPayeExploded(df: DataFrame, outputPath: String): DataFrame = {
+  def getPayeExploded(df: DataFrame): DataFrame = {
 
     // Flatten (ID,List(PAYE Refs)) records to (ID,PAYE Ref) pairs
     val paye = df.select(DataFrameColumn.ID,DataFrameColumn.PayeID)
@@ -129,7 +131,6 @@ object HmrcBiCsvExtractor {
       .withColumn(DataFrameColumn.PayeString, explode(col(DataFrameColumn.PayeID)))
       .drop(col(DataFrameColumn.PayeID))
 
-    BiCsvWriter.writeCsvOutput(paye, outputPath)
     paye
   }
 

@@ -19,3 +19,5 @@
 /src/test/resources/legal_units.parquet
 /src/test/resources/ons.gov/businessIndex/WORKINGDATA
 /src/test/resources/ons.gov/businessIndex/PREVIOUS
+bin/
+.project

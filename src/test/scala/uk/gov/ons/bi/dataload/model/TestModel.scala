@@ -65,4 +65,14 @@ object TestModel {
     StructField("EmploymentBands", StringType, true),
     StructField("CompanyNo", StringType, true)
   ))
+
+  val invalidSchema = StructType(Array(
+    StructField("id", StringType, true),
+    StructField("col2", StringType, true),
+    StructField("col3", StringType, true),
+    StructField("col4", StringType, true),
+    StructField("col5", StringType, true),
+    StructField("col6", StringType, true),
+    StructField("col7", StringType, true)
+  ))
 }
