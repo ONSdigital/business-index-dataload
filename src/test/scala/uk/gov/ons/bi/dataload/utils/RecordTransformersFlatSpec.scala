@@ -3,11 +3,11 @@ package uk.gov.ons.bi.dataload.utils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{FlatSpec, ShouldMatchers}
+import org.scalatest.{FlatSpec, Matchers}
 
 import uk.gov.ons.bi.dataload.model._
 
-class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
+class RecordTransformersFlatSpec extends FlatSpec with Matchers {
 
   behavior of "RecordTransformersFlatSpec"
 
@@ -390,17 +390,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
       Some("C"),
       company.companyNo,
       expectedVatRefs,
-      expectedPayeRefs,
-      None,
-      None,
-      None,
-      None,
-      None
-      Some("address1"),
-      Some("address2"),
-      Some("address3"),
-      Some("address4"),
-      Some("address5")
+      expectedPayeRefs
     )
     results shouldBe expected
   }

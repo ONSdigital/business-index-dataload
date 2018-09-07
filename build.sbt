@@ -6,9 +6,6 @@ version := "1.6"
 //Now updating to Scala 2.11 as updating to Spark 2.1.0
 scalaVersion := "2.11.8"
 
-// Change this to another test framework if you prefer
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
-
 lazy val Versions = new {
   val spark = "2.1.0"
   val sparkSql = "2.1.1"
@@ -19,6 +16,7 @@ lazy val Versions = new {
 }
 
 libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "org.apache.spark" %% "spark-core" % Versions.spark % "provided",
   "org.apache.spark" %% "spark-sql" % Versions.sparkSql % "provided",
 // Restore this when the Cloudera bug is fixed so we can use HiveContext for UBRN rules
