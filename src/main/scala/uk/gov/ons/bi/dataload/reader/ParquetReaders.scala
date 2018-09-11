@@ -4,7 +4,7 @@ import org.apache.spark.rdd._
 import org.apache.spark.sql.DataFrame
 
 import uk.gov.ons.bi.dataload.model._
-import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
+import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, FixSic}
 
 class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataReader {
 
@@ -35,7 +35,14 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     // Yields RDD of (Company No, company record)
 
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
-    val df = getDataFrameFromParquet(CH)
+    val rawCH = getDataFrameFromParquet(CH)
+
+    val parquetReader = new LinksFileReader(ctxMgr)
+    val homeDir = parquetReader.readFromLocal("/")
+    val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
+    val df = rawCH.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(sicList)(rawCH("SICCodeSicText_1")))
+
+    df.select("SICCodeSicText_1").show()
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     //df.registerTempTable("temp_comp")
     df.createOrReplaceTempView("temp_comp")

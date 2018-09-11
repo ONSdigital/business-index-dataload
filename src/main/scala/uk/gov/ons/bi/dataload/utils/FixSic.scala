@@ -1,6 +1,7 @@
 package uk.gov.ons.bi.dataload.utils
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.udf
 
 object FixSic {
 
@@ -39,7 +40,7 @@ object FixSic {
     newList
   }
 
-  def replaceIncorrectSic(sicField: String, sicList: Seq[String]): String = {
+  def replaceIncorrectSic(sicList: Seq[String]) = udf((sicField: String) => {
 
     val space = sicField.split(" ")
     val sicDigits = space(0)
@@ -63,6 +64,6 @@ object FixSic {
         case _ => amendedFourDigitSic
       }
     space.mkString(" ")
-  }
+  })
 
 }

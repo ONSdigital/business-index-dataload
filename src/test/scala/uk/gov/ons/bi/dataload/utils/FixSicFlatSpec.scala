@@ -1,17 +1,18 @@
 package uk.gov.ons.bi.dataload.utils
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.Row
 import org.scalatest.{FlatSpec, Matchers}
 
+import uk.gov.ons.bi.dataload.SparkSessionSpec
+import uk.gov.ons.bi.dataload.helper.DataframeAsserter
 import uk.gov.ons.bi.dataload.reader.LinksFileReader
 
 
-class FixSicFlatSpec extends FlatSpec with Matchers {
+class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with DataframeAsserter {
 
-  val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
-  val ctxMgr = new ContextMgr(sparkSession)
   val parquetReader = new LinksFileReader(ctxMgr)
   val homeDir = parquetReader.readFromLocal("/")
+  import spark.implicits._
 
   "createValidSicList" should "contain all valid SICs that are present in the sicCodeIndex" in {
 
@@ -35,36 +36,76 @@ class FixSicFlatSpec extends FlatSpec with Matchers {
 
   "replaceIncorrectSic" should "be replaced by a valid SIC code" in {
     val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
-    val testString = "1234a"
-    val results = FixSic.replaceIncorrectSic(testString, sicList)
+    val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
-    results shouldBe "99999 - 1234a"
+    val df =
+      Seq(
+        "1234a"
+      ).toDF("SICCodeSicText_1")
+
+    val results = df.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(amendedSicList)(df("SICCodeSicText_1")))
+
+    val expected = Seq(
+      "99999 - 1234a"
+    ).toDF("SICCodeSicText_1")
+
+    assertSmallDataFrameEquality(results, expected)
   }
 
   "replaceIncorrectSic" should "when given a valid sic be replaced based on IDBR methodology" in {
     val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
-    val testString = "33120 - tester"
-    val results = FixSic.replaceIncorrectSic(testString, sicList)
+    val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
-    results shouldBe "28302 - tester"
+    val df =
+      Seq(
+        "33120 - tester"
+      ).toDF("SICCodeSicText_1")
+
+    val results = df.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(amendedSicList)(df("SICCodeSicText_1")))
+
+    val expected = Seq(
+      "28302 - tester"
+    ).toDF("SICCodeSicText_1")
+
+    assertSmallDataFrameEquality(results, expected)
   }
 
-  "replaceIncorrectSic" should "have a leading zero appended to it" in {
+  "replaceIncorrectSic" should "have a leading zero appended to it and return a non trading company sic(99999)" in {
 
     val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
-    val testString = "1234"
-    val results = FixSic.replaceIncorrectSic(testString, sicList)
+    val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
-    results shouldBe "99999"
+    val df =
+      Seq(
+        "1234"
+      ).toDF("SICCodeSicText_1")
+
+    val results = df.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(amendedSicList)(df("SICCodeSicText_1")))
+
+    val expected = Seq(
+      "99999"
+    ).toDF("SICCodeSicText_1")
+
+    assertSmallDataFrameEquality(results, expected)
   }
 
-  "replaceIncorrectSic" should "do nothing" in {
+  "replaceIncorrectSic" should "return same input as output" in {
 
     val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
-    val testString = "10110 - Hello World"
-    val results = FixSic.replaceIncorrectSic(testString, sicList)
+    val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
-    results shouldBe "10110 - Hello World"
+    val df =
+      Seq(
+        "10110 - Hello World"
+      ).toDF("SICCodeSicText_1")
+
+    val results = df.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(amendedSicList)(df("SICCodeSicText_1")))
+
+    val expected = Seq(
+      "10110 - Hello World"
+    ).toDF("SICCodeSicText_1")
+
+    assertSmallDataFrameEquality(results, expected)
   }
 
 }
