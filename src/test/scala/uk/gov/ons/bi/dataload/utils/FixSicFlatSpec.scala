@@ -49,20 +49,22 @@ class FixSicFlatSpec extends FlatSpec with Matchers {
     results shouldBe "28302 - tester"
   }
 
-  "fixFourDigitSic" should "have a leading zero appended to it" in {
+  "replaceIncorrectSic" should "have a leading zero appended to it" in {
 
+    val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
     val testString = "1234"
-    val results = FixSic.fixFourDigitSic(testString)
+    val results = FixSic.replaceIncorrectSic(testString, sicList)
 
-    results shouldBe "01234"
+    results shouldBe "99999"
   }
 
-  "fixFourDigitSic" should "do nothing" in {
+  "replaceIncorrectSic" should "do nothing" in {
 
-    val testString = "12345"
-    val results = FixSic.fixFourDigitSic(testString)
+    val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
+    val testString = "10110 - Hello World"
+    val results = FixSic.replaceIncorrectSic(testString, sicList)
 
-    results shouldBe "12345"
+    results shouldBe "10110 - Hello World"
   }
 
 }

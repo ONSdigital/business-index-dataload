@@ -43,12 +43,15 @@ object FixSic {
 
     val space = sicField.split(" ")
     val sicDigits = space(0)
+    val fourDigitPattern = "(?<!\\d)\\d{4}(?!\\d)".r.pattern
     val fiveDigitPattern = "(?<!\\d)\\d{5}(?!\\d)".r.pattern
 
-      if (sicDigits.length == 0) space(0)
-      else if (!fiveDigitPattern.matcher(sicDigits).matches) space(0) = "99999 - " + sicDigits
-      else if (!(sicList contains sicDigits)) space(0) = "99999"
-      else space(0) = sicDigits match {
+    val amendedFourDigitSic = if (fourDigitPattern.matcher(sicDigits).matches) "0" + space(0) else space(0)
+
+    if (amendedFourDigitSic.length == 0) space(0)
+      else if (!fiveDigitPattern.matcher(amendedFourDigitSic).matches) space(0) = "99999 - " + amendedFourDigitSic
+      else if (!(sicList contains amendedFourDigitSic)) space(0) = "99999"
+      else space(0) = amendedFourDigitSic match {
         case "33120" => "28302"
         case "28960" => "28990"
         case "26301" => "27900"
@@ -57,25 +60,9 @@ object FixSic {
         case "96090" => "33190"
         case "77210" => "77299"
         case "81210" => "81299"
-        case _ => sicDigits
+        case _ => amendedFourDigitSic
       }
     space.mkString(" ")
-  }
-
-  def fixFourDigitSic(sicField: String): String = {
-
-    val space = sicField.split(" ")
-    val sicDigits = space(0)
-    val fourDigitPattern = "(?<!\\d)\\d{4}(?!\\d)".r.pattern
-
-    val test = if (fourDigitPattern.matcher(sicDigits).matches) {
-      space(0) = "0" + space(0)
-      space.mkString(" ")
-    }
-    else {
-      sicField
-    }
-    test
   }
 
 }
