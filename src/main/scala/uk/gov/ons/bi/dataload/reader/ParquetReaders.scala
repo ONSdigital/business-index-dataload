@@ -39,7 +39,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
 
     val parquetReader = new LinksFileReader(ctxMgr)
     val homeDir = parquetReader.readFromLocal("/")
-    val sicList = FixSic.createValidSicList(s"$homeDir/sicCodeIndex2017.csv")
+
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
     val df = rawCH.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(sicList)(rawCH("SICCodeSicText_1")))
 
     df.select("SICCodeSicText_1").show()

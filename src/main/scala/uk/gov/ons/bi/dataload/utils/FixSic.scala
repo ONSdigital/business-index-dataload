@@ -1,17 +1,10 @@
 package uk.gov.ons.bi.dataload.utils
 
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
 
-object FixSic {
+import uk.gov.ons.bi.dataload.reader.LinksFileReader
 
-  lazy val spark: SparkSession = {
-    SparkSession
-      .builder()
-      .master("local")
-      .appName("spark tests")
-      .getOrCreate()
-  }
+object FixSic {
 
   val colNames = Seq(
     "SICCode.SicText_1",
@@ -27,18 +20,13 @@ object FixSic {
     "99999"
   )
 
-  def createValidSicList(filepath: String): Seq[String] = {
-
-    val sicCodeIndex = spark.read.option("header", "true").csv(filepath)
-    val sic07 = sicCodeIndex.select("SIC 2007").collect().map(x => x.toString()).toSeq.map(x => x.replaceAll("[\\[\\]]",""))
-    sic07
+  def createValidSicList(ctxMgr: ContextMgr, filepath: String): Seq[String] = {
+    val reader = new LinksFileReader(ctxMgr)
+    val sicCodeIndex = reader.readSimpleCsv(filepath)
+    sicCodeIndex.select("SIC 2007").collect().map(x => x.toString()).toSeq.map(x => x.replaceAll("[\\[\\]]",""))
   }
 
-  def addValidNonTradingSic(sicList: Seq[String]): Seq[String] = {
-
-    val newList = sicList ++ validNonTradingSic
-    newList
-  }
+  def addValidNonTradingSic(sicList: Seq[String]): Seq[String] = sicList ++ validNonTradingSic
 
   def replaceIncorrectSic(sicList: Seq[String]) = udf((sicField: String) => {
 

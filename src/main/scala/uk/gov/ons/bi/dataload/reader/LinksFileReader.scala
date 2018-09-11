@@ -14,4 +14,8 @@ class LinksFileReader (ctxMgr: ContextMgr) extends BIDataReader {
   def readFromLocal(srcFilePath: String): String = {
     getClass.getResource(srcFilePath).toString
   }
+
+  def readSimpleCsv(srcFilePath: String): DataFrame = {
+    spark.read.option("header", "true").csv(srcFilePath)
+  }
 }
