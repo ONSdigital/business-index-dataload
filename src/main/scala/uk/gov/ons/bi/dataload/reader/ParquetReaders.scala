@@ -37,13 +37,11 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
     val rawCH = getDataFrameFromParquet(CH)
 
-    val parquetReader = new LinksFileReader(ctxMgr)
-    val homeDir = parquetReader.readFromLocal("/")
+    val sicIndexPath = getSicIndexFilePath(appConfig)
 
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, sicIndexPath)
     val df = rawCH.withColumn("SICCodeSicText_1", FixSic.replaceIncorrectSic(sicList)(rawCH("SICCodeSicText_1")))
 
-    df.select("SICCodeSicText_1").show()
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     //df.registerTempTable("temp_comp")
     df.createOrReplaceTempView("temp_comp")

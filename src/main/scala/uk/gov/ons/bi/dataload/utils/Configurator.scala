@@ -110,6 +110,24 @@ class AppConfig {
         """.stripMargin
       }
     }
+
+    val sicIndexConfig = new {
+      private val indexConfig = onsDataConfig.getConfig("sicIndex")
+
+      // Lookups dir is below ONS data dir
+      private val localDir = getConfigStr("dir", indexConfig)
+      // We provide the full path
+      val dir = s"$baseDir/$localDir"
+
+      lazy val sicFix = getConfigStr("sic", indexConfig)
+
+      override def toString: String = {
+        s"""[sic = $sicFix,
+           | dir = $dir
+           | ]
+        """.stripMargin
+      }
+    }
   }
 
   object AppDataConfig {
@@ -151,7 +169,6 @@ class AppConfig {
     lazy val bi = getConfigStr("bi", localConfig)
 
     lazy val tcn = getConfigStr("tcn", localConfig)
-
 
     // Derive working/previous directories from above settings.
     // Saves having to replicate this in multiple places in code.

@@ -11,11 +11,12 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
 
   val parquetReader = new LinksFileReader(ctxMgr)
   val homeDir = parquetReader.readFromLocal("/")
+  val sicListPath = "ons.gov/businessIndex/sicIndex/sicCodeIndex2017.csv"
   import spark.implicits._
 
   "createValidSicList" should "contain all valid SICs that are present in the sicCodeIndex" in {
 
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val result = sicList.length
     // Expected is taken from the 15,592 valid SICs published by ONS at
     val expected = 15592
@@ -25,7 +26,7 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
   }
 
   "addValidNonTradingSic" should "add valid Non Trading Sics to the existing sic list" in {
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val result = FixSic.addValidNonTradingSic(sicList).length
     // plus the 4 valid SICs for non-trading companies (74990, 98000, 99000, 99999)
     val expected = 15596
@@ -34,7 +35,7 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
   }
 
   "replaceIncorrectSic" should "be replaced by a valid SIC code" in {
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
     val df =
@@ -52,7 +53,7 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
   }
 
   "replaceIncorrectSic" should "when given a valid sic be replaced based on IDBR methodology" in {
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
     val df =
@@ -71,7 +72,7 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
 
   "replaceIncorrectSic" should "have a leading zero appended to it and return a non trading company sic(99999)" in {
 
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
     val df =
@@ -90,7 +91,7 @@ class FixSicFlatSpec extends FlatSpec with Matchers with SparkSessionSpec with D
 
   "replaceIncorrectSic" should "return same input as output" in {
 
-    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/sicCodeIndex2017.csv")
+    val sicList = FixSic.createValidSicList(ctxMgr, s"$homeDir/$sicListPath")
     val amendedSicList = FixSic.addValidNonTradingSic(sicList)
 
     val df =
