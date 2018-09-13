@@ -19,8 +19,8 @@ class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) wi
   val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
 
   def readNewLinks(linksFilePath: String): DataFrame = {
-    // Load the JSON links data
-    readFromSourceFile(linksFilePath)
+    // Load the links data
+    spark.read.parquet(linksFilePath)
   }
 
   def readPrevLinks(prevDir: String, linksFile: String): DataFrame = {
