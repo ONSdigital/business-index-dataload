@@ -11,6 +11,14 @@ trait BIDataReader {
     biFile
   }
 
+  def getSicIndexFilePath(appConfig: AppConfig): String = {
+    val sicIndexConfig = appConfig.OnsDataConfig.sicIndexConfig
+    val baseDir = getAppDataConfig(appConfig, "env")
+    val sicDir = sicIndexConfig.dir
+    val sicFile = sicIndexConfig.sicFix
+    s"$baseDir/$sicDir/$sicFile"
+  }
+
   def getAppDataConfig(appConfig: AppConfig, configParam: String): String = {
     val appDataConfig = appConfig.AppDataConfig
 
