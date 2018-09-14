@@ -25,8 +25,9 @@ trait BIDataReader {
     val newLinksFile = appConfig.BusinessIndex.dataScienceFile
 
     log.info(home + ": this is the env argument")
-    log.info(newLinksDir + ": this it the ds dir arg")
-    log.info(newLinksFile + ": this is the ds file arg")
+    log.info(appConfig.home + ": appconfig home")
+    log.info(appConfig.BusinessIndex + ": appconfig BusinessIndex")
+    log.info(appConfig.External + ": appconfig external")
 
     s"$home/$newLinksDir/$newLinksFile"
   }
