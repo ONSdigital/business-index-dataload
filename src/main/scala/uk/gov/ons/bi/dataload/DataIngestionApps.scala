@@ -14,8 +14,8 @@ import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 trait DataloadApp extends App {
 
   val appConfig: AppConfig = new AppConfig
-  val env = appConfig.AppDataConfig.cluster
-  val sparkSess = env match {
+  val cluster = appConfig.home.cluster
+  val sparkSess = cluster match {
     case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
     case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   }
@@ -29,13 +29,13 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
 
   // getFilePaths
   val inputPath = getNewLinksPath(appConfig)
-  val workingDir = getAppDataConfig(appConfig, "working")
-  val prevDir = getAppDataConfig(appConfig, "prev")
-  val linksFile = getAppDataConfig(appConfig, "links")
+  val workingDir = appConfig.BusinessIndex.workPath
+  val prevDir = appConfig.BusinessIndex.prevPath
+  val linksFile = appConfig.BusinessIndex.links
 
   // load links File
   val newLinks = lpp.readNewLinks(inputPath)
-  val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
+  val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
   // pre-process data
   val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)

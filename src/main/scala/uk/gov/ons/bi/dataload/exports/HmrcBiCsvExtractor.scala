@@ -17,13 +17,14 @@ object HmrcBiCsvExtractor {
     val log = ctxMgr.log
     log.setLevel(Level.INFO)
 
-    val workingDir = appConfig.AppDataConfig.workingDir
-    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
+    val workingDir = appConfig.BusinessIndex.workPath
+    val extractDir = appConfig.BusinessIndex.extractDir
+    val outputDir = s"$workingDir/$extractDir"
 
-    val legalFile = s"$extractDir/bi-legal-entities.csv"
-    val vatFile = s"$extractDir/bi-vat.csv"
-    val payeFile = s"$extractDir/bi-paye.csv"
-    val hmrcFile = s"$extractDir/bi-hmrc.csv"
+    val legalFile = s"$outputDir/bi-legal-entities.csv"
+    val vatFile = s"$outputDir/bi-vat.csv"
+    val payeFile = s"$outputDir/bi-paye.csv"
+    val hmrcFile = s"$outputDir/bi-hmrc.csv"
 
     // Read BI data
     val pqReader = new ParquetReaders(appConfig, ctxMgr)

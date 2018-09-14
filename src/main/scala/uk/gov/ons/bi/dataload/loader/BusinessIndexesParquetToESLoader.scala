@@ -14,7 +14,7 @@ object BusinessIndexesParquetToESLoader {
 
     val indexType = esConf.indexType
 
-    val parquetDir = esConf.parquetDir
+    val parquetDir = appConfig.BusinessIndex.elasticDir
 
      // read BI entries
 
