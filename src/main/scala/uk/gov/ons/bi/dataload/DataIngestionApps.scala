@@ -28,7 +28,7 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
   val lpp = new LinksPreprocessor(ctxMgr)
 
   // getFilePaths
-  val inputPath = getNewLinksPath(appConfig, ctxMgr)
+  val inputPath = getNewLinksPath(appConfig)
   val workingDir = appConfig.BusinessIndex.workPath
   val prevDir = appConfig.BusinessIndex.prevPath
   val linksFile = appConfig.BusinessIndex.links

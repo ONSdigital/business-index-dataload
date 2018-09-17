@@ -23,7 +23,7 @@ class AppConfig {
 
     lazy val env = cluster match {
       case "local" => getClass.getResource("/").toString
-      case "cluster" => getConfigStr("env", root)
+      case "cluster" => s"/${getConfigStr("env", root)}"
     }
 
     override def toString: String = {
