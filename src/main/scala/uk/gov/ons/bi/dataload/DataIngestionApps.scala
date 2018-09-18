@@ -15,14 +15,16 @@ trait DataloadApp extends App {
 
   val appConfig: AppConfig = new AppConfig
   val cluster = appConfig.home.cluster
+
+}
+
+object PreprocessLinksApp extends DataloadApp with BIDataReader {
+
   val sparkSess = cluster match {
     case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
     case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   }
   val ctxMgr = new ContextMgr(sparkSess)
-}
-
-object PreprocessLinksApp extends DataloadApp with BIDataReader {
 
   // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
   val lpp = new LinksPreprocessor(ctxMgr)
@@ -46,6 +48,12 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
 
 object SourceDataToParquetApp extends DataloadApp {
 
+  val sparkSess = cluster match {
+    case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  }
+  val ctxMgr = new ContextMgr(sparkSess)
+
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
   // get input and output paths for admin sources
@@ -66,6 +74,12 @@ object SourceDataToParquetApp extends DataloadApp {
 }
 
 object LinkDataApp extends DataloadApp with BIDataReader {
+
+  val sparkSess = cluster match {
+    case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  }
+  val ctxMgr = new ContextMgr(sparkSess)
 
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
@@ -105,7 +119,7 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  val sparkSess2 = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+  val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
     .config("es.port", esConfig.port.toString)
@@ -114,14 +128,14 @@ object LoadBiToEsApp extends DataloadApp {
     .config("es.index.auto.create", esConfig.autocreate)
     .getOrCreate
 
-  val ctxMgr2 = new ContextMgr(sparkSess2)
+  val ctxMgr = new ContextMgr(sparkSess)
 
   // this line decides either if ES index should be created manually or not
   // config("es.index.auto.create", esConfig.autocreate)
 
   // Now we've built the ES SparkSession, let's go to work:
   // Set up the context manager (singleton holding our SparkSession)
-  BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr2, appConfig)
+  BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
 
 }
 
