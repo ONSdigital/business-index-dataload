@@ -45,6 +45,7 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
 }
 
 object SourceDataToParquetApp extends DataloadApp {
+
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
   // get input and output paths for admin sources
@@ -104,7 +105,7 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  override val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+  val sparkSess2 = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
     .config("es.port", esConfig.port.toString)
@@ -113,14 +114,14 @@ object LoadBiToEsApp extends DataloadApp {
     .config("es.index.auto.create", esConfig.autocreate)
     .getOrCreate
 
-  override val ctxMgr = new ContextMgr(sparkSess)
+  val ctxMgr2 = new ContextMgr(sparkSess2)
 
   // this line decides either if ES index should be created manually or not
   // config("es.index.auto.create", esConfig.autocreate)
 
   // Now we've built the ES SparkSession, let's go to work:
   // Set up the context manager (singleton holding our SparkSession)
-  BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr, appConfig)
+  BusinessIndexesParquetToESLoader.loadBIEntriesToES(ctxMgr2, appConfig)
 
 }
 

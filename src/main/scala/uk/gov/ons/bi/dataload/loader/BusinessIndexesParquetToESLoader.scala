@@ -14,7 +14,9 @@ object BusinessIndexesParquetToESLoader {
 
     val indexType = esConf.indexType
 
+    val home = appConfig.BusinessIndex.biPath
     val parquetDir = appConfig.BusinessIndex.elasticDir
+    val esOutput = s"$home/$parquetDir"
 
      // read BI entries
 
@@ -30,7 +32,7 @@ object BusinessIndexesParquetToESLoader {
     val extraEsConfig = Map("es.mapping.id" -> "id")
 
     //Write the dataframe out to a file in HDFS
-    biDf.write.mode("overwrite").parquet(s"$parquetDir")
+    biDf.write.mode("overwrite").parquet(s"$esOutput")
 
     biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }
