@@ -14,25 +14,21 @@ class SourceDataToParquetLoader(ctxMgr: ContextMgr) extends BIDataReader {
 
   def getAdminDataPaths(biSource: BusinessDataSource, appConfig: AppConfig): (String, String) = {
 
-    // External data (HMRC - CH, VAT, PAYE)
-    val extDataConfig = appConfig.ExtDataConfig
-    val extDir = getExtDir(appConfig)
+    // External data (HMRC - CH, VAT, PAYE, TCN)
 
-    // Lookups source directory (TCN)
-    val lookupsConfig = appConfig.OnsDataConfig.lookupsConfig
+    val extDir = appConfig.External.externalPath
+    val workingDir = appConfig.BusinessIndex.workPath
 
-    // output directory
-    val workingDir = getAppDataConfig(appConfig, "working")
+    //Get directories and file names etc for specified data source
 
-     //Get directories and file names etc for specified data source
-    val (baseDir, extSrcFile, extDataDir, parquetFile) = biSource match {
-      case VAT  => (extDir, extDataConfig.vat, extDataConfig.vatDir, getAppDataConfig(appConfig, "vat"))
-      case CH   => (extDir, extDataConfig.ch, extDataConfig.chDir, getAppDataConfig(appConfig, "ch"))
-      case PAYE => (extDir, extDataConfig.paye, extDataConfig.payeDir, getAppDataConfig(appConfig, "paye"))
-      case TCN  => (getAppDataConfig(appConfig, "env"), lookupsConfig.tcnToSic,lookupsConfig.dir, getAppDataConfig(appConfig, "tcn"))
+    val (extDataDir, extSrcFile, parquetFile) = biSource match {
+      case CH  => (appConfig.External.chDir, appConfig.External.ch, appConfig.BusinessIndex.ch)
+      case VAT   => (appConfig.External.vatDir, appConfig.External.vat, appConfig.BusinessIndex.vat)
+      case PAYE => (appConfig.External.payeDir, appConfig.External.paye, appConfig.BusinessIndex.paye)
+      case TCN  => (appConfig.External.lookupsDir, appConfig.External.tcnToSic, appConfig.BusinessIndex.tcn)
     }
 
-    val inputPath = s"$baseDir/$extDataDir/$extSrcFile"
+    val inputPath = s"$extDir/$extDataDir/$extSrcFile"
     val outputPath = s"$workingDir/$parquetFile"
 
     (inputPath, outputPath)
