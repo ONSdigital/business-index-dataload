@@ -28,9 +28,9 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val lpp = new LinksPreprocessor(ctxMgr)
     val inputPath = lpp.getNewLinksPath(appConfig)
-    val workingDir = lpp.getAppDataConfig(appConfig, "working")
-    val prevDir = lpp.getAppDataConfig(appConfig, "prev")
-    val linksFile = lpp.getAppDataConfig(appConfig, "links")
+    val workingDir = appConfig.BusinessIndex.workPath
+    val prevDir = appConfig.BusinessIndex.prevPath
+    val linksFile = appConfig.BusinessIndex.links
     val outputFilePath = s"$workingDir/$linksFile"
 
     // Used to create initial input parquet file
@@ -42,7 +42,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // load links File
     val newLinks = lpp.readNewLinks(inputPath)
-    val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
+    val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
     // pre-process data
     val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
@@ -69,13 +69,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     import sparkSession.implicits._
+    val appConfig: AppConfig = new AppConfig
+
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksFileReader(ctxMgr)
 
-    val homeDir = parquetReader.readFromLocal("/")
-    val inputPath = parquetReader.readFromLocal("/external/companiesHouse/CH.csv")
-    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/CH.parquet"
+    val workingDir = appConfig.BusinessIndex.workPath
+    val externalDir = appConfig.External.externalPath
+
+    val inputPath = s"$externalDir/companiesHouse/CH.csv"
+    val outputPath = s"$workingDir/CH.parquet"
 
     new File(outputPath).delete()
 
@@ -94,14 +97,16 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     import sparkSession.implicits._
+    val appConfig: AppConfig = new AppConfig
+
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksFileReader(ctxMgr)
 
-    val homeDir = parquetReader.readFromLocal("/")
-    val inputPath = parquetReader.readFromLocal("/external/hmrc/paye/PAYE.csv")
+    val workingDir = appConfig.BusinessIndex.workPath
+    val externalDir = appConfig.External.externalPath
 
-    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/PAYE.parquet"
+    val inputPath = s"$externalDir/hmrc/paye/PAYE.csv"
+    val outputPath = s"$workingDir/PAYE.parquet"
 
     new File(outputPath).delete()
 
@@ -124,11 +129,13 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksFileReader(ctxMgr)
 
-    val homeDir = parquetReader.readFromLocal("/")
-    val inputPath = parquetReader.readFromLocal("/external/hmrc/vat/VAT.csv")
-    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/VAT.parquet"
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.BusinessIndex.workPath
+    val externalDir = appConfig.External.externalPath
+
+    val inputPath = s"$externalDir/hmrc/vat/VAT.csv"
+    val outputPath = s"$workingDir/VAT.parquet"
 
     new File(outputPath).delete()
 
@@ -153,11 +160,13 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
     val ctxMgr = new ContextMgr(sparkSession)
     val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
-    val parquetReader = new LinksFileReader(ctxMgr)
 
-    val homeDir = parquetReader.readFromLocal("/")
-    val inputPath = parquetReader.readFromLocal("/ons.gov/businessIndex/lookups/tcn-to-sic-mapping.csv")
-    val outputPath = homeDir + "ons.gov/businessIndex/WORKINGDATA/TCN_TO_SIC_LOOKUP.parquet"
+    val appConfig: AppConfig = new AppConfig
+    val workingDir = appConfig.BusinessIndex.workPath
+    val externalDir = appConfig.External.externalPath
+
+    val inputPath = s"$externalDir/lookups/tcn-to-sic-mapping.csv"
+    val outputPath = s"$workingDir/TCN_TO_SIC_LOOKUP.parquet"
 
     new File(outputPath).delete()
 
@@ -180,11 +189,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
     val appConfig: AppConfig = new AppConfig
     val ctxMgr = new ContextMgr(sparkSession)
-    val parquetReader = new LinksFileReader(ctxMgr)
 
     // admin outputs
-    val homeDir = parquetReader.readFromLocal("/")
-    val biFile = homeDir + "/ons.gov/businessIndex/WORKINGDATA/BI_Output.parquet"
+    val workingDir = appConfig.BusinessIndex.workPath
+
+    val biFile = s"$workingDir/BI_Output.parquet"
 
     new File(biFile).delete
 
@@ -238,14 +247,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
 
     val appConfig: AppConfig = new AppConfig
-    val workingDir = appConfig.AppDataConfig.workingDir
+    val workingDir = appConfig.BusinessIndex.workPath
+    val extractDir = appConfig.BusinessIndex.extractDir
 
     //get hmrc output filepath
-    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
-    val inputCSV = s"$extractDir/bi-hmrc.csv"
+    val extractPath = s"$workingDir/$extractDir"
+    val outputCSV = s"$extractPath/bi-hmrc.csv"
 
     //get bi data filepath
-    val parquetBiFile = appConfig.AppDataConfig.bi
+    val parquetBiFile = appConfig.BusinessIndex.bi
     val biFile = s"$workingDir/$parquetBiFile"
 
     // read in parquet file from path
@@ -254,8 +264,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // generate hmrc csv and read as dataframe
     val modLeu = HmrcBiCsvExtractor.modifyLegalEntities(biData)
     val adminEntities = HmrcBiCsvExtractor.getModifiedLegalEntities(modLeu)
-    BiCsvWriter.writeCsvOutput(adminEntities, inputCSV)
-    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+    BiCsvWriter.writeCsvOutput(adminEntities, outputCSV)
+    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val data = Seq(
@@ -276,14 +286,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val sparkSession: SparkSession = SparkSession.builder().master("local").getOrCreate()
 
     val appConfig: AppConfig = new AppConfig
-    val workingDir = appConfig.AppDataConfig.workingDir
+    val workingDir = appConfig.BusinessIndex.workPath
+    val extractDir = appConfig.BusinessIndex.extractDir
 
     //get hmrc output filepath
-    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
-    val inputCSV = s"$extractDir/bi-legal-entities.csv"
+    val extractPath = s"$workingDir/$extractDir"
+    val outputCSV = s"$extractPath/bi-legal-entities.csv"
 
     //get bi data filepath
-    val parquetBiFile = appConfig.AppDataConfig.bi
+    val parquetBiFile = appConfig.BusinessIndex.bi
     val biFile = s"$workingDir/$parquetBiFile"
 
     // read in parquet file from path
@@ -291,8 +302,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // generate hmrc csv and read as dataframe
     val legalEntities = HmrcBiCsvExtractor.getLegalEntities(biData)
-    BiCsvWriter.writeCsvOutput(legalEntities, inputCSV)
-    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+    BiCsvWriter.writeCsvOutput(legalEntities, outputCSV)
+    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val data = Seq(
@@ -314,14 +325,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
-    val workingDir = appConfig.AppDataConfig.workingDir
+    val workingDir = appConfig.BusinessIndex.workPath
+    val extractDir = appConfig.BusinessIndex.extractDir
 
     //get hmrc output filepath
-    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
-    val inputCSV = s"$extractDir/bi-vat.csv"
+    val extractPath = s"$workingDir/$extractDir"
+    val outputCSV = s"$extractPath/bi-vat.csv"
 
     //get bi data filepath
-    val parquetBiFile = appConfig.AppDataConfig.bi
+    val parquetBiFile = appConfig.BusinessIndex.bi
     val biFile = s"$workingDir/$parquetBiFile"
 
     // read in parquet file from path
@@ -329,8 +341,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // generate hmrc csv and read as dataframe
     val vat = HmrcBiCsvExtractor.getVatExploded(biData)
-    BiCsvWriter.writeCsvOutput(vat, inputCSV)
-    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+    BiCsvWriter.writeCsvOutput(vat, outputCSV)
+    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val expected = Seq(
@@ -350,14 +362,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
 
     val appConfig: AppConfig = new AppConfig
-    val workingDir = appConfig.AppDataConfig.workingDir
+    val workingDir = appConfig.BusinessIndex.workPath
+    val extractDir = appConfig.BusinessIndex.extractDir
 
     //get hmrc output filepath
-    val extractDir = s"$workingDir/${appConfig.AppDataConfig.extract}"
-    val inputCSV = s"$extractDir/bi-paye.csv"
+    val extractPath = s"$workingDir/$extractDir"
+    val outputCSV = s"$extractPath/bi-paye.csv"
 
     //get bi data filepath
-    val parquetBiFile = appConfig.AppDataConfig.bi
+    val parquetBiFile = appConfig.BusinessIndex.bi
     val biFile = s"$workingDir/$parquetBiFile"
 
     // read in parquet file from path
@@ -365,8 +378,8 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     // generate hmrc csv and read as dataframe
     val paye = HmrcBiCsvExtractor.getPayeExploded(biData)
-    BiCsvWriter.writeCsvOutput(paye, inputCSV)
-    val df = sparkSession.read.option("header", true).csv(inputCSV).sort("id")
+    BiCsvWriter.writeCsvOutput(paye, outputCSV)
+    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val expected = Seq(
