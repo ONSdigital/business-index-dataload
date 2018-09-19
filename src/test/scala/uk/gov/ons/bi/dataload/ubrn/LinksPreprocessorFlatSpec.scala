@@ -66,6 +66,27 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
     assertSmallDataFrameEquality(actual, expectedDf)
   }
 
+  it should "Update UBRN with dead vat" in {
+
+    val newLinks = Seq(
+      (Array(""), Array("vat1","vat3"), Array(""))
+    ).toDF("CH","VAT","PAYE")
+
+    val prevLinks = Seq(
+      (1000000000000100L, Array(""), Array("vat1", "vat2","vat3"), Array(""))
+    ).toDF("UBRN", "CH","VAT","PAYE")
+
+    val actual = lpp.preProcessLinks(newLinks, prevLinks)
+
+    val expected = Seq(
+      Row(1000000000000100L, Array(""), Array("vat1", "vat3"), Array(""))
+    )
+
+    val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
+
+    assertSmallDataFrameEquality(actual, expectedDf)
+  }
+  
   it should "IllegalArgumentException error when applying UBRN to invalid inputs for newlinks and previous links" in {
 
     val newLinks = BiSparkDataFrames.emptyLinkWithUbrnDf(ctxMgr)
