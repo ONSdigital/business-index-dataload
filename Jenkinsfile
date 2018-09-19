@@ -1,80 +1,190 @@
 #!groovy
-@Library('jenkins-pipeline-shared@master') _
+def server = Artifactory.server 'art-p-01'
+def rtGradle = Artifactory.newGradleBuild()
+rtGradle.tool = 'gradle_4.9'
+rtGradle.resolver server: server, repo: 'ons-repo'
+rtGradle.deployer server: server, repo: 'registers-snapshots'
+def agentGradleVersion = 'gradle_4-9'
 
 pipeline {
+    libraries {
+        lib('jenkins-pipeline-shared')
+    }
     environment {
-        OOZIE_DIR = "oozie/workspaces/bi-data-ingestion"
-
-        RELEASE_TYPE = "PATCH"
-
-        BRANCH_DEV = "develop"
-        BRANCH_TEST = "release"
-        BRANCH_PROD = "master"
-
-        DEPLOY_DEV = "dev"
-        DEPLOY_TEST = "test"
-        DEPLOY_PROD = "prod"
-
-        GIT_TYPE = "Github"
-        GIT_CREDS = "github-sbr-user"
-        GITLAB_CREDS = "sbr-gitlab-id"
-
-        ORGANIZATION = "ons"
-        TEAM = "bi"
         MODULE_NAME = "business-index-dataload"
+        GRADLE_OPTS = '-Dorg.gradle.daemon=false'
     }
     options {
         skipDefaultCheckout()
         buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
-        timeout(time: 30, unit: 'MINUTES')
-        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+        ansiColor('xterm')
     }
-    agent any
+    agent { label 'download.jenkins.slave'}
     stages {
         stage('Checkout'){
-            agent any
+            agent { label 'download.jenkins.slave'}
             steps{
                 deleteDir()
                 checkout scm
-                stash name: 'app'
-                sh "$SBT version"
-                script {
-                    version = '1.0.' + env.BUILD_NUMBER
-                    currentBuild.displayName = version
-                    env.NODE_STAGE = "Checkout"
+                stash name: 'Checkout'
+            }
+        }
+
+        stage('Build') {
+            agent { label "build.${agentGradleVersion}" }
+            steps {
+                unstash name: 'Checkout'
+                sh 'gradle compileScala'
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
                 }
             }
         }
 
-        stage('Static Analysis') {
-            agent any
-            steps {
-                sh "sbt test"
+        stage('Validate') {
+            failFast true
+            parallel {
+                stage('Test: Unit') {
+                    agent { label "build.${agentGradleVersion}" }
+                    steps {
+                        unstash name: 'Checkout'
+                        sh 'gradle check'
+                    }
+                    post {
+                        success {
+                            junit 'build/test-results/test/TEST-uk.gov.ons.*.xml'
+                        }
+                    }
+                }
+                stage('Style') {
+                    agent { label "build.${agentGradleVersion}" }
+                    steps {
+                        unstash name: 'Checkout'
+                        colourText("info","Running style tests")
+                        sh 'gradle scalaStyleMainCheck'
+                    }
+                    post {
+                        success {
+                            checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'build/scalastyle/main/scalastyle-check.xml', unHealthy: ''   
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
             }
         }
-
-        stage ('Package and Push Artifact') {
-            agent any
-            steps {
-                sh "sbt package"
-                copyToEdgeNode()
+        
+        stage ('Publish') {
+            agent { label "build.${agentGradleVersion}" }
+            when { 
+                branch "master" 
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true 
             }
+            steps {
+                colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
+                unstash name: 'Checkout'
+                script {
+                    def buildInfo = rtGradle.run tasks: 'clean artifactoryPublish'
+                    server.publishBuildInfo buildInfo
+                }
+                stash name: 'deploy.sh', includes: 'src/main/edge/deploy.sh'
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
+        }
+        stage ('Deploy: Dev') {
+            agent { label 'deploy.jenkins.slave'}
+            when { 
+                branch "master" 
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true 
+            }
+            environment{
+                DEPLOY_TO = "dev"
+                DEPLOY_CRED = "bi-dev-ci-ssh-key"
+                VERSION = "0.1.${env.BUILD_NUMBER}"
+            }
+            steps {
+                unstash name: 'deploy.sh'
+                sshagent(["${DEPLOY_CRED}"]) {
+                    withCredentials([string(credentialsId: "prod1-edgenode-2", variable: 'EDGE_NODE'),
+                                    usernamePassword(credentialsId: 'jenk_sbr_prod__artifactory', passwordVariable: 'ART_PWD', usernameVariable: 'ART_USR')]) {
+                        sh '''
+                            scp -q -o StrictHostKeyChecking=no src/main/edge/deploy.sh bi-${DEPLOY_TO}-ci@${EDGE_NODE}:deploy.sh
+                            echo "Successfully copied deploy.sh to HOME directory on ${EDGE_NODE}"
+                        '''
+                        // Set the environment variables and call deploy.
+                        // The `DEPLOY` heredoc doesnt play nice with whitespace hence why there's
+                        // no indentation.
+                        configFileProvider([configFile(fileId: 'bi_dataload_dev_env_sh', variable: 'BI_DL_DEV_ENV')]) {
+                            sh '''
+                            source $BI_DL_DEV_ENV
+                            ssh -o StrictHostKeyChecking=no bi-${DEPLOY_TO}-ci@${EDGE_NODE} /bin/bash <<-DEPLOY
+chmod +x deploy.sh
+bash -x deploy.sh $MY_REPO $ARCHIVE $VERSION $ART_URL $ART_USR $ART_PWD $HDFS_USR
+DEPLOY'''
+                        }
+                    }
+                }
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
+        }
+    }
+    post {
+        success {
+            colourText("success", "All stages complete. Build was successful.")
+            slackSend(
+                color: "good",
+                message: "${currentBuild.fullDisplayName} success: ${env.RUN_DISPLAY_URL}"
+            )
+        }
+        unstable {
+            colourText("warn", "Something went wrong, build finished with result ${currentResult}. This may be caused by failed tests, code violation or in some cases unexpected interrupt.")
+            slackSend(
+                color: "danger",
+                message: "${currentBuild.fullDisplayName} unstable: ${env.RUN_DISPLAY_URL}"
+            )
+        }
+        failure {
+            colourText("warn","Process failed at: ${env.NODE_STAGE}")
+            slackSend(
+                color: "danger",
+                message: "${currentBuild.fullDisplayName} failed at ${env.STAGE_NAME}: ${env.RUN_DISPLAY_URL}"
+            )
         }
     }
 }
 
-def copyToEdgeNode() {
-    echo "Deploying to $DEPLOY_DEV"
-    sshagent(credentials: ["bi-dev-ci-ssh-key"]) {
-        withCredentials([string(credentialsId: "prod1-edgenode-2", variable: 'EDGE_NODE'),
-                         string(credentialsId: "hdfs-jar-path-dev", variable: 'JAR_PATH')]) {
-            sh '''
-                ssh bi-$DEPLOY_DEV-ci@$EDGE_NODE mkdir -p $MODULE_NAME/lib
-                scp ${WORKSPACE}/target/scala-*/business-index-dataload*.jar bi-$DEPLOY_DEV-ci@$EDGE_NODE:$MODULE_NAME/lib/
-                echo "Successfully copied jar file to $MODULE_NAME/lib directory on $EDGE_NODE"
-                ssh bi-$DEPLOY_DEV-ci@$EDGE_NODE hdfs dfs -put -f $MODULE_NAME/lib/business-index-dataload_2.11-1.6.jar $JAR_PATH
-                echo "Successfully copied jar file to HDFS"
-	        '''
-        }
-    }
+def postSuccess() {
+    colourText('info', "Stage: ${env.STAGE_NAME} successfull!")
+}
+
+def postFail() {
+    colourText('warn', "Stage: ${env.STAGE_NAME} failed!")
 }

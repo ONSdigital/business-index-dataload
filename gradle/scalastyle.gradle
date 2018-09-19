@@ -1,0 +1,3 @@
+scalaStyle {
+  config = file("$rootDir/scalastyle-config.xml")
+}

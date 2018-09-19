@@ -43,7 +43,7 @@
 * Apache Spark 2.2.0 on Cloudera is compiled for Scala 2.11.
 * This means we also need to use Scala 2.11 for our application.
 * Since the Cloudera Spark installation has been upgraded to Spark 2.x, we have re-compiled the Scala code with Scala 2.11, which is the default Scala version for Spark 2.x.
-* This was updated by changing the Scala version in the `build.sbt` file.
+* This was updated by changing the Scala version in the `build.gradle` file.
 
 ### ElasticSearch 5.6.x ###
 
@@ -65,18 +65,7 @@
 > * `config-1.3.2.jar`
 
 * These are provided as JARs at runtime (see individual steps below for more information).
-* See the `build.sbt` file for Maven/SBT artifact details.
-
-## Building the application ##
-
-* Build the application using SBT from the command-line:
-
-> `sbt clean compile package`
-
-* We use the SBT `package` task, not `assembly`, because we do not want to build a fat JAR here.
-* Cloudera has its own installation of Spark, so we do not want to deploy our application with all the Spark libraries.
-* It can be difficult to build an assembly package without introducing conflicts between the various Spark libraries and their dependencies.
-* The easiest option is to just build the basic package here, then providing the extra JARS as `--jars` dependencies at runtime.
+* See the `build.gradle` file for Maven/SBT artifact details.
 
 ## Configuration ##
 
@@ -121,11 +110,10 @@
 
 ## Deploying the application ##
 
-* The initial implementation is deployed manually.
-* The application JAR and the 3rd party library JARs are all placed in a directory in HDFS that can be accessed by Oozie.
+* Merges into master trigger an automated deployment in Jenkins.
+* The application JAR and the 3rd party library JARs are all placed in a directory in HDFS `/user/user/applications/oozie/business-index-dataload-latest` that can be accessed by Oozie.
 * Data files are also stored in HDFS.
 * The data file names and locations are specified in `application.conf`, but can be provided at runtime via "-D" parameters.
-* The application is executed as a 4-step Oozie workflow.
 * The individual steps and their Oozie task parameters are documented separately below.
 
 
@@ -135,6 +123,20 @@
 * The locations are specified via various configuration properties.
 * These have default values in the `src/main/resources/application.conf` file.
 * They can be modified via environment variables as described above.
+
+## Development
+
+The commands below use the Gradle wrapper which will install Gradle at the correct version if it does not exist locally.
+
+Build the source code
+
+`./gradlew build`
+
+Run the tests
+
+`./gradlew test`
+
+For integration with intellij simply import the project and specify Gradle project as the type. Intellij will handle the rest.
 
 
 ## Further information ##

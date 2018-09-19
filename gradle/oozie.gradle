@@ -1,0 +1,32 @@
+task oozieZip(type: Zip) {
+    group 'build'
+    description 'Archives the Oozie workflow and libs'
+
+    baseName rootProject.name
+    classifier 'hdfs'
+
+    // create a VERSION.txt dynamically and
+    // add to zip
+    def versionTxt = file("VERSION.txt")
+    versionTxt.text = "$version"
+    from(versionTxt) {
+        into 'apps'
+    }
+    from( 'src/main/hdfs/apps') {
+        into 'apps'
+    }
+    from(jar){
+        into 'apps/bi-data-ingestion/lib'
+    }
+    def deps = configurations.compile {
+        transitive = false
+    }
+    from(deps) {
+        exclude 'spark-*.jar'
+        exclude '*joda*'
+        into 'apps/bi-data-ingestion/lib'
+    }
+    doLast {
+        println archiveName
+    }
+}
