@@ -18,13 +18,13 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
   def getDataFrameFromParquet(src: BIDataSource): DataFrame = {
     // Get data directories:
     // our business data Parquet files are stored under a working directory.
-    val workingDir = getAppDataConfig(appConfig, "working")
+    val workingDir = appConfig.BusinessIndex.workPath
     val parquetData = src match {
-      case LINKS => getAppDataConfig(appConfig, "links")
-      case CH => getAppDataConfig(appConfig, "ch")
-      case VAT => getAppDataConfig(appConfig, "vat")
-      case PAYE => getAppDataConfig(appConfig, "paye")
-      case TCN_SIC_LOOKUP => getAppDataConfig(appConfig, "tcn")
+      case LINKS => appConfig.BusinessIndex.links
+      case CH => appConfig.BusinessIndex.ch
+      case VAT => appConfig.BusinessIndex.vat
+      case PAYE => appConfig.BusinessIndex.paye
+      case TCN_SIC_LOOKUP => appConfig.BusinessIndex.tcn
     }
     val dataFile = s"$workingDir/$parquetData"
 
@@ -231,9 +231,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     // Read Parquet data for Business Indexes as DataFrame via SparkSQL
 
     // Get data directories
-    val appDataConfig = appConfig.AppDataConfig
-    val workingDir = getAppDataConfig(appConfig, "working")
-    val biData = appDataConfig.bi
+    val workingDir = appConfig.BusinessIndex.workPath
+    val biData = appConfig.BusinessIndex.bi
 
     val dataFile = s"$workingDir/$biData"
 

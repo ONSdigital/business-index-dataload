@@ -14,28 +14,30 @@ import uk.gov.ons.bi.dataload.writer.BiParquetWriter
 trait DataloadApp extends App {
 
   val appConfig: AppConfig = new AppConfig
-  val env = appConfig.AppDataConfig.cluster
-  val sparkSess = env match {
+  val cluster = appConfig.home.cluster
+
+}
+
+object PreprocessLinksApp extends DataloadApp with BIDataReader {
+
+  val sparkSess = cluster match {
     case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
     case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
   }
   val ctxMgr = new ContextMgr(sparkSess)
-}
-
-object PreprocessLinksApp extends DataloadApp with BIDataReader {
 
   // Load Links File, preprocess data (apply UBRN etc), write to Parquet.
   val lpp = new LinksPreprocessor(ctxMgr)
 
   // getFilePaths
   val inputPath = getNewLinksPath(appConfig)
-  val workingDir = getAppDataConfig(appConfig, "working")
-  val prevDir = getAppDataConfig(appConfig, "prev")
-  val linksFile = getAppDataConfig(appConfig, "links")
+  val workingDir = appConfig.BusinessIndex.workPath
+  val prevDir = appConfig.BusinessIndex.prevPath
+  val linksFile = appConfig.BusinessIndex.links
 
   // load links File
   val newLinks = lpp.readNewLinks(inputPath)
-  val prevLinks = lpp.readPrevLinks(workingDir, linksFile)
+  val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
   // pre-process data
   val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
@@ -45,6 +47,13 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
 }
 
 object SourceDataToParquetApp extends DataloadApp {
+
+  val sparkSess = cluster match {
+    case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  }
+  val ctxMgr = new ContextMgr(sparkSess)
+
   val sourceDataLoader = new SourceDataToParquetLoader(ctxMgr)
 
   // get input and output paths for admin sources
@@ -65,6 +74,12 @@ object SourceDataToParquetApp extends DataloadApp {
 }
 
 object LinkDataApp extends DataloadApp with BIDataReader {
+
+  val sparkSess = cluster match {
+    case "local" => SparkSession.builder.master("local").appName("Business Index").getOrCreate()
+    case "cluster" => SparkSession.builder.appName("ONS BI Dataload: Apply UBRN rules to Link data").enableHiveSupport.getOrCreate
+  }
+  val ctxMgr = new ContextMgr(sparkSess)
 
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
@@ -104,7 +119,7 @@ object LoadBiToEsApp extends DataloadApp {
   val sparkConfigInfo = appConfig.SparkConfigInfo
   val esConfig = appConfig.ESConfig
 
-  override val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
+  val sparkSess = SparkSession.builder.appName(sparkConfigInfo.appName).enableHiveSupport
     .config("spark.serializer", sparkConfigInfo.serializer)
     .config("es.nodes", esConfig.nodes)
     .config("es.port", esConfig.port.toString)
@@ -113,7 +128,7 @@ object LoadBiToEsApp extends DataloadApp {
     .config("es.index.auto.create", esConfig.autocreate)
     .getOrCreate
 
-  override val ctxMgr = new ContextMgr(sparkSess)
+  val ctxMgr = new ContextMgr(sparkSess)
 
   // this line decides either if ES index should be created manually or not
   // config("es.index.auto.create", esConfig.autocreate)
