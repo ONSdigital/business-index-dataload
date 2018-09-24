@@ -9,6 +9,7 @@ import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr}
 import uk.gov.ons.bi.dataload.writer.BiCsvWriter
 import uk.gov.ons.bi.dataload.model.DataFrameColumn
+
 object HmrcBiCsvExtractor {
 
   def extractBiToCsv(ctxMgr: ContextMgr, appConfig: AppConfig) = {

@@ -71,7 +71,7 @@ pipeline {
                     }
                     post {
                         success {
-                            checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'build/scalastyle/main/scalastyle-check.xml', unHealthy: ''   
+                            checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'build/scalastyle/main/scalastyle-check.xml', unHealthy: ''
                         }
                     }
                 }
@@ -85,13 +85,13 @@ pipeline {
                 }
             }
         }
-        
+
         stage ('Publish') {
             agent { label "build.${agentGradleVersion}" }
-            when { 
-                branch "master" 
+            when {
+                branch "master"
                 // evaluate the when condition before entering this stage's agent, if any
-                beforeAgent true 
+                beforeAgent true
             }
             steps {
                 colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
@@ -113,10 +113,10 @@ pipeline {
         }
         stage ('Deploy: Dev') {
             agent { label 'deploy.jenkins.slave'}
-            when { 
-                branch "master" 
+            when {
+                branch "master"
                 // evaluate the when condition before entering this stage's agent, if any
-                beforeAgent true 
+                beforeAgent true
             }
             environment{
                 DEPLOY_TO = "dev"
@@ -155,13 +155,6 @@ DEPLOY'''
                 }
             }
         }
-        // stage ('Package and Push Artifact') {
-        //     agent any
-        //     steps {
-        //         sh "sbt package"
-        //         copyToEdgeNode()
-        //     }
-        // }
     }
     post {
         success {

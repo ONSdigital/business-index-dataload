@@ -8,8 +8,8 @@ import uk.gov.ons.bi.dataload.reader.{BIDataReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.writer.{BiParquetWriter, PreviousLinksWriter}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
 import org.apache.spark.sql.functions.udf
-import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 
 @Singleton
