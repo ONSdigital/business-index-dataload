@@ -7,9 +7,6 @@ import uk.gov.ons.bi.dataload.model._
 import scala.util.matching.Regex
 import scala.util.{Success, Try}
 
-/**
-  * Created by websc on 24/02/2017.
-  */
 object Transformers {
 
   // Convert the grouped UBRN + Lists into Business records
@@ -84,6 +81,17 @@ object Transformers {
    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
+  def getTradingStlye(br: Business): Option[String] = {
+    val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.tradingStyle}
+    val paye: Option[String] = br.paye.flatMap{ ps => ps.headOption }.flatMap {_.tradingStyle}
+
+    // list in order of preference
+    val candidates = Seq(vat, paye)
+
+    // Take first non-empty name value from list
+   candidates.foldLeft[Option[String]](None)(_ orElse _)
+  }
+
   def appendTag(address: Option[String], tag: String): Option[String] = {
     address match {
       case Some(x) => Some(tag)
@@ -126,19 +134,7 @@ object Transformers {
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address4},
           br.paye.flatMap { ps => ps.headOption }.flatMap {_.address5}
         )
-      case _ => Seq(None)
     }
-  }
-
-  def getTradingStlye(br: Business): Option[String] = {
-    val vat: Option[String] = br.vat.flatMap{ vs => vs.headOption }.flatMap {_.tradingStyle}
-    val paye: Option[String] = br.paye.flatMap{ ps => ps.headOption }.flatMap {_.tradingStyle}
-
-    // list in order of preference
-    val candidates = Seq(vat, paye)
-
-    // Take first non-empty name value from list
-    candidates.foldLeft[Option[String]](None)(_ orElse _)
   }
 
   def extractNumericSicCode(sic: Option[String]): Option[String] = {
@@ -294,8 +290,6 @@ object Transformers {
     val tradingStyle: Option[String] = getTradingStlye(br)
 
     val postcode: Option[String] = getPostcode(br)
-    val address: Seq[Option[String]] = getAddress(br)
-
     val address1: Option[String] = getAddress1(br)
     val address2: Option[String] = getAddress2(br)
     val address3: Option[String] = getAddress3(br)
@@ -331,7 +325,6 @@ object Transformers {
     BusinessIndex(br.ubrn, businessName, postcode, industryCode, legalStatus,
       tradingStatusBand, turnoverBand, empBand, companyNo, vatRefs, payeRefs,
       address1,address2,address3,address4,address5,
-      //address.head, address(1), address(2), address(3), address(4),
       tradingStyle)
   }
 

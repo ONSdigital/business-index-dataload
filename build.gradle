@@ -28,7 +28,7 @@ dependencies {
         exclude group: "javax.servlet"
     }
 
-    testCompile "org.scalatest:scalatest_${scalaVersion}:2.2.4"
+    testCompile "org.scalatest:scalatest_${scalaVersion}:3.0.5"
     testRuntime 'org.pegdown:pegdown:1.4.2'
 }
 

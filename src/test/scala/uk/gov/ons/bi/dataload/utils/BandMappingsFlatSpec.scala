@@ -2,9 +2,6 @@ package uk.gov.ons.bi.dataload.utils
 
 import org.scalatest.{FlatSpec, Matchers}
 
-/**
-  * Created by websc on 31/03/2017.
-  */
 class BandMappingsFlatSpec extends FlatSpec with Matchers {
 
   behavior of "BandMappingsFlatSpec"

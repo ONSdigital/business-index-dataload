@@ -2,13 +2,8 @@ package uk.gov.ons.bi.dataload.writer
 
 import org.apache.spark.sql.DataFrame
 
-/**
-  * Created by websc on 29/06/2017.
-  */
-
 object BiCsvWriter {
 
-  // Write the CSV output files:
   def writeCsvOutput(df: DataFrame, outputFile: String, singleFile: Boolean = true) = {
     // Depends on Spark CSV
     // Spark writes in Hadoop style i.e. creates a directory containing a number of files.
@@ -24,4 +19,6 @@ object BiCsvWriter {
         .csv(outputFile)
 
   }
+
+
 }

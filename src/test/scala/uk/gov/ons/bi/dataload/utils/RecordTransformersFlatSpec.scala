@@ -3,16 +3,11 @@ package uk.gov.ons.bi.dataload.utils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{FlatSpec, ShouldMatchers}
-
-import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder._
+import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.model._
 
 
-/**
-  * Created by websc on 31/03/2017.
-  */
-class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
+class RecordTransformersFlatSpec extends FlatSpec with Matchers {
 
   behavior of "RecordTransformersFlatSpec"
 
@@ -140,7 +135,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Set up source data for a Business with 1 company, 2 VAT, 2 PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -212,7 +208,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Set up source data for a Business with 1 company, no VAT, 2 PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -243,7 +240,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Set up source data for a Business with 1 company, 2 VAT, no PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -292,7 +290,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val ubrn = 100L
 
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -333,7 +332,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val ubrn = 100L
 
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -354,7 +354,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Company SIC = "123 SIC" (should return IndustryCode = 123)
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Active"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Active"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -389,24 +390,13 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val expectedPayeRefs = Some(List(paye1.payeRef.get, paye2.payeRef.get))
 
     val expected = BusinessIndex(ubrn, company.companyName, company.postcode, Some("123"),
-      Some("1"),  // default legal status for Company
-      Some("A"),  // trading status
+      Some("1"), // default legal status for Company
+      Some("A"), // trading status
       Some("H"),
       Some("C"),
       company.companyNo,
       expectedVatRefs,
       expectedPayeRefs
-//      ,
-//      None,
-//      None,
-//      None,
-//      None,
-//      None
-//      Some("address1"),
-//      Some("address2"),
-//      Some("address3"),
-//      Some("address4"),
-//      Some("address5"),
     )
     results shouldBe expected
   }
@@ -417,7 +407,8 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     // Set up source data for a Business with 1 company only
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -428,7 +419,7 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val business: Business = Transformers.buildBusinessRecord(uwl)
 
     // Run conversion
-    val results  = Transformers.convertToBusinessIndex(business).legalStatus
+    val results = Transformers.convertToBusinessIndex(business).legalStatus
     val expected = Some("1") // legalStatus
 
     results shouldBe expected
@@ -441,7 +432,10 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     import sparkSession.implicits._
 
     val ubrn = 100L
-    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = None, address1 = Some("address1"))
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"),
+      sicCode1 = Some("123 SIC"), postcode = None,
+      address1 = Some("address1"), address2 = None, address3 = None, address4 = None, address5 = None
+    )
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
       sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L), address1 = Some("VatAddress"), address2 = Some("add2"), address3 = Some("add3"))
@@ -466,12 +460,10 @@ class RecordTransformersFlatSpec extends FlatSpec with ShouldMatchers {
     val withCol = df.withColumn("id", $"ubrn")
       .withColumnRenamed("ubrn", "UPRN")
       .withColumnRenamed("TurnoverBand", "Turnover")
-      .withColumnRenamed("EmploymentBand","EmploymentBands")
-
-    //withCol.select("id", "BusinessName", "PostCode", "IndustryCode", "LegalStatus", "TradingStatus", "Turnover", "EmploymentBands", "CompanyNo", "VatRefs", "PayeRefs", "Address1", "Address2","Address3","Address4", "Address5", "TradingStyle").show
+      .withColumnRenamed("EmploymentBand", "EmploymentBands")
 
     val results = withCol.select("TradingStyle").collect().map(_.toString())
-    val expected =  Array("[trading as Paye]")
+    val expected = Array("[trading as Paye]")
 
     results shouldBe expected
   }

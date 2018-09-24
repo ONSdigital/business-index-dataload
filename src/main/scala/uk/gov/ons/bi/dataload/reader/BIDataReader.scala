@@ -1,15 +1,22 @@
 package uk.gov.ons.bi.dataload.reader
 
-import org.apache.spark.sql.DataFrame
+import uk.gov.ons.bi.dataload.utils.AppConfig
 
-/**
-  * Created by websc on 10/02/2017.
-  */
 trait BIDataReader {
 
-  def readFromSourceFile(srcFilePath: String): DataFrame
+  def getBiOutput(appConfig: AppConfig): String = {
 
-  def writeParquet(df: DataFrame, targetFilePath: String):Unit = {
-    df.write.mode("overwrite").parquet(targetFilePath)
+    val home = appConfig.BusinessIndex.biPath
+    val workDir = appConfig.BusinessIndex.workingDir
+    val parquetBiFile = appConfig.BusinessIndex.bi
+    s"$home/$workDir/$parquetBiFile"
+  }
+
+  def getNewLinksPath(appConfig: AppConfig): String = {
+
+    val home = appConfig.home.env
+    val newLinksDir = appConfig.BusinessIndex.dataScienceDir
+    val newLinksFile = appConfig.BusinessIndex.dataScienceFile
+    s"$home/$newLinksDir/$newLinksFile"
   }
 }
