@@ -135,7 +135,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     // Set up source data for a Business with 1 company, 2 VAT, 2 PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -207,7 +208,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     // Set up source data for a Business with 1 company, no VAT, 2 PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -238,7 +240,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     // Set up source data for a Business with 1 company, 2 VAT, no PAYE
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -287,7 +290,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     val ubrn = 100L
 
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -328,7 +332,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     val ubrn = 100L
 
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -349,7 +354,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     // Company SIC = "123 SIC" (should return IndustryCode = 123)
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Active"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Active"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -401,7 +407,8 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     // Set up source data for a Business with 1 company only
     val ubrn = 100L
     val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"),
-      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD")
+      companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = Some("AB1 2CD"),
+      address1 = None, address2 = None, address3 = None, address4 = None, address5 = None
     )
     val uwdCh = UbrnWithData(ubrn, CH, company)
 
@@ -425,7 +432,10 @@ class RecordTransformersFlatSpec extends FlatSpec with Matchers {
     import sparkSession.implicits._
 
     val ubrn = 100L
-    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"), sicCode1 = Some("123 SIC"), postcode = None, address1 = Some("address1"))
+    val company = CompanyRec(companyNo = Some("CH1"), companyName = Some("TEST CH1"), companyStatus = Some("Status"),
+      sicCode1 = Some("123 SIC"), postcode = None,
+      address1 = Some("address1"), address2 = None, address3 = None, address4 = None, address5 = None
+    )
 
     val vat1 = VatRec(vatRef = Some(1L), nameLine1 = Some("TEST VAT1"), postcode = Some("AB1 2CD"),
       sic92 = Some("9"), legalStatus = Some(2), turnover = Some(12345L), address1 = Some("VatAddress"), address2 = Some("add2"), address3 = Some("add3"))

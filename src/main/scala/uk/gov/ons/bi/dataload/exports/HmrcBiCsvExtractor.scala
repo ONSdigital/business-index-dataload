@@ -51,7 +51,7 @@ object HmrcBiCsvExtractor {
     log.info(s"Writing ${paye.count} PAYE entries to $payeFile")
     BiCsvWriter.writeCsvOutput(paye, payeFile)
 
-    val hmrcOut = getHMRCOutput(biData)
+    val hmrcOut = getModifiedLegalEntities(biData)
     log.info(s"Writing ${hmrcOut.count} hmrcOut entries to $hmrcFile")
     BiCsvWriter.writeCsvOutput(hmrcOut, hmrcFile)
 
