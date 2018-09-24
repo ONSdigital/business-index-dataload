@@ -11,7 +11,9 @@ class LinksFileReader (ctxMgr: ContextMgr) extends BIDataReader {
     spark.read.parquet(srcFilePath)
   }
 
-  def readFromLocal(srcFilePath: String): String = {
-    getClass.getResource(srcFilePath).toString
+  def readFromLocal(): String = {
+    val external = getClass.getClassLoader.getResource("external").toString
+    val split = external.split("external")
+    split(0)
   }
 }

@@ -18,11 +18,17 @@ class AppConfig {
     localConfig.getString(name)
   }
 
+  def getLocalHome: String = {
+    val external = getClass.getClassLoader.getResource("external").toString
+    val split = external.split("external")
+    split(0)
+  }
+
   object home {
     lazy val cluster = getConfigStr("cluster", root)
 
     lazy val env = cluster match {
-      case "local" => getClass.getResource("/").toString
+      case "local" => getLocalHome
       case "cluster" => s"/${getConfigStr("env", root)}"
     }
 
