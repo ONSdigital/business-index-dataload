@@ -14,7 +14,8 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   val lpp = new LinksPreprocessor(ctxMgr)
 
   "readPrevLinks" should "return an empty DataFrame when given invalid inputs" in {
-      val emptyDF = lpp.readPrevLinks("invalidDir","invalidFile")
+
+      val emptyDF = lpp.readPrevLinks("invalidDir", "invalidFile")
 
       val firstRow: Int = 1
       emptyDF.take(firstRow).isEmpty shouldBe true
