@@ -36,7 +36,7 @@ object HmrcBiCsvExtractor {
 
     // Extract the different sets of data we want, and write to output files
 
-    val adminEntities = getModifiedLegalEntities(modifyLegalEntities(biData))
+    val adminEntities = getModifiedLegalEntities(biData)
     log.info(s"Writing ${adminEntities.count} Legal Entities to $hmrcFile")
     BiCsvWriter.writeCsvOutput(adminEntities, hmrcFile)
 
@@ -75,7 +75,11 @@ object HmrcBiCsvExtractor {
 
   def getModifiedLegalEntities(df: DataFrame): DataFrame = {
 
-    val LeuWithAdminData = df
+    val modifiedDF = modifyLegalEntities(df)
+
+    modifiedDF.show()
+
+     modifiedDF
       .select("id",
         "BusinessName",
         "TradingStyle",
@@ -93,13 +97,11 @@ object HmrcBiCsvExtractor {
         "CompanyNo",
         "VatRef",
         "PayeRef")
-
-    LeuWithAdminData
   }
 
   def getLegalEntities(df: DataFrame): DataFrame = {
 
-    val legalEntities = df.select("id",
+    df.select("id",
       "BusinessName",
       "TradingStyle",
       "PostCode",
@@ -114,29 +116,23 @@ object HmrcBiCsvExtractor {
       "Turnover",
       "EmploymentBands",
       "CompanyNo")
-
-    legalEntities
   }
 
   def getVatExploded(df: DataFrame): DataFrame = {
     // Flatten (ID,List(VAT Refs)) records to (ID,VAT Ref) pairs
-    val vat = df.select(DataFrameColumn.ID,DataFrameColumn.VatID)
+    df.select(DataFrameColumn.ID,DataFrameColumn.VatID)
       .where(col(DataFrameColumn.VatID).isNotNull)
       .withColumn(DataFrameColumn.VatString, explode(col(DataFrameColumn.VatID)))
       .drop(col(DataFrameColumn.VatID))
-
-    vat
   }
 
   def getPayeExploded(df: DataFrame): DataFrame = {
 
     // Flatten (ID,List(PAYE Refs)) records to (ID,PAYE Ref) pairs
-    val paye = df.select(DataFrameColumn.ID,DataFrameColumn.PayeID)
+    df.select(DataFrameColumn.ID,DataFrameColumn.PayeID)
       .where(col(DataFrameColumn.PayeID).isNotNull)
       .withColumn(DataFrameColumn.PayeString, explode(col(DataFrameColumn.PayeID)))
       .drop(col(DataFrameColumn.PayeID))
-
-    paye
   }
 
 }
