@@ -4,6 +4,7 @@ import java.io.File
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SparkSession}
+
 import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
@@ -85,7 +86,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val result = sparkSession.read.parquet(outputPath).select("CompanyName", "CompanyNumber").collect()
 
     val expected = Seq(
-      ("! LTD", "08209948")
+      ("! LTD", "08209948"),
+      ("\"A\" STAR ACCOUNTING, & TRAINING SOLUTIONS LIMITED","10252250"),
+      ("\"ARTHUR BALFOUR\",CONSERVATIVE WORKING MEN'S CLUB LIMITED","IP10067R"),
+      ("\"THE BRAMBLES\", LONGFIELD ROAD,PUDSEY LIMITED","02408030"),
+      ("\"WINKWORTH\" ELECTRIC CAR-BELLS,LIMITED","00224055"),
+      ("\"YES\" ACTION NOW, HEALTH AGENCY CIC","11371247"),
+      ("\"YES, DEAR!\" LIMITED","05497979"),
+      ("\"RED BAND\" CHEMICAL COMPANY, LIMITED","SC016876"),
+      ("\"BRYANSTON SCHOOL\",INCORPORATED","00226143")
     ).toDF("CompanyName", "CompanyNumber").collect()
 
     result shouldBe expected

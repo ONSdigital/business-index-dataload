@@ -1,7 +1,7 @@
 package uk.gov.ons.bi.dataload.ubrn
 
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{max, monotonically_increasing_id}
+import org.apache.spark.sql.functions._
 
 import scala.util.{Success, Try}
 
@@ -36,8 +36,11 @@ object UbrnManager {
 
     val df1partition = df.repartition(1)
 
+    val test1 = monotonically_increasing_id() + base
+    val test2 = when(col("GID").isNull ,null).otherwise(monotonically_increasing_id() + base)
+
     // Now add the new generated UBRN column and sequence value
-    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, monotonically_increasing_id() + base)
+    val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, when(col("GID").isNull ,null).otherwise(monotonically_increasing_id() + base))
 
     // Repartition back to original num partitions (more data shuffling)
     df1partWithUbrn.repartition(numPartitions)

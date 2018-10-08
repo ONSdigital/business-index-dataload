@@ -47,10 +47,22 @@ class CsvReader(ctxMgr: ContextMgr, tempTableName: String) extends BIDataReader 
   def readFromAdminSourceFile(srcFilePath: String, biSource: BusinessDataSource): DataFrame = {
 
     val df = biSource match {
-      case CH =>  spark.read.option("header","true").schema(AdminDataSchema.companySchema).csv(srcFilePath)
-      case PAYE =>  spark.read.option("header","true").schema(AdminDataSchema.payeSchema).csv(srcFilePath)
-      case VAT =>  spark.read.option("header","true").schema(AdminDataSchema.vatSchema).csv(srcFilePath)
-      case TCN => spark.read.option("header", "true").schema(AdminDataSchema.tcnSchema).csv(srcFilePath)
+      case CH =>  spark.read.option("header","true")
+        .option("quote", "\"")
+        .option("escape", "\"")
+        .schema(AdminDataSchema.companySchema).csv(srcFilePath)
+      case PAYE =>  spark.read.option("header","true")
+        .option("quote", "\"")
+        .option("escape", "\"")
+        .schema(AdminDataSchema.payeSchema).csv(srcFilePath)
+      case VAT =>  spark.read.option("header","true")
+        .option("quote", "\"")
+        .option("escape", "\"")
+        .schema(AdminDataSchema.vatSchema).csv(srcFilePath)
+      case TCN => spark.read.option("header", "true")
+        .option("quote", "\"")
+        .option("escape", "\"")
+        .schema(AdminDataSchema.tcnSchema).csv(srcFilePath)
     }
 
     if (BiSparkDataFrames.isDfEmpty(df))
