@@ -22,4 +22,14 @@ object PreviousLinksWriter {
     // We will also write a copy of the preprocessed Links data to the "previous" dir
     df.write.mode("overwrite").parquet(prevLinksFile)
   }
+
+  def writeOutputToHistoric(historicPath: String, df: DataFrame)= {
+
+    val fmt = DateTimeFormat.forPattern("yyyyMMddHHmm")
+
+    val now = DateTime.now()
+    val timestamp = now.toString(fmt)
+
+    df.write.mode("overwrite").parquet(s"$historicPath/$timestamp")
+  }
 }

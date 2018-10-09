@@ -131,6 +131,18 @@ class AppConfig {
     }
   }
 
+  object Historic {
+    private val histConfig = root.getConfig("historic")
+
+    val historicDir = getConfigStr("historic-dir", histConfig)
+
+    val period = getConfigStr("period", histConfig)
+
+    val historicFile = getConfigStr("historic-file", histConfig)
+
+    val historicPath = s"${home.env}/$historicDir/$period/$historicFile"
+  }
+
   object ESConfig {
 
     // allows us to pass sub-configs around separately
