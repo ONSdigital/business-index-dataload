@@ -14,5 +14,5 @@ spark2-submit --class uk.gov.ons.bi.dataload.LoadBiToEsApp \
     --executor-memory 3G \
     --jars "hdfs://prod1/${__workflow_libs}/config-1.3.2.jar,hdfs://prod1/${__workflow_libs}/elasticsearch-spark-20_2.11-6.0.0.jar" \
     --driver-java-options \
-    "-Dbi-dataload.es.nodes=$1 -Dbi-dataload.es.index=$2 -DBI-DATALOAD_ENV=${OOZIE_HOME} -DBI_DATALOAD_CLUSTER=cluster" \
+    "-Dbi-dataload.es.nodes=$1 -Dbi-dataload.es.index=$2 -DBI-DATALOAD_ENV=${OOZIE_HOME} -DBI_DATALOAD_CLUSTER=cluster -DBI_DATALOAD_YEAR=$3 -DBI_DATALOAD_MONTH=$4" \
     hdfs://prod1/${__workflow_libs}/business-index-dataload-*.jar

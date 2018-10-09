@@ -136,11 +136,13 @@ class AppConfig {
 
     val historicDir = getConfigStr("historic-dir", histConfig)
 
-    val period = getConfigStr("period", histConfig)
+    val period = getConfigStr("year", histConfig)
+
+    val month = getConfigStr("month", histConfig)
 
     val historicFile = getConfigStr("historic-file", histConfig)
 
-    val historicPath = s"${home.env}/$historicDir/$period/$historicFile"
+    val historicPath = s"${home.env}/$historicDir/$period/$month/$historicFile"
   }
 
   object ESConfig {

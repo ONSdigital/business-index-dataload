@@ -30,6 +30,6 @@ object PreviousLinksWriter {
     val now = DateTime.now()
     val timestamp = now.toString(fmt)
 
-    df.write.mode("overwrite").parquet(s"$historicPath/$timestamp")
+    df.write.mode("overwrite").parquet(s"${historicPath}_$timestamp")
   }
 }
