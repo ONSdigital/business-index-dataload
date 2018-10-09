@@ -351,4 +351,16 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
     result should be(expected)
   }
 
+  "A Transformer" should "replace missing legal statuses with a default legal status of 1" in {
+
+    val vatNoLegalStatus = fullVatRec.copy(legalStatus = None)
+    val vats = Some(Seq(vatNoLegalStatus))
+    val expected = Some("1")
+    val br = Business(100,None,vats,None)
+    val result = Transformers.getLegalStatus(br)
+
+    result should be (expected)
+
+  }
+
 }
