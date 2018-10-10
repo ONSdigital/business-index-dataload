@@ -118,6 +118,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
         |SELECT
         |CAST(paye.payeref AS STRING) AS payeref,
         | paye.name1,
+        | paye.name2,
+        | paye.name3,
         | paye.postcode,
         | paye.status,
         | CAST(paye.dec_jobs AS DOUBLE) AS dec_jobs,
@@ -145,29 +147,34 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
       val rec = {
         val payeRef = if (row.isNullAt(0)) None else Option(row.getString(0))
         val nameLine1 = if (row.isNullAt(1)) None else Option(row.getString(1))
-        val postcode = if (row.isNullAt(2)) None else Option(row.getString(2))
-        val legalStatus = if (row.isNullAt(3)) None else Option(row.getInt(3))
+        val nameLine2 = if (row.isNullAt(2)) None else Option(row.getString(2))
+        val nameLine3 = if (row.isNullAt(3)) None else Option(row.getString(3))
 
-        val decJobs = if (row.isNullAt(4)) None else Option(row.getDouble(4))
-        val marJobs = if (row.isNullAt(5)) None else Option(row.getDouble(5))
-        val junJobs = if (row.isNullAt(6)) None else Option(row.getDouble(6))
-        val sepJobs = if (row.isNullAt(7)) None else Option(row.getDouble(7))
+        val name: Option[String] = Some(s"${nameLine1.getOrElse("")} ${nameLine2.getOrElse("")} ${nameLine3.getOrElse("")}")
 
-        val jobsLastUpd = if (row.isNullAt(8)) None else Option(row.getString(8))
+        val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
+        val legalStatus = if (row.isNullAt(5)) None else Option(row.getInt(5))
 
-        val stc = if (row.isNullAt(9)) None else Option(row.getInt(9))
-        val sic = if (row.isNullAt(10)) None else Option(row.getString(10))
+        val decJobs = if (row.isNullAt(6)) None else Option(row.getDouble(6))
+        val marJobs = if (row.isNullAt(7)) None else Option(row.getDouble(7))
+        val junJobs = if (row.isNullAt(8)) None else Option(row.getDouble(8))
+        val sepJobs = if (row.isNullAt(9)) None else Option(row.getDouble(9))
 
-        val deathcode = if (row.isNullAt(11)) None else Option(row.getString(11))
+        val jobsLastUpd = if (row.isNullAt(10)) None else Option(row.getString(10))
 
-        val address1 = if (row.isNullAt(12)) None else Option(row.getString(12))
-        val address2 = if (row.isNullAt(13)) None else Option(row.getString(13))
-        val address3 = if (row.isNullAt(14)) None else Option(row.getString(14))
-        val address4 = if (row.isNullAt(15)) None else Option(row.getString(15))
-        val address5 = if (row.isNullAt(16)) None else Option(row.getString(16))
-        val tradingStyle = if (row.isNullAt(17)) None else Option(row.getString(17))
+        val stc = if (row.isNullAt(11)) None else Option(row.getInt(11))
+        val sic = if (row.isNullAt(12)) None else Option(row.getString(12))
 
-        PayeRec(payeRef, nameLine1, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
+        val deathcode = if (row.isNullAt(13)) None else Option(row.getString(13))
+
+        val address1 = if (row.isNullAt(14)) None else Option(row.getString(14))
+        val address2 = if (row.isNullAt(15)) None else Option(row.getString(15))
+        val address3 = if (row.isNullAt(16)) None else Option(row.getString(16))
+        val address4 = if (row.isNullAt(17)) None else Option(row.getString(17))
+        val address5 = if (row.isNullAt(18)) None else Option(row.getString(18))
+        val tradingStyle = if (row.isNullAt(19)) None else Option(row.getString(19))
+
+        PayeRec(payeRef, name, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
           jobsLastUpd, stc, sic, deathcode, address1, address2, address3, address4, address5, tradingStyle)
       }
       (payeRefStr, rec)
@@ -186,6 +193,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
       """
         | SELECT CAST(vatref AS LONG) AS vatref,
         | name1,
+        | name2,
+        | name3,
         | postcode,
         | CAST(sic92 AS STRING) AS sic92,
         | status,
@@ -207,19 +216,24 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
       val rec = {
         val vatRef = if (row.isNullAt(0)) None else Option(row.getLong(0))
         val nameLine1 = if (row.isNullAt(1)) None else Option(row.getString(1))
-        val postcode = if (row.isNullAt(2)) None else Option(row.getString(2))
-        val sic92 = if (row.isNullAt(3)) None else Option(row.getString(3))
-        val legalStatus = if (row.isNullAt(4)) None else Option(row.getInt(4))
-        val turnover = if (row.isNullAt(5)) None else Option(row.getLong(5))
-        val deathcode = if (row.isNullAt(6)) None else Option(row.getString(6))
-        val address1 = if (row.isNullAt(7)) None else Option(row.getString(7))
-        val address2 = if (row.isNullAt(8)) None else Option(row.getString(8))
-        val address3 = if (row.isNullAt(9)) None else Option(row.getString(9))
-        val address4 = if (row.isNullAt(10)) None else Option(row.getString(10))
-        val address5 = if (row.isNullAt(11)) None else Option(row.getString(11))
-        val tradingStyle = if (row.isNullAt(12)) None else Option(row.getString(12))
+        val nameLine2 = if (row.isNullAt(2)) None else Option(row.getString(2))
+        val nameLine3 = if (row.isNullAt(3)) None else Option(row.getString(3))
 
-        VatRec(vatRef, nameLine1, postcode, sic92, legalStatus, turnover, deathcode,
+        val name: Option[String] = Some(s"${nameLine1.getOrElse("")} ${nameLine2.getOrElse("")} ${nameLine3.getOrElse("")}")
+
+        val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
+        val sic92 = if (row.isNullAt(5)) None else Option(row.getString(5))
+        val legalStatus = if (row.isNullAt(6)) None else Option(row.getInt(6))
+        val turnover = if (row.isNullAt(7)) None else Option(row.getLong(7))
+        val deathcode = if (row.isNullAt(8)) None else Option(row.getString(8))
+        val address1 = if (row.isNullAt(9)) None else Option(row.getString(9))
+        val address2 = if (row.isNullAt(10)) None else Option(row.getString(10))
+        val address3 = if (row.isNullAt(11)) None else Option(row.getString(11))
+        val address4 = if (row.isNullAt(12)) None else Option(row.getString(12))
+        val address5 = if (row.isNullAt(13)) None else Option(row.getString(13))
+        val tradingStyle = if (row.isNullAt(14)) None else Option(row.getString(14))
+
+        VatRec(vatRef, name, postcode, sic92, legalStatus, turnover, deathcode,
           address1, address2, address3, address4, address5, tradingStyle)
       }
       (vatRefStr, rec)

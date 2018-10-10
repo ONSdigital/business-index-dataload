@@ -14,15 +14,15 @@ case class CompanyRec(companyNo: Option[String], companyName: Option[String],
                       address1: Option[String], address2: Option[String], address3: Option[String],
                       address4: Option[String], address5: Option[String]) extends BusinessElement
 
-case class VatRec(vatRef: Option[Long], nameLine1: Option[String], postcode: Option[String],
-                  sic92: Option[String], legalStatus: Option[Int],
+case class VatRec(vatRef: Option[Long], nameLine1: Option[String],
+                  postcode: Option[String], sic92: Option[String], legalStatus: Option[Int],
                   turnover: Option[Long], deathcode: Option[String] = None,
                   address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
                   address4: Option[String] = None, address5: Option[String] = None, tradingStyle: Option[String] = None
                  ) extends BusinessElement
 
-case class PayeRec(payeRef: Option[String], nameLine1: Option[String], postcode: Option[String],
-                   legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
+case class PayeRec(payeRef: Option[String], nameLine1: Option[String],
+                   postcode: Option[String], legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
                    stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None,
                    address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
