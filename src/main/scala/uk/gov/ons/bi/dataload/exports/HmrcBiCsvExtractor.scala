@@ -77,8 +77,6 @@ object HmrcBiCsvExtractor {
 
     val modifiedDF = modifyLegalEntities(df)
 
-    modifiedDF.show()
-
      modifiedDF
       .select("id",
         "BusinessName",

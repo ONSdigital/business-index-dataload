@@ -3,6 +3,7 @@ package uk.gov.ons.bi.dataload.loader
 import uk.gov.ons.bi.dataload.reader.ParquetReaders
 import uk.gov.ons.bi.dataload.utils._
 import org.elasticsearch.spark.sql._
+import uk.gov.ons.bi.dataload.writer.PreviousLinksWriter
 
 object BusinessIndexesParquetToESLoader {
 
@@ -18,6 +19,7 @@ object BusinessIndexesParquetToESLoader {
     val parquetDir = appConfig.BusinessIndex.elasticDir
     val esOutput = s"$home/$parquetDir"
 
+    val historicPath = appConfig.Historic.historicPath
      // read BI entries
 
     val pqReader = new ParquetReaders(appConfig, ctxMgr)
@@ -33,6 +35,8 @@ object BusinessIndexesParquetToESLoader {
 
     //Write the dataframe out to a file in HDFS
     biDf.write.mode("overwrite").parquet(s"$esOutput")
+
+    PreviousLinksWriter.writeOutputToHistoric(historicPath, biDf)
 
     biDf.saveToEs(s"$index/$indexType",extraEsConfig)
   }
