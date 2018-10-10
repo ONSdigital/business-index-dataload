@@ -10,11 +10,11 @@ class FieldTransformersFlatSpec extends FlatSpec with Matchers {
                        Some("Active"), Some("12345 - fubar"), Some("Company Post Code"),
   Some("address1"), Some("address2"), Some("address3"), Some("address4"), Some("address5"))
 
-  val fullVatRec = VatRec(Some(100L), Some("VAT Name Line 1"),Some("VAT Name Line 2"),Some("VAT Name Line 3"),
+  val fullVatRec = VatRec(Some(100L), Some("VAT Name Line 1"),
     Some("VAT Post Code"), Some("92"), Some(1), Some(12345), Some("3"),
     Some("address1"), Some("address2"), Some("address3"), Some("address4"), Some("address5"))
 
-  val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"), Some("PAYE Name Line 2"), Some("PAYE Name Line 3"),
+  val fullPayeRec = PayeRec(Some("PAYE REF"), Some("PAYE Name Line 1"),
     Some("PAYE Post Code"), Some(2), Some(120.0D), Some(30.0D),
     Some(60.0D), Some(90.0D), Some("Jun16"), Some(100), Some("1500"),Some("6"),
     Some("address1"), Some("address2"), Some("address3"), Some("address4"), Some("address5"))

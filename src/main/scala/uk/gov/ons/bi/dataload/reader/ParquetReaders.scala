@@ -150,6 +150,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
         val nameLine2 = if (row.isNullAt(2)) None else Option(row.getString(2))
         val nameLine3 = if (row.isNullAt(3)) None else Option(row.getString(3))
 
+        val name: Option[String] = Some(s"${nameLine1.getOrElse("")} ${nameLine2.getOrElse("")} ${nameLine3.getOrElse("")}")
 
         val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
         val legalStatus = if (row.isNullAt(5)) None else Option(row.getInt(5))
@@ -173,7 +174,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
         val address5 = if (row.isNullAt(18)) None else Option(row.getString(18))
         val tradingStyle = if (row.isNullAt(19)) None else Option(row.getString(19))
 
-        PayeRec(payeRef, nameLine1, nameLine2, nameLine3, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
+        PayeRec(payeRef, name, postcode, legalStatus, decJobs, marJobs, junJobs, sepJobs,
           jobsLastUpd, stc, sic, deathcode, address1, address2, address3, address4, address5, tradingStyle)
       }
       (payeRefStr, rec)
@@ -218,6 +219,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
         val nameLine2 = if (row.isNullAt(2)) None else Option(row.getString(2))
         val nameLine3 = if (row.isNullAt(3)) None else Option(row.getString(3))
 
+        val name: Option[String] = Some(s"${nameLine1.getOrElse("")} ${nameLine2.getOrElse("")} ${nameLine3.getOrElse("")}")
+
         val postcode = if (row.isNullAt(4)) None else Option(row.getString(4))
         val sic92 = if (row.isNullAt(5)) None else Option(row.getString(5))
         val legalStatus = if (row.isNullAt(6)) None else Option(row.getInt(6))
@@ -230,7 +233,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
         val address5 = if (row.isNullAt(13)) None else Option(row.getString(13))
         val tradingStyle = if (row.isNullAt(14)) None else Option(row.getString(14))
 
-        VatRec(vatRef, nameLine1, nameLine2,nameLine3, postcode, sic92, legalStatus, turnover, deathcode,
+        VatRec(vatRef, name, postcode, sic92, legalStatus, turnover, deathcode,
           address1, address2, address3, address4, address5, tradingStyle)
       }
       (vatRefStr, rec)

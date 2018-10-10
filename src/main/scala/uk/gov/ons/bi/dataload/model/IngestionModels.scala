@@ -15,7 +15,6 @@ case class CompanyRec(companyNo: Option[String], companyName: Option[String],
                       address4: Option[String], address5: Option[String]) extends BusinessElement
 
 case class VatRec(vatRef: Option[Long], nameLine1: Option[String],
-                  nameLine2: Option[String] = None, nameLine3: Option[String] = None,
                   postcode: Option[String], sic92: Option[String], legalStatus: Option[Int],
                   turnover: Option[Long], deathcode: Option[String] = None,
                   address1: Option[String] = None, address2: Option[String] = None, address3: Option[String] = None,
@@ -23,7 +22,6 @@ case class VatRec(vatRef: Option[Long], nameLine1: Option[String],
                  ) extends BusinessElement
 
 case class PayeRec(payeRef: Option[String], nameLine1: Option[String],
-                   nameLine2: Option[String] = None, nameLine3: Option[String] = None,
                    postcode: Option[String], legalStatus: Option[Int], decJobs: Option[Double], marJobs: Option[Double],
                    junJobs: Option[Double], sepJobs: Option[Double], jobsLastUpd: Option[String],
                    stc: Option[Int] = None, sic: Option[String] = None, deathcode: Option[String] = None,
