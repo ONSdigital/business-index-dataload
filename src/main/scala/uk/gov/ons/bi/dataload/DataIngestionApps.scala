@@ -1,8 +1,7 @@
 package uk.gov.ons.bi.dataload
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.rdd.RDD
-
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.model._

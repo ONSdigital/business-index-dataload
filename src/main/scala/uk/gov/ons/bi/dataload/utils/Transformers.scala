@@ -47,14 +47,26 @@ object Transformers {
     val co: Option[String] = br.company.flatMap {
       _.companyName
     }
-    val vat: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+    val vatName1: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
       _.nameLine1
     }
-    val paye: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+    val vatName2: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.nameLine2
+    }
+    val vatName3: Option[String] = br.vat.flatMap { vs => vs.headOption }.flatMap {
+      _.nameLine3
+    }
+    val payeName1: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
       _.nameLine1
+    }
+    val payeName2: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.nameLine2
+    }
+    val payeName3: Option[String] = br.paye.flatMap { ps => ps.headOption }.flatMap {
+      _.nameLine3
     }
     // list in order of preference
-    val candidates = Seq(co, vat, paye)
+    val candidates = Seq(co, vatName1, vatName2, vatName3, payeName1, payeName2, payeName3)
     // Take first non-empty name value from list
     candidates.foldLeft[Option[String]](None)(_ orElse _).map(_.toUpperCase)
   }

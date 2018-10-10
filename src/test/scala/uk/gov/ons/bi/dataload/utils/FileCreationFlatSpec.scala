@@ -3,8 +3,7 @@ package uk.gov.ons.bi.dataload.utils
 import java.io.File
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SparkSession}
-
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
@@ -234,19 +233,19 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
 
     val df = sparkSession.read.parquet(biFile)
-    val results = df.sort("id")
+    val actual = df.sort("id")
 
     val data = Seq(
-      Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array()),
-      Row(1000000000000004L, "NAME1", "tradstyle1", 1000000000000004L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(862764963000L), Array()),
-      Row(1000000000000003L, "NAME1", "tradstyle1", 1000000000000003L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(868504062000L), Array("035H7A22627")),
       Row(1000000000000001L, "NAME1", "tradstyle1", 1000000000000001L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null, Array(), Array("065H7Z31732")),
-      Row(1000000000000005L, "NAME1", "tradstyle1", 1000000000000005L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"))
+      Row(1000000000000002L, "! LTD", "tradstyle1", 1000000000000002L, "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", Array(312764963000L), Array()),
+      Row(1000000000000003L, "VAT_NAME3", "tradstyle1", 1000000000000003L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(868504062000L), Array("035H7A22627")),
+      Row(1000000000000004L, "VAT_NAME2", "tradstyle1", 1000000000000004L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(862764963000L), Array()),
+      Row(1000000000000005L, "PAYE_NAME3", "tradstyle1", 1000000000000005L, "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, Array(123764963000L), Array("125H7A71620"))
     )
 
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.linkSchema).sort("id")
 
-    results.collect() shouldBe expected.collect
+    actual.collect() shouldBe expected.collect
   }
 
   "HmrcBiExportApp - HMRC" should "output Hmrc combined file containing legal units with admin data" in {
@@ -272,20 +271,20 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val modLeu = HmrcBiCsvExtractor.modifyLegalEntities(biData)
     val adminEntities = HmrcBiCsvExtractor.getModifiedLegalEntities(modLeu)
     BiCsvWriter.writeCsvOutput(adminEntities, outputCSV)
-    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
+    val actual = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val data = Seq(
-      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", "[312764963000]", "[]"),
-      Row("1000000000000004", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[862764963000]", "[]"),
-      Row("1000000000000003", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[868504062000]", "[035H7A22627]"),
       Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null, "[]", "[065H7Z31732]"),
-      Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
+      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948", "[312764963000]", "[]"),
+      Row("1000000000000003", "VAT_NAME3", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[868504062000]", "[035H7A22627]"),
+      Row("1000000000000004", "VAT_NAME2", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[862764963000]", "[]"),
+      Row("1000000000000005", "PAYE_NAME3", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null, "[123764963000]", "[125H7A71620]")
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.hmrcSchema).sort("id")
 
     // test expected against results
-    df.collect() shouldBe expected.collect()
+    actual.collect() shouldBe expected.collect()
   }
 
   "HmrcBiExportApp - LEU" should "output Hmrc combined file containing legal units" in {
@@ -310,20 +309,20 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // generate hmrc csv and read as dataframe
     val legalEntities = HmrcBiCsvExtractor.getLegalEntities(biData)
     BiCsvWriter.writeCsvOutput(legalEntities, outputCSV)
-    val df = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
+    val actual = sparkSession.read.option("header", true).csv(outputCSV).sort("id")
 
     // expected data
     val data = Seq(
-      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948"),
-      Row("1000000000000004", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
-      Row("1000000000000003", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
       Row("1000000000000001", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, null, null, null),
-      Row("1000000000000005", "NAME1", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null)
+      Row("1000000000000002", "! LTD", "tradstyle1", "LS10 2RU", "METROHOUSE 57 PEPPER ROAD", "HUNSLET", "LEEDS", "YORKSHIRE", null, "99999", "1", "A", "A", null, "08209948"),
+      Row("1000000000000003", "VAT_NAME3", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
+      Row("1000000000000004", "VAT_NAME2", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null),
+      Row("1000000000000005", "PAYE_NAME3", "tradstyle1", "postcode", "address1", "address2", "address3", "address4", "address5", null, "0", null, "A", null, null)
     )
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.leuSchema).sort("id")
 
     // test expected against results
-    df.collect() shouldBe expected.collect()
+    actual.collect() shouldBe expected.collect()
   }
 
   "HmrcBiExportApp - VAT" should "output Hmrc combined file containing VAT data" in {
