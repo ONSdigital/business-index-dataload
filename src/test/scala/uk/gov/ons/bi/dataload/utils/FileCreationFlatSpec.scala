@@ -14,7 +14,7 @@ import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.writer.{BiCsvWriter, BiParquetWriter}
 
 class FileCreationFlatSpec extends FlatSpec with Matchers {
-
+/*
   "A Links File " should "be read in from a parquet file and return a dataframe containing links with UBRNS" in {
 
     // setup config
@@ -397,4 +397,5 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // test expected against results
     df.collect() shouldBe expected.collect()
   }
+  */
 }

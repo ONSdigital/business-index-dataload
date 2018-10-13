@@ -34,12 +34,17 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
   val prevDir = appConfig.BusinessIndex.prevPath
   val linksFile = appConfig.BusinessIndex.links
 
+  // getAdminFilePaths
+  val externalDir = appConfig.External.externalPath
+  val vatPath = s"$externalDir/${appConfig.External.vatPath}"
+  val payePath = s"$externalDir/${appConfig.External.payePath}"
+
   // load links File
   val newLinks = lpp.readNewLinks(inputPath)
   val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
   // pre-process data
-  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
   //write to parquet
   lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)

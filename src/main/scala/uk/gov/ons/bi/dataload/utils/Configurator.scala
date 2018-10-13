@@ -63,6 +63,9 @@ class AppConfig {
     lazy val tcnToSic = getConfigStr("tcn-to-sic", extConfig)
 
     lazy val externalPath = s"${home.env}/$extDir"
+    lazy val vatPath = s"$vatDir/$vat"
+    lazy val payePath = s"$payeDir/$paye"
+    lazy val chPath = s"$chDir/$ch"
 
     override def toString: String = {
       s"""[
