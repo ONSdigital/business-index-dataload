@@ -99,11 +99,12 @@ class LinkMatcher(ctxMgr: ContextMgr) {
   def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame, vatPath: String, payePath: String) = {
 
     // write new method for matching CH takes priority on UBRN
+    val chResults = getChMatches(oldLinks, newLinks)
 
-    val complex = getComplex(newLinks, oldLinks, vatPath, payePath)
-    val matched = excludeMatches(oldLinks, newLinks, complex)
+    val complex = getComplex(chResults.unmatchedNewLinks, chResults.unmatchedOldLinks, vatPath, payePath)
+    val matched = excludeMatches(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks, complex)
+    val withOldUbrn = chResults.matched.union(matched.matched.select("UBRN","GID","CH","VAT","PAYE"))
 
-    val withOldUbrn = matched.matched.select("UBRN","GID","CH","VAT","PAYE")
     val needUbrn = matched.unmatchedNewLinks
 
     (withOldUbrn, needUbrn)

@@ -35,7 +35,7 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   "preProcessLinks" should "apply UBRN to newly created Legal Units where previous links is empty and new links are valid" in {
 
     val newLinks = Seq(
-      (Array("ch1"), Array(""), Array("065H7Z31732"))
+      (Array("ch1"), Array(null.asInstanceOf[String]), Array("065H7Z31732"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = BiSparkDataFrames.emptyLinkWithUbrnDf(ctxMgr)
@@ -43,7 +43,7 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000001L, Array("ch1"), Array(""), Array("065H7Z31732"))
+      Row(1000000000000001L, Array("ch1"), Array(null.asInstanceOf[String]), Array("065H7Z31732"))
     )
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
 
@@ -53,25 +53,25 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "apply UBRN to newly created Legal Units and Edit existing links given valid inputs for new links and previous links" in {
 
     val newLinks = Seq(
-      (Array("ch1"), Array(""), Array("")),
-      (Array("ch3"), Array(""), Array("paye1")),
-      (Array("ch2"), Array("vat1"), Array("")),
-      (Array(""), Array(""), Array("paye2"))
+      (Array("ch1"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String])),
+      (Array("ch3"), Array(null.asInstanceOf[String]), Array("065H7Z31732")),
+      (Array("ch2"), Array("862764963000"), Array(null.asInstanceOf[String])),
+      (Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("035H7A22627"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000001L, Array("ch1"), Array(""), Array("paye1")),
-      (1000000000000010L, Array("ch2"), Array(""), Array("")),
-      (1000000000000020L, Array("ch3"), Array(""), Array("paye2"))
+      (1000000000000001L, Array("ch1"), Array(null.asInstanceOf[String]), Array("065H7Z31732")),
+      (1000000000000010L, Array("ch2"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String])),
+      (1000000000000020L, Array("ch3"), Array(null.asInstanceOf[String]), Array("035H7A22627"))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000001L, Array("ch1"), Array(""), Array("")),
-      Row(1000000000000010L, Array("ch2"), Array("vat1"), Array("")),
-      Row(1000000000000020L, Array("ch3"), Array(""), Array("paye1")),
-      Row(1000000000000021L, Array(""), Array(""), Array("paye2"))
+      Row(1000000000000001L, Array("ch1"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String])),
+      Row(1000000000000010L, Array("ch2"), Array("862764963000"), Array(null.asInstanceOf[String])),
+      Row(1000000000000020L, Array("ch3"), Array(null.asInstanceOf[String]), Array("065H7Z31732")),
+      Row(1000000000000021L, Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("035H7A22627"))
     )
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
 
@@ -81,17 +81,17 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "Update UBRN with dead vat" in {
 
     val newLinks = Seq(
-      (Array(""), Array("vat1","vat3"), Array(""))
+      (Array(null.asInstanceOf[String]), Array("868500288000","123764963000"), Array(null.asInstanceOf[String]))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000100L, Array(""), Array("vat1", "vat2","vat3"), Array(""))
+      (1000000000000100L, Array(null.asInstanceOf[String]), Array("868500288000", "312764963000","123764963000"), Array(null.asInstanceOf[String]))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000100L, Array(""), Array("vat1", "vat3"), Array(""))
+      Row(1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000", "312764963000"), Array(null.asInstanceOf[String]))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -112,20 +112,20 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "example 1 - merge admin units into one legal unit" in {
 
     val newLinks = Seq(
-      (Array(""), Array("VAT1"), Array("PAYE2")),
-      (Array(""), Array(""), Array(""))
+      (Array(null.asInstanceOf[String]), Array("862764963000"), Array("035H7A22627")),
+      (Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000100L, Array(""), Array("VAT1"), Array("")),
-      (1000000000000101L, Array(""), Array(""), Array("PAYE2"))
+      (1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array(null.asInstanceOf[String])),
+      (1000000000000101L, Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("035H7A22627"))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000100L, Array(""), Array("VAT1"), Array("PAYE2")),
-      Row(1000000000000101L, Array(""), Array(""), Array(""))
+      Row(1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array("035H7A22627")),
+      Row(1000000000000101L, Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -136,19 +136,19 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "example 2 - split admin units into multipe legal units" in {
 
     val newLinks = Seq(
-      (Array(""), Array("VAT1"), Array("")),
-      (Array(""), Array(""), Array("PAYE1"))
+      (Array(null.asInstanceOf[String]), Array("862764963000"), Array(null.asInstanceOf[String])),
+      (Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("065H7Z31732"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000100L, Array(""), Array("VAT1"), Array("PAYE1"))
+      (1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array("065H7Z31732"))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000100L, Array(""), Array("VAT1"), Array("")),
-      Row(1000000000000101L, Array(""), Array(""), Array("PAYE1"))
+      Row(1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array(null.asInstanceOf[String])),
+      Row(1000000000000101L, Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("065H7Z31732"))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -159,20 +159,20 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "example 3 - move admin units between multiple legal units" in {
 
     val newLinks = Seq(
-      (Array(""), Array("VAT1"), Array("PAYE1")),
-      (Array(""), Array("VAT2"), Array("PAYE2"))
+      (Array(null.asInstanceOf[String]), Array("862764963000"), Array("065H7Z31732")),
+      (Array(null.asInstanceOf[String]), Array("123764963000"), Array("035H7A22627"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000100L, Array(""), Array("VAT1"), Array("PAYE1","PAYE2")),
-      (1000000000000101L, Array(""), Array("VAT2"), Array(""))
+      (1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array("065H7Z31732","035H7A22627")),
+      (1000000000000101L, Array(null.asInstanceOf[String]), Array("123764963000"), Array(null.asInstanceOf[String]))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000100L, Array(""), Array("VAT1"), Array("PAYE1")),
-      Row(1000000000000101L, Array(""), Array("VAT2"), Array("PAYE2"))
+      Row(1000000000000100L, Array(null.asInstanceOf[String]), Array("862764963000"), Array("065H7Z31732")),
+      Row(1000000000000101L, Array(null.asInstanceOf[String]), Array("123764963000"), Array("035H7A22627"))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -183,22 +183,22 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "example 4 - Splits and appends admin units across multiple legal units" in {
 
     val newLinks = Seq(
-      (Array("CH1"), Array("VAT1"), Array("PAYE1","PAYE1000")),
-      (Array("CH2"), Array("VAT2"), Array("PAYE2")),
-      (Array(""), Array("VAT3"), Array("PAYE3"))
+      (Array("CH1"), Array("862764963000"), Array("065H7Z31732","065H7Z31732000")),
+      (Array("CH2"), Array("123764963000"), Array("035H7A22627")),
+      (Array(null.asInstanceOf[String]), Array("312764963000"), Array("125H7A71620"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000100L, Array("CH1"), Array("VAT1", "VAT2", "VAT3"), Array("PAYE1", "PAYE2", "PAYE3")),
-      (1000000000000101L, Array("CH2"), Array("VAT2"), Array(""))
+      (1000000000000100L, Array("CH1"), Array("862764963000", "123764963000", "312764963000"), Array("065H7Z31732", "035H7A22627", "125H7A71620")),
+      (1000000000000101L, Array("CH2"), Array("123764963000"), Array(null.asInstanceOf[String]))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000100L, Array("CH1"), Array("VAT1"), Array("PAYE1", "PAYE1000")),
-      Row(1000000000000101L, Array("CH2"), Array("VAT2"), Array("PAYE2")),
-      Row(1000000000000102L, Array(""), Array("VAT3"), Array("PAYE3"))
+      Row(1000000000000100L, Array("CH1"), Array("862764963000"), Array("065H7Z31732", "065H7Z31732000")),
+      Row(1000000000000101L, Array("CH2"), Array("123764963000"), Array("035H7A22627")),
+      Row(1000000000000102L, Array(null.asInstanceOf[String]), Array("312764963000"), Array("125H7A71620"))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -209,21 +209,21 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
   it should "example 5 - No UBRN value present in legal unit structure so new UBRN is applied" in {
 
     val newLinks = Seq(
-      (Array("CH2"), Array("VAT2"), Array("PAYE2")),
-      (Array(""), Array("VAT7"), Array("PAYE7"))
+      (Array("CH2"), Array("123764963000"), Array("035H7A22627")),
+      (Array(null.asInstanceOf[String]), Array("868504062000"), Array("065H7Z31732"))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000101L, Array("CH2"), Array("VAT2"), Array("")),
-      (1000000000000102L, Array(""), Array("VAT7"), Array("")),
-      (1000000000000103L, Array(""), Array(""), Array("PAYE7"))
+      (1000000000000101L, Array("CH2"), Array("123764963000"), Array(null.asInstanceOf[String])),
+      (1000000000000102L, Array(null.asInstanceOf[String]), Array("312764963000"), Array(null.asInstanceOf[String])),
+      (1000000000000103L, Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]), Array("125H7A71620"))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
     val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     val expected = Seq(
-      Row(1000000000000101L, Array("CH2"), Array("VAT2"), Array("PAYE2")),
-      Row(1000000000000104L, Array(""), Array("VAT7"), Array("PAYE7"))
+      Row(1000000000000101L, Array("CH2"), Array("123764963000"), Array("035H7A22627")),
+      Row(1000000000000104L, Array(null.asInstanceOf[String]), Array("312764963000"), Array("125H7A71620"))
     )
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
@@ -235,27 +235,29 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
 
   it should "test bed" in {
     val newLinks = Seq(
-      (Array("1"), Array("868500288000", "123764963000"), Array("035H7A22627", "125H7A71620")),
-      (Array("2"), Array("868504062000"), Array("065H7Z31732")),
-      (Array("CH3"), Array(""), Array(""))
+      (Array(null.asInstanceOf[String]), Array("868500288000", "123764963000"), Array("035H7A22627", "125H7A71620")),
+      (Array(null.asInstanceOf[String]), Array("868504062000"), Array("065H7Z31732")),
+      (Array("CH3"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
     ).toDF("CH","VAT","PAYE")
 
     val prevLinks = Seq(
-      (1000000000000101L, Array(""), Array("868500288000", "312764963000"), Array("")),
-      (1000000000000102L, Array(""), Array("868504062000"), Array("065H7Z31732", "035H7A22627")),
-      (1000000000000103L, Array("CH3"), Array(""), Array(""))
+      (1000000000000101L, Array(null.asInstanceOf[String]), Array("868500288000", "312764963000"), Array(null.asInstanceOf[String])),
+      (1000000000000102L, Array(null.asInstanceOf[String]), Array("868504062000"), Array("065H7Z31732", "035H7A22627")),
+      (1000000000000103L, Array("CH3"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
     ).toDF("UBRN", "CH","VAT","PAYE")
 
-    val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
-
-    actual.show(false)
+    val actual = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath).sort("UBRN")
 
     val expected = Seq(
-      Row(1000000000000101L, Array("CH2"), Array("VAT2"), Array("PAYE2")),
-      Row(1000000000000104L, Array(""), Array("VAT7"), Array("PAYE7"))
+      Row(1000000000000102L, Array(null.asInstanceOf[String]), Array("868500288000", "123764963000"), Array("035H7A22627", "125H7A71620")),
+      Row(1000000000000103L, Array("CH3"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String])),
+      Row(1000000000000104L, Array(null.asInstanceOf[String]),Array("868504062000"), Array("065H7Z31732"))
     )
 
-    val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema)
+    val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema).sort("UBRN")
+
+    actual.show()
+    expectedDf.show()
 
     assertSmallDataFrameEquality(actual, expectedDf)
   }
