@@ -3,7 +3,7 @@ package uk.gov.ons.bi.dataload.utils
 import java.io.File
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
@@ -14,7 +14,7 @@ import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.writer.{BiCsvWriter, BiParquetWriter}
 
 class FileCreationFlatSpec extends FlatSpec with Matchers {
-/*
+
   "A Links File " should "be read in from a parquet file and return a dataframe containing links with UBRNS" in {
 
     // setup config
@@ -31,6 +31,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val linksFile = appConfig.BusinessIndex.links
     val outputFilePath = s"$workingDir/$linksFile"
 
+    // getAdminFilePaths
+    val externalDir = appConfig.External.externalPath
+    val vatPath = s"$externalDir/${appConfig.External.vatPath}"
+    val payePath = s"$externalDir/${appConfig.External.payePath}"
+
     // Used to create initial input parquet file
     val jsonPath = parquetReader.readFromLocal + "links.json"
 
@@ -44,7 +49,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
     // pre-process data
-    val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+    val linksToSave = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     //write to parquet
     lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
@@ -397,5 +402,4 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     // test expected against results
     df.collect() shouldBe expected.collect()
   }
-  */
 }

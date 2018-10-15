@@ -36,9 +36,6 @@ object UbrnManager {
 
     val df1partition = df.repartition(1)
 
-    val test1 = monotonically_increasing_id() + base
-    val test2 = when(col("GID").isNull ,null).otherwise(monotonically_increasing_id() + base)
-
     // Now add the new generated UBRN column and sequence value
     val df1partWithUbrn = df1partition.withColumn(defaultUbrnColName, when(col("GID").isNull ,null).otherwise(monotonically_increasing_id() + base))
 

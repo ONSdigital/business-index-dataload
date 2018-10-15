@@ -1,10 +1,7 @@
 package uk.gov.ons.bi.dataload.ubrn
 
-import java.util.UUID
-
 import com.google.inject.Singleton
 import org.apache.spark.sql._
-import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 import org.apache.spark.storage.StorageLevel
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
@@ -74,23 +71,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     applySqlRule(matchQuery, oldLinks, newLinks)
   }
 
-
-  def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-    // Different rule for each matching process
-    val matchQuery =
-      """
-        SELECT old.UBRN AS UBRN, new.GID as GID, new.CH, new.VAT, new.PAYE
-        |FROM old_links AS old
-        |INNER JOIN new_links AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
-        |WHERE old.CH[0] IS NULL
-        | AND new.CH[0] IS NULL
-        | AND (new.VAT IS NOT NULL OR new.PAYE IS NOT NULL)
-        | AND (old.VAT IS NOT NULL OR old.PAYE IS NOT NULL)
-      """.stripMargin
-
-    applySqlRule(matchQuery, oldLinks, newLinks)
-  }
-
   def combineLinksToSave(linksWithUbrn1: DataFrame, linksWithUbrn2: DataFrame): DataFrame = {
     linksWithUbrn1.select("UBRN", "CH", "VAT", "PAYE")
       .union(linksWithUbrn2.select("UBRN", "CH", "VAT", "PAYE"))
@@ -105,19 +85,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     val matched = excludeMatches(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks, complex)
     val withOldUbrn = chResults.matched.union(matched.matched.select("UBRN","GID","CH","VAT","PAYE"))
 
-    val needUbrn = matched.unmatchedNewLinks
-
-    (withOldUbrn, needUbrn)
-  }
-
-  def applyAllMatchingRulesOld(newLinks: DataFrame, oldLinks: DataFrame, vatPath: String, payePath: String) = {
-
-    val chResults = getChMatches(oldLinks, newLinks)
-
-    val complex = getComplex(chResults.unmatchedNewLinks, chResults.unmatchedOldLinks, vatPath, payePath)
-    val matched = excludeMatches(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks, complex)
-
-    val withOldUbrn = chResults.matched.union(matched.matched.select("UBRN","GID","CH","VAT","PAYE"))
     val needUbrn = matched.unmatchedNewLinks
 
     (withOldUbrn, needUbrn)

@@ -256,9 +256,6 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
 
     val expectedDf = spark.createDataFrame(sc.parallelize(expected),BiSparkDataFrames.linkWithUbrnSchema).sort("UBRN")
 
-    actual.show()
-    expectedDf.show()
-
     assertSmallDataFrameEquality(actual, expectedDf)
   }
 }
