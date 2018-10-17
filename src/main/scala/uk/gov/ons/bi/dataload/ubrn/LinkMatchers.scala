@@ -92,10 +92,16 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
   def getComplex(newLinks: DataFrame, oldLinks: DataFrame, vatPath: String, payePath: String): DataFrame = {
 
+    val numPartitions = newLinks.rdd.getNumPartitions
     val prevBirth = getPrevBirth(oldLinks, vatPath, payePath)
-    val newBirth = getNewBirth(newLinks, vatPath, payePath)
-    val birthMatched = newBirth.join(prevBirth, expr("array_contains(collected_Units,oldest_unit)"))
-    birthMatched
+    val joinedNewLinks = joinLinks(newLinks).repartition(numPartitions)
+    joinedNewLinks.join(prevBirth).where(joinedNewLinks("vatref")===prevBirth("oldest_unit"))
+  }
+
+  def joinLinks(df: DataFrame) = {
+    val vat = df.withColumn("vatref", explode(df("VAT")))
+    val paye = df.withColumn("payeref", explode(df("PAYE")))
+    vat.union(paye)
   }
 
   def getPrevBirth(df: DataFrame, vatPath: String, payePath: String) = {
@@ -108,34 +114,15 @@ class LinkMatcher(ctxMgr: ContextMgr) {
         .union(payeBirth)
         .groupBy("UBRN").agg(min("timestamp").as("timestamp"),
           min("vatref").as("oldest_unit")
-      )
-  }
-
-  def getNewBirth(df: DataFrame, vatPath: String, payePath: String) = {
-
-    // get birthdate of admin unit
-    val (vatBirth, payeBirth) = assignBirth(df, vatPath, payePath)
-
-    val unionDF = vatBirth.union(payeBirth).sort("timestamp")
-
-    // concat admin units based on ID
-      unionDF
-        .groupBy("GID")
-        .agg(
-          collect_list("vatref") as "collected_Units",
-          collect_list("timestamp") as "collect_Time",
-          min("CH").as("CH"),
-          min("VAT").as("VAT"),
-          min("PAYE").as("PAYE")
-        )
+      ).drop("timestamp")
   }
 
   // ask about last period's birthdate for admin units since new month will have updated admin unit files
   def assignBirth(df: DataFrame, vatPath: String, payePath: String) = {
 
     // explode admin units
-    val vat = df.withColumn("vatref", explode(df("VAT")))//.drop("CH", "VAT", "PAYE")
-    val paye = df.withColumn("payeref", explode(df("PAYE")))//.drop("CH","VAT", "PAYE")
+    val vat = df.withColumn("vatref", explode(df("VAT"))).drop("CH","VAT", "PAYE")
+    val paye = df.withColumn("payeref", explode(df("PAYE"))).drop("CH","VAT", "PAYE")
 
     // read in VAT and PAYE
     val pattern = "dd/MM/yyyy"

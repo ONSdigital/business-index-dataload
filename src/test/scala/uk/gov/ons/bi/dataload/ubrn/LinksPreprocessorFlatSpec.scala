@@ -258,4 +258,34 @@ class LinksPreprocessorFlatSpec extends FlatSpec with Matchers with SparkSession
 
     assertSmallDataFrameEquality(actual, expectedDf)
   }
+
+//  it should "test2" in {
+//
+//    val newLinksDF = Seq(
+//      (Array(null.asInstanceOf[String]), Array("868500288000", "123764963000"), Array("035H7A22627", "125H7A71620")),
+//      (Array(null.asInstanceOf[String]), Array("868504062000"), Array("065H7Z31732")),
+//      (Array("CH3"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
+//    ).toDF("CH","VAT","PAYE")
+//
+//    val prevLinks = Seq(
+//      (1000000000000101L, Array(null.asInstanceOf[String]), Array("868500288000", "312764963000"), Array(null.asInstanceOf[String])),
+//      (1000000000000102L, Array(null.asInstanceOf[String]), Array("868504062000"), Array("065H7Z31732", "035H7A22627")),
+//      (1000000000000103L, Array("CH3"), Array(null.asInstanceOf[String]), Array(null.asInstanceOf[String]))
+//    ).toDF("UBRN", "CH","VAT","PAYE")
+//
+//    val generateUuid: UserDefinedFunction = udf(() => UUID.randomUUID().toString)
+//    val newLinks = newLinksDF.withColumn("GID", generateUuid())
+//    newLinks.persist(StorageLevel.MEMORY_AND_DISK)
+//
+//    val matcher = new LinkMatcher(ctxMgr)
+//
+//    val test = matcher.getMatchingUbrn(newLinks, vatPath, payePath)
+//
+//    val prevBirth = matcher.getPrevBirth(prevLinks, vatPath, payePath)
+//
+//    prevBirth.show()
+//
+//    val matched = test.join(prevBirth).where(test("vatref")===prevBirth("oldest_unit"))
+//    matched.show()
+//  }
 }
