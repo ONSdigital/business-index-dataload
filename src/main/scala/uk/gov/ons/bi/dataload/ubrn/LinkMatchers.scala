@@ -94,14 +94,22 @@ class LinkMatcher(ctxMgr: ContextMgr) {
 
     val numPartitions = newLinks.rdd.getNumPartitions
     val prevBirth = getPrevBirth(oldLinks, vatPath, payePath)
-    val joinedNewLinks = joinLinks(newLinks).repartition(numPartitions)
-    joinedNewLinks.join(prevBirth).where(joinedNewLinks("vatref")===prevBirth("oldest_unit"))
+    val joinedNewLinks = joinLinks(newLinks, vatPath, payePath).repartition(numPartitions)
+    joinedNewLinks.join(prevBirth).where(joinedNewLinks("oldest_unit")===prevBirth("oldest_unit"))
   }
 
-  def joinLinks(df: DataFrame) = {
-    val vat = df.withColumn("vatref", explode(df("VAT")))
-    val paye = df.withColumn("payeref", explode(df("PAYE")))
-    vat.union(paye)
+  def joinLinks(df: DataFrame, vatPath: String, payePath: String) = {
+    val (vatBirth, payeBirth) = assignBirth(df, vatPath, payePath)
+
+    // for each UBRN assign oldest admin unit to it
+    vatBirth
+      .union(payeBirth)
+      .groupBy("GID").agg(min("timestamp").as("timestamp"),
+      min("vatref").as("oldest_unit"),
+      min("CH").as("CH"),
+      min("VAT").as("VAT"),
+      min("PAYE").as("PAYE")
+    ).drop("timestamp")
   }
 
   def getPrevBirth(df: DataFrame, vatPath: String, payePath: String) = {
@@ -121,8 +129,8 @@ class LinkMatcher(ctxMgr: ContextMgr) {
   def assignBirth(df: DataFrame, vatPath: String, payePath: String) = {
 
     // explode admin units
-    val vat = df.withColumn("vatref", explode(df("VAT"))).drop("CH","VAT", "PAYE")
-    val paye = df.withColumn("payeref", explode(df("PAYE"))).drop("CH","VAT", "PAYE")
+    val vat = df.withColumn("vatref", explode(df("VAT")))//.drop("CH","VAT", "PAYE")
+    val paye = df.withColumn("payeref", explode(df("PAYE")))//.drop("CH","VAT", "PAYE")
 
     // read in VAT and PAYE
     val pattern = "dd/MM/yyyy"
