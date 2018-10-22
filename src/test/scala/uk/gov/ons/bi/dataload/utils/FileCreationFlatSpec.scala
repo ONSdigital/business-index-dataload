@@ -250,6 +250,10 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.linkSchema).sort("id")
 
+    actual.show()
+
+    expected.show()
+
     actual.collect() shouldBe expected.collect
   }
 

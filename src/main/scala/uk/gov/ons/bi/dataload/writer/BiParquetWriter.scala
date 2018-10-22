@@ -55,8 +55,10 @@ object BiParquetWriter {
   def tempFixPayeDupes(df: DataFrame): DataFrame = {
     val explodedPaye = df.withColumn("temp", explode(df("PayeRefs"))).dropDuplicates()
 
-    val rejoinedPaye = explodedPaye.groupBy("id").agg(collect_list("temp") as "PayeRefs")
+    val collectedNonDupes = explodedPaye.groupBy("id").agg(collect_list("temp") as "PayeRefs")
 
-    df.drop("PayeRefs").join(rejoinedPaye, Seq("id"), "leftOuter")
+    val rejoinedPaye = df.drop("PayeRefs").join(collectedNonDupes, Seq("id"), "leftOuter")
+
+    rejoinedPaye.withColumn("PayeRefs", when(rejoinedPaye("PayeRefs").isNull, Array.empty[String]).otherwise(rejoinedPaye("PayeRefs")))
   }
 }

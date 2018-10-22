@@ -148,6 +148,16 @@ class AppConfig {
     val historicPath = s"${home.env}/$historicDir/$period/$month/$historicFile"
   }
 
+  object Metrics {
+    private val metricsConfig = root.getConfig("metrics")
+
+    val metricsDir = getConfigStr("metrics-dir", metricsConfig)
+
+    val dataloadDir = getConfigStr("dataload-dir", metricsConfig)
+
+    val metricsPath = getConfigStr("metrics-file", metricsConfig)
+  }
+
   object ESConfig {
 
     // allows us to pass sub-configs around separately
