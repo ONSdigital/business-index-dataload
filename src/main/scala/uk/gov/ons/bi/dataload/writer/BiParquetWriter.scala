@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload.writer
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 
 import uk.gov.ons.bi.dataload.model.BusinessIndex
 import uk.gov.ons.bi.dataload.utils.ContextMgr
@@ -41,11 +42,21 @@ object BiParquetWriter {
       "VatRefs",
       "PayeRefs")
 
+    val temp = tempFixPayeDupes(biDf3)
+
     // Write BI DataFrame to Parquet file. We will load it into ElasticSearch separately.
-    biDf3.write.mode("overwrite").parquet(biOutputFile)
+    temp.write.mode("overwrite").parquet(biOutputFile)
   }
 
   def writeParquet(df: DataFrame, targetFilePath: String):Unit = {
     df.write.mode("overwrite").parquet(targetFilePath)
+  }
+
+  def tempFixPayeDupes(df: DataFrame): DataFrame = {
+    val explodedPaye = df.withColumn("temp", explode(df("PayeRefs"))).dropDuplicates()
+
+    val rejoinedPaye = explodedPaye.groupBy("id").agg(collect_list("temp") as "PayeRefs")
+
+    df.drop("PayeRefs").join(rejoinedPaye, Seq("id"), "leftOuter")
   }
 }
