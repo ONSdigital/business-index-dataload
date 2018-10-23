@@ -86,11 +86,16 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   }
   val ctxMgr = new ContextMgr(sparkSess)
 
+  // get admin dataframes
+  val chDF = parquetReader.getDataFrameFromParquet(CH)
+  val vatDF = parquetReader.getDataFrameFromParquet(VAT)
+  val payeDF = parquetReader.getDataFrameFromParquet(PAYE)
+
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
-  val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader()
-  val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader()
-  val PAYEReader: RDD[(String, PayeRec)] = parquetReader.payeParquetReader()
+  val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader(chDF)
+  val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader(vatDF)
+  val PAYEReader: RDD[(String, PayeRec)] = parquetReader.payeParquetReader(payeDF)
 
   val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 
@@ -120,7 +125,8 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   val metricsPath = appConfig.Metrics.metricsPath
 
   BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
-  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, chDF, vatDF, payeDF, ctxMgr)
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, chDF, vatDF, payeDF, ctxMgr, true)
 }
 
 object LoadBiToEsApp extends DataloadApp {

@@ -31,11 +31,8 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     readFromSourceFile(dataFile)
   }
 
-  def chParquetReader(): RDD[(String, CompanyRec)] = {
-    // Yields RDD of (Company No, company record)
+  def chParquetReader(df: DataFrame): RDD[(String, CompanyRec)] = {
 
-    // Read Parquet data via SparkSQL but return as RDD so we can use RDD joins etc.
-    val df = getDataFrameFromParquet(CH)
     // Using SQL for more flexibility with conflicting datatypes in sample/real data
     //df.registerTempTable("temp_comp")
     df.createOrReplaceTempView("temp_comp")
@@ -96,11 +93,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     }.filter(lr => lr.ubrn >= 0) // Throw away Links with bad UBRNs
   }
 
-  def payeParquetReader(): RDD[(String, PayeRec)] = {
-
-    // Yields RDD of (PAYE Ref, PAYE record)
-
-    val payeDf = getDataFrameFromParquet(PAYE)
+  def payeParquetReader(payeDf: DataFrame): RDD[(String, PayeRec)] = {
 
     // Need to join to lookup table TCN-->SIC
     val lookupDf = getDataFrameFromParquet(TCN_SIC_LOOKUP)
@@ -181,11 +174,7 @@ class ParquetReaders(appConfig: AppConfig, ctxMgr: ContextMgr) extends BIDataRea
     }
   }
 
-  def vatParquetReader(): RDD[(String, VatRec)] = {
-
-    // Yields RDD of (VAT Ref, VAT record)
-
-    val df = getDataFrameFromParquet(VAT)
+  def vatParquetReader(df: DataFrame): RDD[(String, VatRec)] = {
 
     // Only interested in a subset of columns. SQL is easier to maintain here.
     df.createOrReplaceTempView("temp_vat")
