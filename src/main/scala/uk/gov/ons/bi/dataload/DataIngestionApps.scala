@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.rdd.RDD
+import uk.gov.ons.bi.dataload.PreprocessLinksApp.appConfig
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.model._
@@ -115,7 +116,9 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   val biFile = getBiOutput(appConfig)
 
   // get filepaths for metric writer
-  val datascienceInput = getNewLinksPath(appConfig)
+  val workingDir = appConfig.BusinessIndex.workPath
+  val linksFile = appConfig.BusinessIndex.links
+  val datascienceInput = s"$workingDir/$linksFile"
   val metricsPath = appConfig.Metrics.metricsPath
 
   MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
