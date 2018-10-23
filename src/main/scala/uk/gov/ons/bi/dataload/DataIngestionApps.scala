@@ -116,13 +116,11 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   val biFile = getBiOutput(appConfig)
 
   // get filepaths for metric writer
-  val workingDir = appConfig.BusinessIndex.workPath
-  val linksFile = appConfig.BusinessIndex.links
-  val datascienceInput = s"$workingDir/$linksFile"
+  val datascienceInput = getNewLinksPath(appConfig)
   val metricsPath = appConfig.Metrics.metricsPath
 
-  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
   BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
 }
 
 object LoadBiToEsApp extends DataloadApp {
