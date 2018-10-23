@@ -8,7 +8,7 @@ import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.{BIDataReader, ParquetReaders}
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
-import uk.gov.ons.bi.dataload.writer.BiParquetWriter
+import uk.gov.ons.bi.dataload.writer.{BiParquetWriter, MetricsWriter}
 
 trait DataloadApp extends App {
 
@@ -113,6 +113,12 @@ object LinkDataApp extends DataloadApp with BIDataReader {
 
   // write BI data to parquet file
   val biFile = getBiOutput(appConfig)
+
+  // get filepaths for metric writer
+  val datascienceInput = appConfig.BusinessIndex.dataScienceFile
+  val metricsPath = appConfig.Metrics.metricsPath
+
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
   BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
 }
 
