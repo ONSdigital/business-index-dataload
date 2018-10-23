@@ -115,7 +115,7 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   val biFile = getBiOutput(appConfig)
 
   // get filepaths for metric writer
-  val datascienceInput = appConfig.BusinessIndex.dataScienceFile
+  val datascienceInput = getNewLinksPath(appConfig)
   val metricsPath = appConfig.Metrics.metricsPath
 
   MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, ctxMgr)
