@@ -86,12 +86,13 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   }
   val ctxMgr = new ContextMgr(sparkSess)
 
+  val parquetReader = new ParquetReaders(appConfig, ctxMgr)
+
   // get admin dataframes
   val chDF = parquetReader.getDataFrameFromParquet(CH)
   val vatDF = parquetReader.getDataFrameFromParquet(VAT)
   val payeDF = parquetReader.getDataFrameFromParquet(PAYE)
 
-  val parquetReader = new ParquetReaders(appConfig, ctxMgr)
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
   val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader(chDF)
   val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader(vatDF)

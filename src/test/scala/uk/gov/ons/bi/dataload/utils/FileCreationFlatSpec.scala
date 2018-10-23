@@ -209,11 +209,12 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(biFile).delete
 
-    val chDF = parquetReader.getDataFrameFromParquet(CH)
-    val vatDF = parquetReader.getDataFrameFromParquet(VAT)
-    val payeDF = parquetReader.getDataFrameFromParquet(PAYE)
-
     val parquetReaders = new ParquetReaders(appConfig, ctxMgr)
+
+    val chDF = parquetReaders.getDataFrameFromParquet(CH)
+    val vatDF = parquetReaders.getDataFrameFromParquet(VAT)
+    val payeDF = parquetReaders.getDataFrameFromParquet(PAYE)
+
     val linkRecsReader: RDD[LinkRec] = parquetReaders.linksParquetReader()
     val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader(chDF)
     val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader(vatDF)
@@ -254,10 +255,6 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     )
 
     val expected = sparkSession.createDataFrame(sparkSession.sparkContext.parallelize(data), TestModel.linkSchema).sort("id")
-
-    actual.show()
-
-    expected.show()
 
     actual.collect() shouldBe expected.collect
   }
