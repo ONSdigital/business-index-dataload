@@ -24,6 +24,6 @@ object MetricsWriter {
       ("DataIngestion", outputCount)
     ).toDF("MetricType", "Count")
 
-    BiCsvWriter.writeCsvOutput(metricsDF, metricsPath)
+    BiCsvWriter.writeCsvOutput(metricsDF, metricsFile)
   }
 }

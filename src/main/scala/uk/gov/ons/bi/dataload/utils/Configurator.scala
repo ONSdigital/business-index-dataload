@@ -155,7 +155,9 @@ class AppConfig {
 
     val dataloadDir = getConfigStr("dataload-dir", metricsConfig)
 
-    val metricsPath = getConfigStr("metrics-file", metricsConfig)
+    val metricsFile = getConfigStr("metrics-file", metricsConfig)
+
+    val metricsPath = s"${home.env}/$metricsDir/$metricsDir/$metricsFile"
   }
 
   object ESConfig {
