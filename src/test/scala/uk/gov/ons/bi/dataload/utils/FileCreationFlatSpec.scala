@@ -5,6 +5,7 @@ import java.io.File
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
+import uk.gov.ons.bi.dataload.LinkDataApp.parquetReader
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
@@ -208,11 +209,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
 
     new File(biFile).delete
 
+    val chDF = parquetReader.getDataFrameFromParquet(CH)
+    val vatDF = parquetReader.getDataFrameFromParquet(VAT)
+    val payeDF = parquetReader.getDataFrameFromParquet(PAYE)
+
     val parquetReaders = new ParquetReaders(appConfig, ctxMgr)
     val linkRecsReader: RDD[LinkRec] = parquetReaders.linksParquetReader()
-    val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader()
-    val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader()
-    val PAYEReader: RDD[(String, PayeRec)] = parquetReaders.payeParquetReader()
+    val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader(chDF)
+    val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader(vatDF)
+    val PAYEReader: RDD[(String, PayeRec)] = parquetReaders.payeParquetReader(payeDF)
 
     val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 

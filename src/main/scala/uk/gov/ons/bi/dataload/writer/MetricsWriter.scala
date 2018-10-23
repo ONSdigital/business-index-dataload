@@ -30,7 +30,7 @@ object MetricsWriter {
 
     val metricsDF = Seq(
       ("DataScience", inputCount),
-      ("DataIngestion", outputCount),g
+      ("DataIngestion", outputCount),
       ("CH", chDF.count),
       ("VAT", vatDF.count),
       ("PAYE", payeDF.count)
