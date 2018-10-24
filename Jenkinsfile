@@ -47,6 +47,8 @@ pipeline {
             }
         }
 
+        // The validate phase has been left as-is to perform parallel execution
+        // This shall serve as the control for REG-2140
         stage('Validate') {
             failFast true
             parallel {
