@@ -33,9 +33,9 @@ object MetricsWriter {
       ("DataIngestion", outputCount),
       ("CH", chDF.count),
       ("VAT", vatDF.count),
-      ("Live VATs", vatDF.filter("deathdate is null").count,
+      ("Live VATs", vatDF.filter("deathdate is null").count),
       ("PAYE", payeDF.count),
-      ("Live PAYEs", payeDF.filter("deathdate is null").count))
+      ("Live PAYEs", payeDF.filter("deathdate is null").count)
     ).toDF("MetricType", "Count")
 
     BiCsvWriter.writeCsvOutput(metricsDF, metricsFile)
