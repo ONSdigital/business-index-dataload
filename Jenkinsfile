@@ -47,37 +47,35 @@ pipeline {
             }
         }
 
-        stage('Validate') {
+        stage('Validate : Test: Unit') {
             failFast true
-            parallel {
-                stage('Test: Unit') {
-                    agent { label "build.${agentGradleVersion}" }
-                    steps {
-                        unstash name: 'Checkout'
-                        sh 'gradle check'
-                    }
-                    post {
-                        success {
-                            junit 'build/test-results/test/TEST-uk.gov.ons.*.xml'
-                        }
-                    }
-                }
-                stage('Style') {
-                    agent { label "build.${agentGradleVersion}" }
-                    steps {
-                        unstash name: 'Checkout'
-                        colourText("info","Running style tests")
-                        sh 'gradle scalaStyleMainCheck'
-                    }
-                    post {
-                        success {
-                            checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'build/scalastyle/main/scalastyle-check.xml', unHealthy: ''
-                        }
-                    }
-                }
+            agent { label "build.${agentGradleVersion}" }
+            steps {
+                unstash name: 'Checkout'
+                sh 'gradle check'
             }
             post {
                 success {
+                    junit 'build/test-results/test/TEST-uk.gov.ons.*.xml'
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
+        }
+
+        stage('Validate: Style') {
+            failFast true
+            agent { label "build.${agentGradleVersion}" }
+            steps {
+                unstash name: 'Checkout'
+                colourText("info", "Running style tests")
+                sh 'gradle scalaStyleMainCheck'
+            }
+            post {
+                success {
+                    checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'build/scalastyle/main/scalastyle-check.xml', unHealthy: ''
                     postSuccess()
                 }
                 failure {
