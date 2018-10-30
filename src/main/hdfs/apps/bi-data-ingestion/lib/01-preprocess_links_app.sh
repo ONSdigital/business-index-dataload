@@ -1,4 +1,4 @@
-#!/bin/bash​
+#!/bin/bash
 
 __workflow_name="bi-data-ingestion"
 __module_name="business-index-dataload"
