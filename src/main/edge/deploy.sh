@@ -21,12 +21,13 @@ arg_artifactory_url=${4}
 arg_artifactory_usr="${5}"
 arg_artifactory_pwd="${6}"
 arg_hdfs_usr="${7}"
+arg_repo_branch="${8}"
 
 __required_num_args=6
 __local_user_home="/home/${arg_hdfs_usr}@Ons.Statistics.gov.uk"
 __local_download_base="${__local_user_home}/download/oozie"
 __local_install_base="${__local_user_home}/install/oozie"
-__local_install_version="${__local_install_base}/${arg_archive_base_name}-${arg_version}"
+__local_install_version="${__local_install_base}/${arg_archive_base_name}-${arg_version}-${arg_repo_branch}/"
 __hdfs_install_base="/user/${arg_hdfs_usr}/applications/oozie"
 __group_path="uk/gov/ons"
 __repository_path="${arg_repo}/${__group_path}/${arg_archive_base_name}/${arg_version}"
