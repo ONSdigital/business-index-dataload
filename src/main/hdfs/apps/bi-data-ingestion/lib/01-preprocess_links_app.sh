@@ -19,5 +19,5 @@ spark2-submit --class uk.gov.ons.bi.dataload.PreprocessLinksApp \
     --executor-memory 40G \
     --jars "hdfs://prod1/${__workflow_libs}/config-1.3.2.jar" \
     --driver-java-options \
-    "-DBI-DATALOAD_ENV=${OOZIE_HOME} -DBI_DATALOAD_CLUSTER=cluster" \
+    "-DBI_DATALOAD_ENV=${OOZIE_HOME} -DBI_DATALOAD_CLUSTER=cluster" \
     hdfs://prod1/${__workflow_libs}/business-index-dataload-*.jar
