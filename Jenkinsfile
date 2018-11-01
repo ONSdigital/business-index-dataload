@@ -120,6 +120,7 @@ pipeline {
                 DEPLOY_TO = "dev"
                 DEPLOY_CRED = "bi-dev-ci-ssh-key"
                 VERSION = "0.1.${env.BUILD_NUMBER}"
+                BRANCH_NAME = "${env.BRANCH_NAME}"
             }
             steps {
                 unstash name: 'deploy.sh'
@@ -138,7 +139,7 @@ pipeline {
                             source $BI_DL_DEV_ENV
                             ssh -o StrictHostKeyChecking=no bi-${DEPLOY_TO}-ci@${EDGE_NODE} /bin/bash <<-DEPLOY
 chmod +x deploy.sh
-bash -x deploy.sh $MY_REPO $ARCHIVE $VERSION $ART_URL $ART_USR $ART_PWD $HDFS_USR
+bash -x deploy.sh $MY_REPO $ARCHIVE $VERSION $ART_URL $ART_USR $ART_PWD $HDFS_USR $BRANCH_NAME
 DEPLOY'''
                         }
                     }
