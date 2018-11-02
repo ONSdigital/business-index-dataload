@@ -9,6 +9,9 @@ __workflow_basedir="${__hdfs_install_base}/${__module_name}-latest/apps/${__work
 __workflow_libs="${__workflow_basedir}/lib"
 
 echo "__workflow_libs: ${__workflow_libs}"
+
+BI_DATALOAD_JAR=$( hdfs dfs -ls "hdfs://prod1/${__workflow_libs}/business-index-dataload-*.jar" | awk '{print $NF}' )
+
 spark2-submit --class uk.gov.ons.bi.dataload.HmrcBiExportApp \
     --master='yarn' \
     --deploy-mode='cluster' \
@@ -18,4 +21,4 @@ spark2-submit --class uk.gov.ons.bi.dataload.HmrcBiExportApp \
     --jars "hdfs://prod1/${__workflow_libs}/config-1.3.2.jar" \
     --driver-java-options \
     "-DBI_DATALOAD_ENV=${OOZIE_HOME} -DBI_DATALOAD_CLUSTER=cluster" \
-    hdfs://prod1/${__workflow_libs}/business-index-dataload-*.jar
+    $BI_DATALOAD_JAR
