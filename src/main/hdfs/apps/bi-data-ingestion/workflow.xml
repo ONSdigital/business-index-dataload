@@ -1,24 +1,15 @@
 <workflow-app name="BI Data Ingestion" xmlns="uri:oozie:workflow:0.5">
-    <start to="shell-26f4"/>
+    <start to="shell-2b05"/>
     <kill name="Kill">
         <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
     </kill>
-    <action name="shell-26f4">
-        <shell xmlns="uri:oozie:shell-action:0.1">
-            <job-tracker>${jobTracker}</job-tracker>
-            <name-node>${nameNode}</name-node>
-            <exec>01-preprocess_links_app.sh</exec>
-            <capture-output/>
-        </shell>
-        <ok to="shell-7a2b"/>
-        <error to="Kill"/>
-    </action>
     <action name="shell-7a2b">
         <shell xmlns="uri:oozie:shell-action:0.1">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <exec>02-source_data_to_parquet_app.sh</exec>
-            <capture-output/>
+            <exec>lib/02-source_data_to_parquet_app.sh</exec>
+            <file>lib/02-source_data_to_parquet_app.sh#02-source_data_to_parquet_app.sh</file>
+              <capture-output/>
         </shell>
         <ok to="shell-d8a6"/>
         <error to="Kill"/>
@@ -27,8 +18,9 @@
         <shell xmlns="uri:oozie:shell-action:0.1">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <exec>03-link_data_app.sh</exec>
-            <capture-output/>
+            <exec>lib/03-link_data_app.sh</exec>
+            <file>lib/03-link_data_app.sh#03-link_data_app.sh</file>
+              <capture-output/>
         </shell>
         <ok to="fork-ca1c"/>
         <error to="Kill"/>
@@ -37,10 +29,11 @@
         <shell xmlns="uri:oozie:shell-action:0.1">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <exec>04-load_bi_to_es_app.sh</exec>
-            <argument>${elastic}</argument>
-            <argument>${index}</argument>
-            <capture-output/>
+            <exec>lib/04-load_bi_to_es_app.sh</exec>
+              <argument>${elastic}</argument>
+              <argument>${index}</argument>
+            <file>lib/04-load_bi_to_es_app.sh#04-load_bi_to_es_app.sh</file>
+              <capture-output/>
         </shell>
         <ok to="join-0031"/>
         <error to="Kill"/>
@@ -49,8 +42,9 @@
         <shell xmlns="uri:oozie:shell-action:0.1">
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
-            <exec>04-hmrc_csv_app.sh</exec>
-            <capture-output/>
+            <exec>lib/04-hmrc_csv_app.sh</exec>
+            <file>lib/04-hmrc_csv_app.sh#04-hmrc_csv_app.sh</file>
+              <capture-output/>
         </shell>
         <ok to="join-0031"/>
         <error to="Kill"/>
@@ -60,5 +54,15 @@
         <path start="shell-f212" />
     </fork>
     <join name="join-0031" to="End"/>
+    <action name="shell-2b05">
+        <shell xmlns="uri:oozie:shell-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <exec>lib/01-preprocess_links_app.sh</exec>
+            <file>lib/01-preprocess_links_app.sh#01-preprocess_links_app.sh</file>
+        </shell>
+        <ok to="shell-7a2b"/>
+        <error to="Kill"/>
+    </action>
     <end name="End"/>
-</workflow-app
+</workflow-app>
