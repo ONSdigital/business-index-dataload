@@ -3,8 +3,9 @@ package uk.gov.ons.bi.dataload.utils
 import java.io.File
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{Row, SparkSession}
 import org.scalatest.{FlatSpec, Matchers}
+import uk.gov.ons.bi.dataload.LinkDataApp.parquetReader
 import uk.gov.ons.bi.dataload.exports.HmrcBiCsvExtractor
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.SourceDataToParquetLoader
@@ -31,6 +32,11 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val linksFile = appConfig.BusinessIndex.links
     val outputFilePath = s"$workingDir/$linksFile"
 
+    // getAdminFilePaths
+    val externalDir = appConfig.External.externalPath
+    val vatPath = s"$externalDir/${appConfig.External.vatPath}"
+    val payePath = s"$externalDir/${appConfig.External.payePath}"
+
     // Used to create initial input parquet file
     val jsonPath = parquetReader.readFromLocal + "links.json"
 
@@ -44,7 +50,7 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
     // pre-process data
-    val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+    val linksToSave = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
     //write to parquet
     lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
@@ -204,10 +210,15 @@ class FileCreationFlatSpec extends FlatSpec with Matchers {
     new File(biFile).delete
 
     val parquetReaders = new ParquetReaders(appConfig, ctxMgr)
+
+    val chDF = parquetReaders.getDataFrameFromParquet(CH)
+    val vatDF = parquetReaders.getDataFrameFromParquet(VAT)
+    val payeDF = parquetReaders.getDataFrameFromParquet(PAYE)
+
     val linkRecsReader: RDD[LinkRec] = parquetReaders.linksParquetReader()
-    val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader()
-    val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader()
-    val PAYEReader: RDD[(String, PayeRec)] = parquetReaders.payeParquetReader()
+    val CHReader: RDD[(String, CompanyRec)] = parquetReaders.chParquetReader(chDF)
+    val VATReader: RDD[(String, VatRec)] = parquetReaders.vatParquetReader(vatDF)
+    val PAYEReader: RDD[(String, PayeRec)] = parquetReaders.payeParquetReader(payeDF)
 
     val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 

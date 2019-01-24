@@ -20,7 +20,8 @@ object BusinessIndexesParquetToESLoader {
     val esOutput = s"$home/$parquetDir"
 
     val historicPath = appConfig.Historic.historicPath
-     // read BI entries
+
+    // read BI entries
 
     val pqReader = new ParquetReaders(appConfig, ctxMgr)
 

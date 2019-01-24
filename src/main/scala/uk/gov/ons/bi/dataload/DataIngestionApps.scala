@@ -2,13 +2,14 @@ package uk.gov.ons.bi.dataload
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.rdd.RDD
+import uk.gov.ons.bi.dataload.PreprocessLinksApp.appConfig
 import uk.gov.ons.bi.dataload.linker.LinkedBusinessBuilder
 import uk.gov.ons.bi.dataload.loader.{BusinessIndexesParquetToESLoader, SourceDataToParquetLoader}
 import uk.gov.ons.bi.dataload.model._
 import uk.gov.ons.bi.dataload.reader.{BIDataReader, ParquetReaders}
 import uk.gov.ons.bi.dataload.ubrn.LinksPreprocessor
 import uk.gov.ons.bi.dataload.utils.{AppConfig, ContextMgr, Transformers}
-import uk.gov.ons.bi.dataload.writer.BiParquetWriter
+import uk.gov.ons.bi.dataload.writer.{BiParquetWriter, MetricsWriter}
 
 trait DataloadApp extends App {
 
@@ -34,12 +35,17 @@ object PreprocessLinksApp extends DataloadApp with BIDataReader {
   val prevDir = appConfig.BusinessIndex.prevPath
   val linksFile = appConfig.BusinessIndex.links
 
+  // getAdminFilePaths
+  val externalDir = appConfig.External.externalPath
+  val vatPath = s"$externalDir/${appConfig.External.vatPath}"
+  val payePath = s"$externalDir/${appConfig.External.payePath}"
+
   // load links File
   val newLinks = lpp.readNewLinks(inputPath)
   val prevLinks = lpp.readPrevLinks(prevDir, linksFile)
 
   // pre-process data
-  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks)
+  val linksToSave = lpp.preProcessLinks(newLinks, prevLinks, vatPath, payePath)
 
   //write to parquet
   lpp.writeToParquet(prevDir, workingDir, linksFile, linksToSave)
@@ -81,10 +87,16 @@ object LinkDataApp extends DataloadApp with BIDataReader {
   val ctxMgr = new ContextMgr(sparkSess)
 
   val parquetReader = new ParquetReaders(appConfig, ctxMgr)
+
+  // get admin dataframes
+  val chDF = parquetReader.getDataFrameFromParquet(CH)
+  val vatDF = parquetReader.getDataFrameFromParquet(VAT)
+  val payeDF = parquetReader.getDataFrameFromParquet(PAYE)
+
   val linkRecsReader: RDD[LinkRec] = parquetReader.linksParquetReader()
-  val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader()
-  val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader()
-  val PAYEReader: RDD[(String, PayeRec)] = parquetReader.payeParquetReader()
+  val CHReader: RDD[(String, CompanyRec)] = parquetReader.chParquetReader(chDF)
+  val VATReader: RDD[(String, VatRec)] = parquetReader.vatParquetReader(vatDF)
+  val PAYEReader: RDD[(String, PayeRec)] = parquetReader.payeParquetReader(payeDF)
 
   val uwks: RDD[UbrnWithKey] = LinkedBusinessBuilder.getLinksAsUwks(linkRecsReader)
 
@@ -108,7 +120,14 @@ object LinkDataApp extends DataloadApp with BIDataReader {
 
   // write BI data to parquet file
   val biFile = getBiOutput(appConfig)
+
+  // get filepaths for metric writer
+  val datascienceInput = getNewLinksPath(appConfig)
+  val metricsPath = appConfig.Metrics.metricsPath
+
   BiParquetWriter.writeBiRddToParquet(ctxMgr, biFile, businessIndexes)
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, chDF, vatDF, payeDF, ctxMgr)
+  MetricsWriter.writeMetrics(metricsPath, datascienceInput, biFile, chDF, vatDF, payeDF, ctxMgr, true)
 }
 
 object LoadBiToEsApp extends DataloadApp {

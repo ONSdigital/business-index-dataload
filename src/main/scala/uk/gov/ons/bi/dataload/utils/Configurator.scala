@@ -63,6 +63,9 @@ class AppConfig {
     lazy val tcnToSic = getConfigStr("tcn-to-sic", extConfig)
 
     lazy val externalPath = s"${home.env}/$extDir"
+    lazy val vatPath = s"$vatDir/$vat"
+    lazy val payePath = s"$payeDir/$paye"
+    lazy val chPath = s"$chDir/$ch"
 
     override def toString: String = {
       s"""[
@@ -143,6 +146,16 @@ class AppConfig {
     val historicFile = getConfigStr("historic-file", histConfig)
 
     val historicPath = s"${home.env}/$historicDir/$period/$month/$historicFile"
+  }
+
+  object Metrics {
+    private val metricsConfig = root.getConfig("metrics")
+
+    val metricsDir = getConfigStr("metrics-dir", metricsConfig)
+
+    val metricsFile = getConfigStr("metrics-file", metricsConfig)
+
+    val metricsPath = s"${home.env}/$metricsDir/$metricsFile"
   }
 
   object ESConfig {

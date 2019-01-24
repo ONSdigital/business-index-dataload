@@ -2,6 +2,7 @@ package uk.gov.ons.bi.dataload.ubrn
 
 import com.google.inject.Singleton
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
 import org.apache.spark.storage.StorageLevel
 import uk.gov.ons.bi.dataload.model.BiSparkDataFrames
 import uk.gov.ons.bi.dataload.utils.ContextMgr
@@ -55,19 +56,6 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     excludeMatches(oldLinks, newLinks, matched)
   }
 
-  def getUbrnMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-
-    val matchQuery =
-      """
-       SELECT c.UBRN,c.GID, c.CH, c.VAT, c.PAYE
-    FROM old_links AS p
-    INNER JOIN new_links AS c ON (p.UBRN = c.UBRN)
-    WHERE c.UBRN IS NOT NULL
-          """.stripMargin
-
-    applySqlRule(matchQuery, oldLinks, newLinks)
-  }
-
   def getChMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
     val matchQuery =
       """
@@ -83,148 +71,79 @@ class LinkMatcher(ctxMgr: ContextMgr) {
     applySqlRule(matchQuery, oldLinks, newLinks)
   }
 
-
-  def getContentMatchesNoCh(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-    // Different rule for each matching process
-    val matchQuery =
-      """
-        SELECT old.UBRN AS UBRN, new.GID as GID, new.CH, new.VAT, new.PAYE
-        |FROM old_links AS old
-        |INNER JOIN new_links AS new ON (old.VAT = new.VAT AND old.PAYE = new.PAYE)
-        |WHERE old.CH[0] IS NULL
-        | AND new.CH[0] IS NULL
-        | AND (new.VAT IS NOT NULL OR new.PAYE IS NOT NULL)
-        | AND (old.VAT IS NOT NULL OR old.PAYE IS NOT NULL)
-      """.stripMargin
-
-    applySqlRule(matchQuery, oldLinks, newLinks)
-  }
-
-  def getVatMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-    //
-    // VAT matching logic:  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
-    //
-    // Take unmatched records.
-    // Explode VAT arrays to create old/new Links with a single VAT reference in each.
-    // Match on the individual VAT references.
-    // It is possible that one new Link GID might match >1 old Link UBRN, or vice versa.
-    // We therefore rank the old and new VATs (in order of VAT reference) within each UBRN or GID.
-    // Then we take UBRN and GID for the first match only.
-
-
-    val matchQuery =
-      """
-              SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
- |                FROM (
- |                SELECT exp_old.UBRN, exp_new.GID,
- |                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_vat) as rank_in_ubrn,
- |                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_vat) as rank_in_gid
- |                FROM
- |                (SELECT GID, CH, explode(VAT) AS exploded_vat FROM new_links) AS exp_new
- |                INNER JOIN
- |                (SELECT UBRN, CH, explode(VAT) AS exploded_vat FROM old_links) AS exp_old
- |                 ON (exp_old.exploded_vat = exp_new.exploded_vat)
- |                 ) t1 INNER JOIN new_links AS un ON (un.GID = t1.GID)
- |                 WHERE  t1.rank_in_ubrn = 1
- |                 AND t1.rank_in_gid = 1
-               """.stripMargin
-
-    applySqlRule(matchQuery, oldLinks, newLinks)
-  }
-
-
-  def getPayeMatches(oldLinks: DataFrame, newLinks: DataFrame): LinkMatchResults = {
-
-    //
-    // PAYE matching logic:  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
-    //
-    // Take unmatched records.
-    // Explode PAYE arrays to create old/new Links with a single PAYE reference in each.
-    // Match on the individual PAYE references.
-    // It is possible that one new Link GID might match >1 old Link UBRN, or vice versa.
-    // We therefore rank the old and new PAYEs (in order of PAYE reference) within each UBRN or GID.
-    // Then we take UBRN and GID for the first match only.
-
-    val matchQuery =
-      """
-        SELECT t1.UBRN, t1.GID, un.CH, un.VAT, un.PAYE
- |                FROM (
- |                SELECT exp_old.UBRN, exp_new.GID,
- |                        dense_rank() OVER (PARTITION BY exp_old.UBRN ORDER BY exp_old.exploded_paye) as rank_in_ubrn,
- |                        dense_rank() OVER (PARTITION BY exp_new.GID ORDER BY exp_new.exploded_paye) as rank_in_gid
- |                FROM
- |                (SELECT GID, CH, explode(PAYE) as exploded_paye FROM new_links) AS exp_new
- |                INNER JOIN
- |                (SELECT UBRN, CH, explode(PAYE) as exploded_paye FROM old_links) AS exp_old
- |                 ON (exp_old.exploded_paye = exp_new.exploded_paye)
- |                 ) t1 INNER JOIN new_links AS un ON (un.GID = t1.GID)
- |                 WHERE  t1.rank_in_ubrn = 1
- |                 AND t1.rank_in_gid = 1
-               """.stripMargin
-
-    applySqlRule(matchQuery, oldLinks, newLinks)
-  }
-
   def combineLinksToSave(linksWithUbrn1: DataFrame, linksWithUbrn2: DataFrame): DataFrame = {
     linksWithUbrn1.select("UBRN", "CH", "VAT", "PAYE")
       .union(linksWithUbrn2.select("UBRN", "CH", "VAT", "PAYE"))
   }
 
-  def getOptionEdit(oldLinks: DataFrame, newLinks:DataFrame): LinkMatchResults = {
-    newLinks.columns.contains("UBRN") match {
-      case true => getUbrnMatches(oldLinks, newLinks)
-      case _ => getChMatches(oldLinks, newLinks)
-    }
-  }
+  def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame, vatPath: String, payePath: String) = {
 
-  def applyAllMatchingRules(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
-    // Each rule eliminates matching records from the set of links we still have to match,
-    // so each step should have a smaller search space.
-    // Cache intermediate sets temporarily so we don't have to keep re-materialising them.
+    // write new method for matching CH takes priority on UBRN
+    val chResults = getChMatches(oldLinks, newLinks)
 
-    //val ubrnResults = getOptionEdit(oldLinks, newLinks)
+    val complex = getComplex(chResults.unmatchedNewLinks, chResults.unmatchedOldLinks, vatPath, payePath)
+    val matched = excludeMatches(chResults.unmatchedOldLinks, chResults.unmatchedNewLinks, complex)
+    val withOldUbrn = chResults.matched.union(matched.matched.select("UBRN","GID","CH","VAT","PAYE"))
 
-    // Get CH matches where CH is present in both sets
-    //val chResults = getChMatches(oldLinks, newLinks)
-
-    val linkResults = getOptionEdit(oldLinks, newLinks)
-
-    // Get records where CH is absent from both sets but other contents are same
-    val contentResults = getContentMatchesNoCh(linkResults.unmatchedOldLinks, linkResults.unmatchedNewLinks)
-
-    // Uncomment all this when VAT and PAYE rules restored  *** NEEDS HIVE CONTEXT!!! *** HiveContext, SQLContext and SparkConf replaced by SparkSession in Spark 2.x
-
-    // Get records where VAT ref matches
-    //val vatResults = getVatMatches(contentResults.unmatchedOldLinks, contentResults.unmatchedNewLinks)
-
-    // Get records where PAYE ref matches
-    //val payeResults = getPayeMatches(vatResults.unmatchedOldLinks, vatResults.unmatchedNewLinks)
-
-    // Finally we should have:
-    // - one sub-set of new links that we have matched, so they now have a UBRN:
-    val withOldUbrn: DataFrame =
-    linkResults.matched
-      //.union(contentResults.matched)
-    // UNION with these when we restore the VAT and PAYE matching logic above
-      //.union(vatResults.matched)   // If the VAT and PAYE rules are removed comment out these unions and switch the needUbrn calls
-      //.union(payeResults.matched)
-
-    // - and one sub-set of new links that we could not match, so they need new UBRN:
-    // When VAT and PAYE rules restored, use the commented version of needUbrn instead:
-    val needUbrn: DataFrame = linkResults.unmatchedNewLinks
-    // val needUbrn: DataFrame = contentResults.unmatchedNewLinks
-
-    // Return the stuff we want
+    val needUbrn = matched.unmatchedNewLinks
 
     (withOldUbrn, needUbrn)
   }
 
-  def processNewOldLinks(newLinks: DataFrame, oldLinks: DataFrame): (DataFrame, DataFrame) = {
-    // We can skip all the checks if the old set is empty
-    if (BiSparkDataFrames.isDfEmpty(oldLinks))
-      (BiSparkDataFrames.emptyLinkWithUbrnDf(ctxMgr), newLinks)
-    else
-      applyAllMatchingRules(newLinks, oldLinks)
+  def getComplex(newLinks: DataFrame, oldLinks: DataFrame, vatPath: String, payePath: String): DataFrame = {
+
+    val numPartitions = newLinks.rdd.getNumPartitions
+    val prevBirth = getPrevBirth(oldLinks, vatPath, payePath)
+    val joinedNewLinks = joinLinks(newLinks, vatPath, payePath).repartition(numPartitions)
+    joinedNewLinks.join(prevBirth).where(joinedNewLinks("oldest_unit")===prevBirth("oldest_unit"))
+  }
+
+  def joinLinks(df: DataFrame, vatPath: String, payePath: String) = {
+    val (vatBirth, payeBirth) = assignBirth(df, vatPath, payePath)
+
+    // for each UBRN assign oldest admin unit to it
+    vatBirth
+      .union(payeBirth)
+      .groupBy("GID").agg(min("timestamp").as("timestamp"),
+      min("vatref").as("oldest_unit"),
+      min("CH").as("CH"),
+      min("VAT").as("VAT"),
+      min("PAYE").as("PAYE")
+    ).drop("timestamp")
+  }
+
+  def getPrevBirth(df: DataFrame, vatPath: String, payePath: String) = {
+
+    // get birthdate of admin unit
+    val (vatBirth, payeBirth) = assignBirth(df, vatPath, payePath)
+
+    // for each UBRN assign oldest admin unit to it
+      vatBirth
+        .union(payeBirth)
+        .groupBy("UBRN").agg(min("timestamp").as("timestamp"),
+          min("vatref").as("oldest_unit")
+      ).drop("timestamp")
+  }
+
+  // ask about last period's birthdate for admin units since new month will have updated admin unit files
+  def assignBirth(df: DataFrame, vatPath: String, payePath: String) = {
+
+    // explode admin units
+    val vat = df.withColumn("vatref", explode(df("VAT")))//.drop("CH","VAT", "PAYE")
+    val paye = df.withColumn("payeref", explode(df("PAYE")))//.drop("CH","VAT", "PAYE")
+
+    // read in VAT and PAYE
+    val pattern = "dd/MM/yyyy"
+    val vatDf = spark.read.option("header", "true").csv(vatPath).select("vatref", "birthdate")
+    val payeDf = spark.read.option("header", "true").csv(payePath).select("payeref", "birthdate")
+
+    val vatStamp = vatDf.withColumn("timestamp", unix_timestamp(vatDf("birthdate"), pattern).cast("timestamp"))
+    val payeStamp = payeDf.withColumn("timestamp", unix_timestamp(payeDf("birthdate"), pattern).cast("timestamp"))
+
+    val vatWithBirth = vat.join(vatStamp, "vatref")
+    val payeWithBirth = paye.join(payeStamp, "payeref")
+
+    (vatWithBirth, payeWithBirth)
   }
 
 }

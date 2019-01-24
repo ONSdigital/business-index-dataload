@@ -3,7 +3,6 @@ package uk.gov.ons.bi.dataload.ubrn
 import java.util.UUID
 
 import com.google.inject.Singleton
-
 import uk.gov.ons.bi.dataload.reader.{BIDataReader, PreviousLinkStore}
 import uk.gov.ons.bi.dataload.writer.{BiParquetWriter, PreviousLinksWriter}
 import uk.gov.ons.bi.dataload.utils.ContextMgr
@@ -28,7 +27,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) wi
     readFromSourceFile(prevLinksFile)
   }
 
-  def preProcessLinks(newLinksDF: DataFrame, prevLinks: DataFrame) = {
+  def preProcessLinks(newLinksDF: DataFrame, prevLinks: DataFrame, vatPath: String, payePath: String) = {
 
     // WARNING:
     // UUID is generated when data is materialised e.g. in a SELECT statement,
@@ -40,7 +39,7 @@ class LinksPreprocessor(ctxMgr: ContextMgr) extends PreviousLinkStore(ctxMgr) wi
     val matcher = new LinkMatcher(ctxMgr)
 
     // Apply all matching rules and get (matched, unmatched) records back
-    val (withOldUbrn, needUbrn) = matcher.applyAllMatchingRules(newLinks, prevLinks)
+    val (withOldUbrn, needUbrn) = matcher.applyAllMatchingRules(newLinks, prevLinks, vatPath, payePath)
 
     val maxUrbn = UbrnManager.getMaxUbrn(prevLinks)
 
